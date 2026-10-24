@@ -9,9 +9,22 @@ export const shuffle = <T>(array: T[]): T[] => {
   return shuffled;
 };
 
+export const IMAGES_LEVEL_IMAGE_COUNTS: Record<number, number> = {
+  1: 6,
+  2: 8,
+  3: 10,
+  4: 12,
+  5: 14,
+  6: 16,
+  7: 18,
+  8: 22,
+  9: 26,
+  10: 30,
+};
+
 export const getImageCountForLevel = (level: number): number => {
   const safeLevel = Math.max(1, Math.min(10, level));
-  return 6 + (safeLevel - 1) * 2;
+  return IMAGES_LEVEL_IMAGE_COUNTS[safeLevel] ?? 6;
 };
 
 export const generateImageDeck = (count: number): ImageCard[] => {

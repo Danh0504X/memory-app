@@ -21,7 +21,7 @@ export const GameSelectionPage = () => {
           </div>
 
           {/* ── Danh sách Card Trò chơi ── */}
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {/* Card 1: Game Thẻ Bài */}
             <div
               role="button"
@@ -35,11 +35,10 @@ export const GameSelectionPage = () => {
                   navigate("/games/cards");
                 }
               }}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border-2 bg-white p-7 text-left transition-all cursor-pointer ${
-                selectedGame === "cards"
-                  ? "border-[#2e7d32] shadow-[0px_12px_32px_rgba(46,125,50,0.12)]"
-                  : "border-[#e3ebe6] hover:-translate-y-1 hover:border-[#9bc9a8] hover:shadow-lg"
-              }`}
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border-2 bg-white p-7 text-left transition-all cursor-pointer ${selectedGame === "cards"
+                ? "border-[#2e7d32] shadow-[0px_12px_32px_rgba(46,125,50,0.12)]"
+                : "border-[#e3ebe6] hover:-translate-y-1 hover:border-[#9bc9a8] hover:shadow-lg"
+                }`}
             >
               {/* Khung minh họa xếp thẻ bài */}
               <div className="relative mb-6 flex h-[220px] w-full items-center justify-center overflow-hidden rounded-[20px] bg-[#f3f8f4]">
@@ -72,25 +71,23 @@ export const GameSelectionPage = () => {
               </div>
             </div>
 
-            {/* Card 2: Game Hình ảnh (Sắp ra mắt) */}
             {/* Card 2: Game Hình ảnh */}
             <div
               role="button"
               tabIndex={0}
               onClick={() => {
                 setSelectedGame("images");
-                navigate("/games/images"); // Chuyển thẳng sang route /games/images
+                navigate("/games/images");
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   navigate("/games/images");
                 }
               }}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border-2 bg-white p-7 text-left transition-all cursor-pointer ${
-                selectedGame === "images"
-                  ? "border-[#2e7d32] shadow-[0px_12px_32px_rgba(46,125,50,0.12)]"
-                  : "border-[#e3ebe6] hover:-translate-y-1 hover:border-[#9bc9a8] hover:shadow-lg"
-              }`}
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border-2 bg-white p-7 text-left transition-all cursor-pointer ${selectedGame === "images"
+                ? "border-[#2e7d32] shadow-[0px_12px_32px_rgba(46,125,50,0.12)]"
+                : "border-[#e3ebe6] hover:-translate-y-1 hover:border-[#9bc9a8] hover:shadow-lg"
+                }`}
             >
               {/* Khung minh họa icon linh vật/hình ảnh */}
               <div className="relative mb-6 flex h-[220px] w-full items-center justify-center overflow-hidden rounded-[20px] bg-[#edf4fc]">
@@ -123,6 +120,56 @@ export const GameSelectionPage = () => {
                 <p className="mt-2 text-[15px] font-medium text-[#667085]">
                   Ghi nhớ thứ tự các hình ảnh và kiểm tra khả năng hồi đáp
                   nhanh.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Game Từ ngẫu nhiên (Words Game) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setSelectedGame("words");
+                navigate("/games/words");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  navigate("/games/words");
+                }
+              }}
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border-2 bg-white p-7 text-left transition-all cursor-pointer ${selectedGame === "words"
+                ? "border-[#2e7d32] shadow-[0px_12px_32px_rgba(46,125,50,0.12)]"
+                : "border-[#e3ebe6] hover:-translate-y-1 hover:border-[#9bc9a8] hover:shadow-lg"
+                }`}
+            >
+              {/* Khung minh họa từ vựng */}
+              <div className="relative mb-6 flex h-[220px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[20px] bg-[#fbf5e8] p-4">
+                <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 font-black text-sm text-[#b45309] shadow-sm">
+                  <span>1.</span>
+                  <span className="tracking-wide">airplane</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-white/90 px-4 py-2 font-bold text-xs text-[#77839a] shadow-xs">
+                  <span>2.</span>
+                  <span className="tracking-wide">crystal</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-white/70 px-4 py-1.5 font-semibold text-xs text-[#98a2b3]">
+                  <span>3.</span>
+                  <span className="tracking-wide">guitar</span>
+                </div>
+              </div>
+
+              {/* Tiêu đề & Thông tin */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[24px] font-extrabold text-[#1f2937] group-hover:text-[#2e7d32]">
+                    Từ
+                  </h2>
+                  <span className="rounded-full bg-[#fef3c7] px-3 py-1 text-[12px] font-bold text-[#b45309]">
+                    Luyện trí nhớ
+                  </span>
+                </div>
+                <p className="mt-2 text-[15px] font-medium text-[#667085]">
+                  Ghi nhớ danh sách từ vựng và gõ lại chuẩn xác từng vị trí.
                 </p>
               </div>
             </div>

@@ -5,6 +5,7 @@ import HomePage from "@/features/home/pages/HomePage";
 import GameSelectionPage from "@/components/layout/GameSelectionPage";
 import { CardsGame } from "@/features/cards-game/components/CardsGame";
 import { ImagesGame } from "@/features/images-game/components/ImagesGame";
+import { WordsGame } from "@/features/words-game/components/WordsGame";
 import { PublicOnlyRoute } from "./PublicOnlyRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
   {
     path: "/games/images",
     element: <ImagesGame />,
+  },
+  {
+    path: "/games/words",
+    element: <WordsGame />,
   },
   {
     element: <ProtectedRoute />,
