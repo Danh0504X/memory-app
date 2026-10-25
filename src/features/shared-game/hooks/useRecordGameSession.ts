@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/features/auth/store/authStore";
 
-export type GameName = "card" | "image" | "number";
+export type GameName = "card" | "image" | "number" | "word";
 
 interface RecordGameSessionParams {
     gameName: GameName;

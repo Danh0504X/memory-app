@@ -28,6 +28,8 @@ interface GameSettingsLayoutProps {
     setMemorizeTime: (time: number) => void;
     onStart: () => void;
     onOpenPreferences?: () => void;
+    onOpenGuide?: () => void;
+    onOpenExplanation?: () => void;
 }
 
 export const GameSettingsLayout = ({
@@ -39,6 +41,8 @@ export const GameSettingsLayout = ({
     setMemorizeTime,
     onStart,
     onOpenPreferences,
+    onOpenGuide,
+    onOpenExplanation,
 }: GameSettingsLayoutProps) => {
     const [activeTab, setActiveTab] = useState("Tiêu chuẩn");
     const [showExplanation, setShowExplanation] = useState(false);
@@ -56,7 +60,7 @@ export const GameSettingsLayout = ({
 
                         <button
                             type="button"
-                            onClick={() => setShowExplanation(true)}
+                            onClick={onOpenExplanation || (() => setShowExplanation(true))}
                             className="flex items-center gap-1.5 rounded-full bg-[#eff4ff] px-4 py-1.5 text-[13px] font-bold text-[#40493d] shadow-sm transition hover:bg-[#dfe9fb] cursor-pointer"
                         >
                             <span>💡</span>
@@ -77,7 +81,7 @@ export const GameSettingsLayout = ({
                         <nav className="flex items-center gap-2">
                             <button
                                 type="button"
-                                onClick={() => setShowGuide(true)}
+                                onClick={onOpenGuide || (() => setShowGuide(true))}
                                 className="flex items-center gap-1.5 rounded-full bg-[#dee9fc] px-5 py-2 text-[14px] font-bold text-[#121c2a] shadow-sm hover:bg-[#d0e0fb] cursor-pointer"
                             >
                                 📖 Hướng dẫn

@@ -22,7 +22,6 @@ const BigImageCard = ({
     total: number;
     groupSize?: number;
 }) => {
-    // 1 ảnh thì làm khung to cực đại, 2-5 ảnh thì tự điều chỉnh vừa vặn hàng ngang
     const cardWidth = groupSize === 1 ? "w-[360px]" : groupSize === 2 ? "w-[270px]" : groupSize === 3 ? "w-[220px]" : "w-[185px]";
     const imgSize = groupSize === 1 ? "h-72 w-72" : groupSize === 2 ? "h-56 w-56" : groupSize === 3 ? "h-44 w-44" : "h-36 w-36";
 
@@ -98,7 +97,6 @@ const ThumbStrip = ({
                 onPointerUp={onPointerUp}
             >
                 {images.map((img, idx) => {
-                    // Kiểm tra xem thumbnail này có nằm trong nhóm ảnh đang hiển thị hay không
                     const isInGroup = idx >= activeIndex && idx < activeIndex + groupSize;
                     return (
                         <button
@@ -135,24 +133,40 @@ export const ImagesMemorizePhase = () => {
         phaseDeadline,
         level,
         resetGame,
-        preferences, // ➔ Lấy preferences từ store
+        preferences,
     } = useImagesGameStore();
     const { formattedTime } = usePhaseTimer(phaseDeadline, finishMemorize);
 
     const groupSize = preferences.groups || 1;
 
+    const lastRightArrowTimeRef = useRef<number>(0);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "ArrowLeft") prevMemorizeCard();
-            else if (e.key === "ArrowRight") nextMemorizeCard();
-            else if (e.key === " ") { e.preventDefault(); useImagesGameStore.setState({ currentMemorizeIndex: 0 }); }
-            else if (e.key === "Enter") finishMemorize();
+            if (e.key === "ArrowLeft") {
+                prevMemorizeCard();
+            } else if (e.key === "ArrowRight") {
+                const isAtEnd = currentMemorizeIndex + groupSize >= imagesToMemorize.length;
+                if (isAtEnd) {
+                    const now = Date.now();
+                    if (now - lastRightArrowTimeRef.current < 500) {
+                        finishMemorize();
+                        return;
+                    }
+                    lastRightArrowTimeRef.current = now;
+                }
+                nextMemorizeCard();
+            } else if (e.key === " " || e.key === "ArrowUp") {
+                e.preventDefault();
+                useImagesGameStore.setState({ currentMemorizeIndex: 0 });
+            } else if (e.key === "Enter") {
+                finishMemorize();
+            }
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [prevMemorizeCard, nextMemorizeCard, finishMemorize]);
+    }, [prevMemorizeCard, nextMemorizeCard, finishMemorize, currentMemorizeIndex, groupSize, imagesToMemorize.length]);
 
-    // Lấy danh sách ảnh thuộc nhóm trang hiện tại (1, 2 hoặc 5 ảnh)
     const currentGroupImages = imagesToMemorize.slice(
         currentMemorizeIndex,
         currentMemorizeIndex + groupSize
@@ -161,13 +175,11 @@ export const ImagesMemorizePhase = () => {
     const isFirst = currentMemorizeIndex === 0;
     const isLast = currentMemorizeIndex + groupSize >= imagesToMemorize.length;
 
-    // Tính tổng số trang theo nhóm
     const totalPages = Math.ceil(imagesToMemorize.length / groupSize);
     const currentPage = Math.floor(currentMemorizeIndex / groupSize);
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f5faf7] font-sans text-[#202b39]">
-            {/* Header: Nếu ẩn đồng hồ thì truyền formattedTime là undefined */}
             <GameHeader
                 gameName="Hình ảnh"
                 level={level}
@@ -179,7 +191,6 @@ export const ImagesMemorizePhase = () => {
             />
 
             <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8">
-                {/* Khu vực hiển thị nhóm ảnh */}
                 <div className="flex flex-wrap items-center justify-center gap-5 max-w-6xl">
                     {currentGroupImages.map((img, idx) => (
                         <BigImageCard
@@ -192,7 +203,6 @@ export const ImagesMemorizePhase = () => {
                     ))}
                 </div>
 
-                {/* Thanh cuộn Thumbnails */}
                 <ThumbStrip
                     images={imagesToMemorize}
                     activeIndex={currentMemorizeIndex}
@@ -203,7 +213,6 @@ export const ImagesMemorizePhase = () => {
                     }}
                 />
 
-                {/* Các chấm hiển thị số trang */}
                 <div className="flex gap-1.5">
                     {Array.from({ length: totalPages }).map((_, pageIdx) => (
                         <span

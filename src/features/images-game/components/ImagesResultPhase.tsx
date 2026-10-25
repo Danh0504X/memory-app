@@ -15,13 +15,12 @@ const ImageChip = ({ image, isCorrect, showMark = false }: { image: ImageCard | 
 
     return (
         <div className="flex flex-col items-center gap-1">
-            <div className="flex h-16 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border-2 text-[11px] font-bold shadow-xs transition" style={{ borderColor, backgroundColor: bgColor }}>
+            <div className="flex h-16 w-14 items-center justify-center rounded-xl border-2 shadow-xs transition" style={{ borderColor, backgroundColor: bgColor }}>
                 <img
                     src={image.imageUrl}
                     alt="Hình ảnh"
                     className="h-12 w-12 rounded-lg object-cover"
                 />
-                <span className="max-w-full truncate px-1 text-[9px] font-bold text-[#202b39]">{image.name}</span>
             </div>
             {showMark && (
                 <span className="text-xs font-bold" style={{ color: isCorrect ? "#1a7a4a" : "#e45454" }}>
@@ -87,13 +86,12 @@ export const ImagesResultPhase = () => {
                         {imagesToMemorize.map((img, index) => (
                             <div key={`correct-${index}`} className="flex flex-col items-center gap-1">
                                 <span className="text-[10px] font-bold text-[#77839a]">{index + 1}</span>
-                                <div className="flex h-16 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-[#1a7a4a] bg-[#e6f7ed] text-[11px] font-bold">
+                                <div className="flex h-16 w-14 items-center justify-center rounded-xl border border-[#1a7a4a] bg-[#e6f7ed] shadow-xs">
                                     <img
                                         src={img.imageUrl}
                                         alt="Hình ảnh"
                                         className="h-12 w-12 rounded-lg object-cover"
                                     />
-                                    <span className="max-w-full truncate px-1 text-[9px] font-bold text-[#1f2937]">{img.name}</span>
                                 </div>
                             </div>
                         ))}
