@@ -4,7 +4,7 @@ import { notifyGameSessionRecorded } from "@/features/shared-game/events";
 import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { describeRoundError, isRoundClosed } from "@/features/shared-game/utils/roundErrors";
 import type { ImageCard, GamePhase } from "../types/imageTypes";
-import { imageFromView } from "../utils/imageUtils";
+import { imageFromView, preloadImages } from "../utils/imageUtils";
 
 // Thao tác đang chờ backend trả lời; dùng để khoá nút và tránh gửi hai lần (bấm nút cùng lúc hết giờ)
 type PendingAction = "start" | "recall" | "submit" | null;
@@ -85,6 +85,8 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
             const { data } = await gamesApi.startRound({ gameName: "image", memorizeSec });
             const { session } = data;
             const images = session.items.map(imageFromView);
+            // Nút Bắt đầu vẫn ở trạng thái chờ trong lúc tải ảnh; phần lệch giờ do tải ảnh nằm trong thời gian bù trễ của backend
+            await preloadImages(images.map((image) => image.imageUrl));
             set({
                 ...EMPTY_ROUND,
                 phase: "memorize",

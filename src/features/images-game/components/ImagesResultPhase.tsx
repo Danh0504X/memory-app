@@ -7,18 +7,18 @@ import type { ImageCard } from "../types/imageTypes";
 
 const ImageChip = ({ image, isCorrect, showMark = false }: { image: ImageCard | null; isCorrect?: boolean; showMark?: boolean }) => {
     if (!image) {
-        return <div className="flex h-16 w-14 items-center justify-center rounded-xl border-2 border-dashed border-[#c8d8d0] text-sm font-bold text-[#c8d8d0]">—</div>;
+        return <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-dashed border-[#c8d8d0] text-sm font-bold text-[#c8d8d0]">—</div>;
     }
     const borderColor = showMark ? (isCorrect ? "#1a7a4a" : "#e45454") : "#e0eee6";
     const bgColor = showMark ? (isCorrect ? "#e6f7ed" : "#fef2f2") : "#ffffff";
 
     return (
-        <div className="flex flex-col items-center gap-1">
-            <div className="flex h-16 w-14 items-center justify-center rounded-xl border-2 shadow-xs transition" style={{ borderColor, backgroundColor: bgColor }}>
+        <div className="flex flex-col items-center gap-1.5">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 p-1 shadow-xs transition" style={{ borderColor, backgroundColor: bgColor }}>
                 <img
                     src={image.imageUrl}
                     alt="Hình ảnh đã chọn"
-                    className="h-12 w-12 rounded-lg object-cover"
+                    className="h-full w-full rounded-xl object-cover"
                 />
             </div>
             {showMark && (
@@ -76,13 +76,13 @@ export const ImagesResultPhase = () => {
                     <h2 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-[#77839a]">Thứ tự đúng</h2>
                     <div className="flex flex-wrap justify-center gap-3">
                         {perItem.map(({ expected: image }, index) => (
-                            <div key={`correct-${index}`} className="flex flex-col items-center gap-1">
+                            <div key={`correct-${index}`} className="flex flex-col items-center gap-1.5">
                                 <span className="text-[10px] font-bold text-[#77839a]">{index + 1}</span>
-                                <div className="flex h-16 w-14 items-center justify-center rounded-xl border border-[#1a7a4a] bg-[#e6f7ed]">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[#1a7a4a] bg-[#e6f7ed] p-1 shadow-xs">
                                     <img
                                         src={image.imageUrl}
                                         alt={`Hình ảnh thứ ${index + 1}`}
-                                        className="h-12 w-12 rounded-lg object-cover"
+                                        className="h-full w-full rounded-xl object-cover"
                                     />
                                 </div>
                             </div>
