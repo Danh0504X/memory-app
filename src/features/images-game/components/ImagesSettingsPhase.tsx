@@ -6,7 +6,8 @@ import { ImagesPreferencesModal } from "./ImagesPreferencesModal";
 
 export const ImagesSettingsPhase = () => {
     const { game, status, error: catalogError, reload } = useGameCatalog("image");
-    const { memorizeTime, setMemorizeTime, startGame, pending, error } = useImagesGameStore();
+    const { memorizeTime, setMemorizeTime, selectedLevel, setSelectedLevel, startGame, pending, error } =
+        useImagesGameStore();
     const [showPreferences, setShowPreferences] = useState(false);
 
     if (!game) {
@@ -23,9 +24,11 @@ export const ImagesSettingsPhase = () => {
                 itemUnit="hình ảnh"
                 game={game}
                 customItemCount={null}
+                selectedLevel={selectedLevel}
+                onSelectLevel={setSelectedLevel}
                 memorizeSec={memorizeSec}
                 onMemorizeSecChange={setMemorizeTime}
-                onStart={() => void startGame(memorizeSec)}
+                onStart={(gameLevel) => void startGame(memorizeSec, gameLevel)}
                 isStarting={pending === "start"}
                 error={error}
                 onOpenPreferences={() => setShowPreferences(true)}

@@ -7,7 +7,8 @@ import { CardPreferencesModal } from "./CardPreferencesModal";
 
 export const SettingsPhase = () => {
   const { game, status, error: catalogError, reload } = useGameCatalog("card");
-  const { memorizeTime, setMemorizeTime, startGame, preferences, pending, error } = useGameStore();
+  const { memorizeTime, setMemorizeTime, selectedLevel, setSelectedLevel, startGame, preferences, pending, error } =
+    useGameStore();
   const [showPreferences, setShowPreferences] = useState(false);
 
   if (!game) {
@@ -28,9 +29,11 @@ export const SettingsPhase = () => {
         itemUnit="thẻ bài"
         game={game}
         customItemCount={customCardCount}
+        selectedLevel={selectedLevel}
+        onSelectLevel={setSelectedLevel}
         memorizeSec={memorizeSec}
         onMemorizeSecChange={setMemorizeTime}
-        onStart={() => void startGame({ memorizeSec, customCardCount })}
+        onStart={(gameLevel) => void startGame({ memorizeSec, customCardCount, gameLevel })}
         isStarting={pending === "start"}
         error={error}
         onOpenPreferences={() => setShowPreferences(true)}

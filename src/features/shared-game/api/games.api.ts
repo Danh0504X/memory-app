@@ -18,7 +18,7 @@ export interface GameCatalogItem {
     recallSec: number;
     passAccuracy: number;
     unlockOn: "pass" | "perfect";
-    // null với khách
+    // null với khách chưa chơi ván nào; khách đã chơi chỉ có level đã mở (giữ tạm), bestLevel luôn null
     player: { unlockedLevel: number; bestLevel: number | null; played: number } | null;
 }
 
@@ -77,13 +77,15 @@ export interface CompletedRound extends RoundBase {
         recallSec: number;
         perItem: { expected: ItemView; answer: ItemView | null; correct: boolean }[];
     };
-    rewards: RoundRewards;
+    rewards: RoundRewards | null;   // null với ván của khách: không có EXP, kỷ lục hay streak
+    unlockedLevel: { before: number; after: number };
 }
 
-// Không gửi gameLevel: backend tự chọn level cao nhất đã mở
 export interface StartRoundRequest {
     gameName: GameName;
     mode?: RoundMode;
+    // Bỏ trống: backend chọn level cao nhất đã mở. Chỉ chọn được level đã mở (chơi lại level cũ)
+    gameLevel?: number;
     itemCount?: number;     // Chỉ dùng khi mode = "custom"
     memorizeSec?: number;
 }

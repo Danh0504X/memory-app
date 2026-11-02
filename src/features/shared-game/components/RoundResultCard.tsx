@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { CompletedRound, RecordKey, RoundResult } from "../api/games.api";
 import { formatSeconds } from "../utils/formatTime";
 
@@ -24,19 +24,25 @@ interface RoundResultCardProps {
 // Kết quả và phần thưởng đều do backend chấm, thẻ này chỉ hiển thị
 export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset }: RoundResultCardProps) => {
     const navigate = useNavigate();
-    const { result, rewards, rules } = round;
+    const location = useLocation();
+    // rewards null: ván của khách, không có EXP, kỷ lục hay chuỗi ngày chơi
+    const { result, rewards, rules, unlockedLevel } = round;
     const meta = RESULT_META[result.result];
     const percentage = Math.round(result.accuracy * 100);
-    const unlocked = rewards.unlockedLevel.after > rewards.unlockedLevel.before;
-    const leveledUp = rewards.userLevel.after > rewards.userLevel.before;
+    const unlocked = unlockedLevel.after > unlockedLevel.before;
+    // Chơi lại cấp đã vượt qua thì không mở thêm cấp nào
+    const isReplay = rules.mode === "level" && rules.gameLevel !== null && rules.gameLevel < unlockedLevel.before;
+    const leveledUp = rewards !== null && rewards.userLevel.after > rewards.userLevel.before;
     const conqueredMax = result.result === "perfect" && rules.mode === "level" && rules.gameLevel === maxLevel;
-    const { breakdown } = rewards.exp;
-    const expLines = [
-        { label: "Kết quả ván", value: breakdown.round },
-        { label: "Hoàn hảo", value: breakdown.perfectBonus },
-        { label: "Ván đầu tiên hôm nay", value: breakdown.firstGameOfDayBonus },
-        { label: "Phá kỷ lục", value: breakdown.newRecordBonus },
-    ].filter((line) => line.value > 0);
+    const breakdown = rewards?.exp.breakdown;
+    const expLines = breakdown
+        ? [
+              { label: "Kết quả ván", value: breakdown.round },
+              { label: "Hoàn hảo", value: breakdown.perfectBonus },
+              { label: "Ván đầu tiên hôm nay", value: breakdown.firstGameOfDayBonus },
+              { label: "Phá kỷ lục", value: breakdown.newRecordBonus },
+          ].filter((line) => line.value > 0)
+        : [];
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,46 +81,62 @@ export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset }: Round
             </div>
 
             {/* Phần thưởng */}
-            <div className="mb-5 rounded-xl bg-[#fff7df] p-4 text-left">
-                <p className="text-center text-2xl font-extrabold text-[#92400e]">+{rewards.exp.total} EXP</p>
-                {expLines.length > 1 && (
-                    <ul className="mt-2 space-y-0.5 text-[12px] text-[#78716c]">
-                        {expLines.map((line) => (
-                            <li key={line.label} className="flex justify-between">
-                                <span>{line.label}</span>
-                                <span className="font-bold">+{line.value}</span>
-                            </li>
+            {rewards ? (
+                <div className="mb-5 rounded-xl bg-[#fff7df] p-4 text-left">
+                    <p className="text-center text-2xl font-extrabold text-[#92400e]">+{rewards.exp.total} EXP</p>
+                    {expLines.length > 1 && (
+                        <ul className="mt-2 space-y-0.5 text-[12px] text-[#78716c]">
+                            {expLines.map((line) => (
+                                <li key={line.label} className="flex justify-between">
+                                    <span>{line.label}</span>
+                                    <span className="font-bold">+{line.value}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                    <div className="mt-3 flex flex-wrap justify-center gap-1.5 text-[12px] font-bold">
+                        {rewards.newRecords.map((record) => (
+                            <span key={record} className="rounded-full bg-[#fef3c7] px-2.5 py-1 text-[#92400e]">
+                                🏅 {RECORD_LABELS[record]}
+                            </span>
                         ))}
-                    </ul>
-                )}
-                <div className="mt-3 flex flex-wrap justify-center gap-1.5 text-[12px] font-bold">
-                    {rewards.newRecords.map((record) => (
-                        <span key={record} className="rounded-full bg-[#fef3c7] px-2.5 py-1 text-[#92400e]">
-                            🏅 {RECORD_LABELS[record]}
-                        </span>
-                    ))}
-                    {leveledUp && (
-                        <span className="rounded-full bg-[#eaf8ef] px-2.5 py-1 text-[#1a7a4a]">
-                            ⭐ Lên cấp tài khoản {rewards.userLevel.after}
-                        </span>
-                    )}
-                    {rewards.streak.currentStreak > 0 && (
-                        <span className="rounded-full bg-[#ffedd5] px-2.5 py-1 text-[#c2410c]">
-                            🔥 Chuỗi {rewards.streak.currentStreak} ngày
-                        </span>
-                    )}
+                        {leveledUp && (
+                            <span className="rounded-full bg-[#eaf8ef] px-2.5 py-1 text-[#1a7a4a]">
+                                ⭐ Lên cấp tài khoản {rewards.userLevel.after}
+                            </span>
+                        )}
+                        {rewards.streak.currentStreak > 0 && (
+                            <span className="rounded-full bg-[#ffedd5] px-2.5 py-1 text-[#c2410c]">
+                                🔥 Chuỗi {rewards.streak.currentStreak} ngày
+                            </span>
+                        )}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <p className="mb-5 rounded-xl bg-[#eff4ff] p-4 text-[13px] leading-relaxed text-[#40493d]">
+                    Bạn đang chơi với tư cách khách nên ván này không tính EXP, kỷ lục hay chuỗi ngày chơi.{" "}
+                    {/* Thoát ván trước khi rời trang, để đăng nhập xong quay lại màn chọn cấp độ */}
+                    <Link
+                        to="/login"
+                        state={{ from: location }}
+                        onClick={onReset}
+                        className="font-bold text-[#2e7d32] hover:underline"
+                    >
+                        Đăng nhập
+                    </Link>{" "}
+                    để lưu tiến độ.
+                </p>
+            )}
 
             {unlocked && (
                 <p className="mb-4 text-sm font-semibold text-[#1a7a4a]">
-                    🎉 Tuyệt vời! Bạn đã mở khoá <strong>Cấp độ {rewards.unlockedLevel.after}</strong>
+                    🎉 Tuyệt vời! Bạn đã mở khoá <strong>Cấp độ {unlockedLevel.after}</strong>
                 </p>
             )}
             {!unlocked && conqueredMax && (
                 <p className="mb-4 text-sm font-semibold text-[#1a7a4a]">🏆 Chúc mừng! Bạn đã chinh phục cấp độ cao nhất!</p>
             )}
-            {result.result !== "perfect" && (
+            {result.result !== "perfect" && !isReplay && (
                 <p className="mb-4 text-sm text-[#77839a]">Nhớ đúng tất cả để mở khoá cấp độ mới. Cố lên nhé!</p>
             )}
 
@@ -129,7 +151,7 @@ export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset }: Round
                     className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[15px] font-bold text-white shadow-md transition hover:shadow-lg active:scale-95 cursor-pointer"
                     style={{ backgroundColor: "#1a7a4a" }}
                 >
-                    {unlocked ? `Chơi Cấp độ ${rewards.unlockedLevel.after}` : "Chơi ván mới"}
+                    {unlocked ? `Chơi Cấp độ ${unlockedLevel.after}` : "Chơi ván mới"}
                 </button>
                 <button
                     type="button"

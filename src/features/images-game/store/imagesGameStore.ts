@@ -18,6 +18,8 @@ export interface ImagesPreferences {
 interface ImagesGameState {
     preferences: ImagesPreferences;
     memorizeTime: number; // giây; phải là một lựa chọn backend cho phép
+    // Level muốn chơi, chỉ giữ trong phiên; null: level cao nhất đã mở (tự lên khi mở level mới)
+    selectedLevel: number | null;
 
     // Ván đang chơi; luật, đề và kết quả đều do backend quyết định
     phase: GamePhase;
@@ -36,7 +38,8 @@ interface ImagesGameState {
 
     setPreferences: (preferences: ImagesPreferences) => void;
     setMemorizeTime: (time: number) => void;
-    startGame: (memorizeSec: number) => Promise<void>;
+    setSelectedLevel: (level: number | null) => void;
+    startGame: (memorizeSec: number, gameLevel: number) => Promise<void>;
     nextMemorizeCard: () => void;
     prevMemorizeCard: () => void;
     finishMemorize: () => Promise<void>;
@@ -72,17 +75,19 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
         prepTime: 20,
     },
     memorizeTime: 60,
+    selectedLevel: null,
     ...EMPTY_ROUND,
     error: null,
 
     setPreferences: (preferences) => set({ preferences }),
     setMemorizeTime: (time) => set({ memorizeTime: time }),
+    setSelectedLevel: (level) => set({ selectedLevel: level }),
 
-    startGame: async (memorizeSec) => {
+    startGame: async (memorizeSec, gameLevel) => {
         if (get().pending) return;
         set({ pending: "start", error: null });
         try {
-            const { data } = await gamesApi.startRound({ gameName: "image", memorizeSec });
+            const { data } = await gamesApi.startRound({ gameName: "image", memorizeSec, gameLevel });
             const { session } = data;
             const images = session.items.map(imageFromView);
             // Nút Bắt đầu vẫn ở trạng thái chờ trong lúc tải ảnh; phần lệch giờ do tải ảnh nằm trong thời gian bù trễ của backend

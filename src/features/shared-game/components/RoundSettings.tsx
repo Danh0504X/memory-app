@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { AlertCircle, LoaderCircle, RefreshCw } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { AlertCircle, LoaderCircle, Lock, RefreshCw } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { GameGuideModal } from "@/features/cards-game/components/GameGuideModal";
 import type { GameCatalogItem } from "../api/games.api";
 import { formatSeconds } from "../utils/formatTime";
@@ -17,9 +19,11 @@ interface RoundSettingsProps {
     itemUnit: string;               // ví dụ: "thẻ bài" hoặc "hình ảnh"
     game: GameCatalogItem;          // Luật chơi và level đã mở, lấy từ backend
     customItemCount: number | null; // null: chơi theo cấp độ; số: ván tự chọn với số lượng này
+    selectedLevel: number | null;   // null: cấp cao nhất đã mở
+    onSelectLevel: (level: number | null) => void;
     memorizeSec: number;
     onMemorizeSecChange: (seconds: number) => void;
-    onStart: () => void;
+    onStart: (gameLevel: number) => void;
     isStarting: boolean;
     error: string | null;
     onOpenPreferences?: () => void;
@@ -30,6 +34,8 @@ export const RoundSettings = ({
     itemUnit,
     game,
     customItemCount,
+    selectedLevel,
+    onSelectLevel,
     memorizeSec,
     onMemorizeSecChange,
     onStart,
@@ -40,14 +46,20 @@ export const RoundSettings = ({
     const [activeTab, setActiveTab] = useState("Tiêu chuẩn");
     const [showLevels, setShowLevels] = useState(false);
     const [showGuide, setShowGuide] = useState(false);
+    const isGuest = !useAuthStore((state) => state.isAuthenticated);
+    const location = useLocation();
 
-    const level = game.player?.unlockedLevel ?? 1;
+    const unlockedLevel = game.player?.unlockedLevel ?? 1;
+    // Cấp đã chọn có thể không còn mở (đổi tài khoản, tiến độ khách hết hạn): quay về cấp cao nhất đã mở
+    const level = selectedLevel !== null && selectedLevel <= unlockedLevel ? selectedLevel : unlockedLevel;
     const isCustom = customItemCount !== null;
+    const isReplay = !isCustom && level < unlockedLevel;
     const itemCount = customItemCount ?? game.levels[level - 1]?.itemCount ?? 0;
     const passPercent = Math.round(game.passAccuracy * 100);
 
     let goal = `Ghi nhớ và chọn đúng tất cả để mở khóa cấp độ ${level + 1} nhé!`;
     if (isCustom) goal = "Đây là ván tự chọn số lượng nên không mở khoá cấp độ mới và không tính kỷ lục.";
+    else if (isReplay) goal = `Bạn đang chơi lại cấp độ đã mở để luyện tập. Chỉ ván ở cấp độ ${unlockedLevel} mới mở khoá cấp tiếp theo.`;
     else if (level >= game.maxLevel) goal = "Bạn đang ở cấp độ cao nhất, hãy thử ghi nhớ nhanh hơn để phá kỷ lục!";
 
     return (
@@ -131,7 +143,7 @@ export const RoundSettings = ({
                                     {isCustom ? "Ván tự chọn" : `Cấp độ ${level}`}
                                 </h2>
                                 <span className="flex items-center gap-1.5 rounded-full bg-[#a3f69c] px-4 py-1 text-[13px] font-bold text-[#002204]">
-                                    {isCustom ? `Đang mở cấp ${level}` : getLevelLabel(level)}
+                                    {isCustom ? `Đang mở cấp ${unlockedLevel}` : getLevelLabel(level)}
                                 </span>
 
                                 <div className="flex items-center gap-1 rounded-full bg-[#dee9fc] px-3 py-1 text-[13px] font-bold text-[#121c2a]">
@@ -153,6 +165,36 @@ export const RoundSettings = ({
                                 </div>
                             </div>
 
+                            {/* Chọn lại được mọi cấp đã mở; cấp chưa mở bị khoá cho tới khi vượt qua cấp trước */}
+                            {!isCustom && (
+                                <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Chọn cấp độ">
+                                    <span className="text-[13px] font-bold text-[#40493d]">Chọn cấp độ:</span>
+                                    {game.levels.map(({ level: option }) => {
+                                        const locked = option > unlockedLevel;
+                                        const active = option === level;
+                                        return (
+                                            <button
+                                                key={option}
+                                                type="button"
+                                                disabled={locked}
+                                                aria-pressed={active}
+                                                aria-label={locked ? `Cấp độ ${option}, chưa mở khoá` : `Cấp độ ${option}`}
+                                                onClick={() => onSelectLevel(option === unlockedLevel ? null : option)}
+                                                className={`flex h-9 min-w-9 items-center justify-center gap-1 rounded-full px-3 text-[13px] font-bold transition ${active
+                                                    ? "bg-[#2e7d32] text-white shadow-sm"
+                                                    : locked
+                                                        ? "cursor-not-allowed bg-[#f2f4f7] text-[#98a2b3]"
+                                                        : "cursor-pointer bg-[#eaf8ef] text-[#1a7a4a] hover:bg-[#cbffc2]"
+                                                    }`}
+                                            >
+                                                {locked && <Lock size={12} aria-hidden="true" />}
+                                                {option}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
                             <p className="max-w-xl text-[18px] leading-[29px] text-[#40493d]">
                                 Bạn có <strong className="font-bold text-[#0d631b]">{itemCount} {itemUnit}</strong> cần ghi nhớ.{" "}
                                 {goal}
@@ -165,6 +207,18 @@ export const RoundSettings = ({
                                 {game.player?.bestLevel && <span>Cấp cao nhất đã hoàn hảo: {game.player.bestLevel}</span>}
                             </div>
 
+                            {isGuest && (
+                                <p className="max-w-xl rounded-2xl bg-[#eff4ff] px-4 py-3 text-[14px] leading-relaxed text-[#40493d]">
+                                    Bạn đang chơi với tư cách khách: cấp độ đã mở chỉ được giữ tạm trên trình duyệt này, không
+                                    nhận EXP và không lưu lịch sử.{" "}
+                                    {/* Truyền trang hiện tại để đăng nhập xong quay lại đúng trò chơi */}
+                                    <Link to="/login" state={{ from: location }} className="font-bold text-[#2e7d32] hover:underline">
+                                        Đăng nhập
+                                    </Link>{" "}
+                                    để lưu tiến độ.
+                                </p>
+                            )}
+
                             {error && (
                                 <p role="alert" className="flex items-center gap-2 text-[14px] font-semibold text-[#b42318]">
                                     <AlertCircle size={16} aria-hidden="true" />
@@ -175,7 +229,7 @@ export const RoundSettings = ({
                             <div className="pt-2">
                                 <button
                                     type="button"
-                                    onClick={onStart}
+                                    onClick={() => onStart(level)}
                                     disabled={isStarting}
                                     className="flex items-center justify-center gap-2 rounded-full bg-[#2e7d32] px-8 py-4 text-[18px] font-bold text-white shadow-[0px_8px_20px_rgba(46,125,50,0.3),0px_4px_0px_#1b5e20] transition hover:bg-[#236527] active:translate-y-1 active:shadow-none disabled:cursor-wait disabled:opacity-80 cursor-pointer"
                                 >

@@ -20,12 +20,15 @@ export interface CardPreferences {
 interface StartOptions {
   memorizeSec: number;
   customCardCount: number | null;
+  gameLevel: number; // bỏ qua khi chơi ván tự chọn
 }
 
 interface GameState {
   // Lưu giữa các lần mở trang
   preferences: CardPreferences;
   memorizeTime: number; // giây; phải là một lựa chọn backend cho phép
+  // Level muốn chơi, chỉ giữ trong phiên; null: level cao nhất đã mở (tự lên khi mở level mới)
+  selectedLevel: number | null;
 
   // Ván đang chơi; luật, đề và kết quả đều do backend quyết định
   phase: GamePhase;
@@ -44,6 +47,7 @@ interface GameState {
 
   setPreferences: (preferences: CardPreferences) => void;
   setMemorizeTime: (time: number) => void;
+  setSelectedLevel: (level: number | null) => void;
   startGame: (options: StartOptions) => Promise<void>;
   nextMemorizeCard: () => void;
   prevMemorizeCard: () => void;
@@ -80,6 +84,7 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       preferences: DEFAULT_PREFERENCES,
       memorizeTime: 120,
+      selectedLevel: null,
       ...EMPTY_ROUND,
       error: null,
 
@@ -91,15 +96,16 @@ export const useGameStore = create<GameState>()(
           },
         }),
       setMemorizeTime: (time) => set({ memorizeTime: time }),
+      setSelectedLevel: (level) => set({ selectedLevel: level }),
 
-      startGame: async ({ memorizeSec, customCardCount }) => {
+      startGame: async ({ memorizeSec, customCardCount, gameLevel }) => {
         if (get().pending) return;
         set({ pending: "start", error: null });
         try {
           const { data } = await gamesApi.startRound({
             gameName: "card",
             memorizeSec,
-            ...(customCardCount !== null && { mode: "custom", itemCount: customCardCount }),
+            ...(customCardCount !== null ? { mode: "custom", itemCount: customCardCount } : { gameLevel }),
           });
           const { session } = data;
           const cards = session.items.map((item) => cardFromCode(item.code));
