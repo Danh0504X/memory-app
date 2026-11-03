@@ -2,7 +2,9 @@ import { useEffect } from "react";
 import { useGameStore } from "../store/gameStore";
 import { usePhaseTimer } from "../hooks/usePhaseTimer";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
+import { RoundStatusBar } from "@/features/shared-game/components/RoundStatusBar";
 import type { Card, Suit } from "../types/types";
+import { isSameCard } from "../utils/cardUtils";
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
     hearts: "♥",
@@ -58,7 +60,7 @@ const DeckTile = ({ card, isUsed, onClick }: { card: Card; isUsed: boolean; onCl
 };
 
 export const RecallPhase = () => {
-    const { cardsToMemorize, userRecall, deckCards, selectedSlotIndex, selectSlot, placeCard, removeCard, finishGame, phaseDeadline, level, resetGame } = useGameStore();
+    const { cardsToMemorize, userRecall, deckCards, selectedSlotIndex, selectSlot, placeCard, removeCard, finishGame, phaseDeadline, level, resetGame, pending, error } = useGameStore();
     const { formattedTime } = usePhaseTimer(phaseDeadline, finishGame);
 
     useEffect(() => {
@@ -79,10 +81,11 @@ export const RecallPhase = () => {
                 level={level}
                 subtitle={`Đã điền ${filledCount}/${cardsToMemorize.length} lá bài`}
                 formattedTime={formattedTime}
-                actionButtonText="✓ Hoàn thành"
+                actionButtonText={pending === "submit" ? "Đang chấm..." : "✓ Hoàn thành"}
                 onAction={finishGame}
                 onReset={resetGame}
             />
+            <RoundStatusBar pendingText={pending === "submit" ? "Đang chấm bài..." : null} error={error} />
 
             <main className="flex flex-1 flex-col gap-6 overflow-auto px-4 py-6">
                 <section className="rounded-2xl border border-[#e0eee6] bg-white p-6 shadow-sm">
@@ -102,10 +105,10 @@ export const RecallPhase = () => {
                 </section>
 
                 <section className="rounded-2xl border border-[#e0eee6] bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-center text-sm font-semibold text-[#77839a] uppercase tracking-wide">Bộ bài (52 lá)</h2>
+                    <h2 className="mb-4 text-center text-sm font-semibold text-[#77839a] uppercase tracking-wide">Bộ bài ({deckCards.length} lá)</h2>
                     <div className="flex flex-wrap justify-center gap-2">
                         {deckCards.map((card) => {
-                            const isUsed = userRecall.some((c) => c?.suit === card.suit && c?.rank === card.rank);
+                            const isUsed = userRecall.some((placed) => isSameCard(placed, card));
                             return (
                                 <DeckTile
                                     key={`deck-${card.suit}-${card.rank}`}

@@ -5,24 +5,10 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import { Header } from '@/components/layout/Header';
-import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/features/auth/store/authStore';
-
-interface UserProfile {
-    username: string | null;
-    fullname: string | null;
-    exp: number | null;
-    streaks: number | null;
-    streakExpired: boolean;
-}
-
-interface ProfileResponse {
-    status: string;
-    data: {
-        profile: UserProfile;
-        unavailableFields: string[];
-    };
-}
+import { GAME_SESSION_RECORDED_EVENT } from '@/features/shared-game/events';
+import { profileApi, type UserProfile } from '../api/profile.api';
+import { formatNumber } from '../utils/profileProgress';
 
 interface ApiError {
     message?: string;
@@ -37,9 +23,6 @@ const updateUsernameSchema = z.object({
 });
 
 type UpdateUsernameForm = z.infer<typeof updateUsernameSchema>;
-
-const formatExperience = (experience: number | null): string =>
-    experience === null ? 'Chưa có dữ liệu' : new Intl.NumberFormat('vi-VN').format(experience);
 
 export const UpdateProfilePage = () => {
     const updateUser = useAuthStore((state) => state.updateUser);
@@ -71,7 +54,7 @@ export const UpdateProfilePage = () => {
             setLoadError(null);
 
             try {
-                const response = await apiClient.get('/profile/') as unknown as ProfileResponse;
+                const response = await profileApi.getProfile();
                 if (!isCurrent || requestId !== latestRequest) return;
 
                 setProfile(response.data.profile);
@@ -87,11 +70,11 @@ export const UpdateProfilePage = () => {
         };
 
         const refreshStatsAfterGame = () => { void loadProfile(false); };
-        window.addEventListener('memio:game-session-recorded', refreshStatsAfterGame);
+        window.addEventListener(GAME_SESSION_RECORDED_EVENT, refreshStatsAfterGame);
         void loadProfile();
         return () => {
             isCurrent = false;
-            window.removeEventListener('memio:game-session-recorded', refreshStatsAfterGame);
+            window.removeEventListener(GAME_SESSION_RECORDED_EVENT, refreshStatsAfterGame);
         };
     }, [reloadKey, reset]);
 
@@ -100,10 +83,7 @@ export const UpdateProfilePage = () => {
         setSuccessMessage(null);
 
         try {
-            const response = await apiClient.patch(
-                '/profile/',
-                { username: values.username },
-            ) as unknown as ProfileResponse;
+            const response = await profileApi.updateUsername(values.username);
             const updatedProfile = response.data.profile;
 
             setProfile(updatedProfile);
@@ -116,14 +96,18 @@ export const UpdateProfilePage = () => {
     };
 
     const usernameField = register('username');
-    const experienceValue = isLoading ? 'Đang tải...' : formatExperience(profile?.exp ?? null);
+    const experienceValue = isLoading
+        ? 'Đang tải...'
+        : profile
+            ? `${formatNumber(profile.exp)} · Cấp ${profile.level.level}`
+            : 'Chưa có dữ liệu';
     const streakValue = isLoading
         ? 'Đang tải...'
-        : profile?.streakExpired
-            ? 'Đã bị gián đoạn chuỗi'
-            : profile?.streaks === null || profile?.streaks === undefined
+        : !profile
             ? 'Chưa có dữ liệu'
-            : `${profile.streaks} ngày liên tiếp`;
+            : profile.streakExpired
+                ? 'Đã bị gián đoạn chuỗi'
+                : `${profile.streaks} ngày liên tiếp`;
 
     return (
         <div className="min-h-screen bg-[#f8fbf8] font-sans text-[#1f2937]">

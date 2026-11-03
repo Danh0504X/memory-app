@@ -1,45 +1,51 @@
 import { useState } from "react";
+import type { GameCatalogItem } from "@/features/shared-game/api/games.api";
+import { formatSeconds } from "@/features/shared-game/utils/formatTime";
 import { useGameStore } from "../store/gameStore";
-import {
-  clampCardCount,
-  getCardCountForLevel,
-  MAX_CARD_COUNT,
-  MIN_CARD_COUNT,
-} from "../utils/cardUtils";
+import { clamp } from "../utils/cardUtils";
 
 interface CardPreferencesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  game: GameCatalogItem; // Giới hạn số lá và thời gian lấy từ backend
 }
 
-export const CardPreferencesModal = ({
-  isOpen,
-  onClose,
-}: CardPreferencesModalProps) => {
-  const {
-    preferences,
-    setPreferences,
-    memorizeTime,
-    setMemorizeTime,
-    recallTime,
-    setRecallTime,
-    level,
-  } = useGameStore();
+const Switch = ({ checked, label, onToggle }: { checked: boolean; label: string; onToggle: () => void }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-label={label}
+    aria-checked={checked}
+    onClick={onToggle}
+    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? "bg-[#2e7d32]" : "bg-[#d1d5db]"}`}
+  >
+    <span
+      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${checked ? "translate-x-5" : "translate-x-0"}`}
+    />
+  </button>
+);
+
+export const CardPreferencesModal = ({ isOpen, onClose, game }: CardPreferencesModalProps) => {
+  const { preferences, setPreferences, memorizeTime, setMemorizeTime } = useGameStore();
+
+  const range = game.customItems;
+  const levelCardCount = game.levels[(game.player?.unlockedLevel ?? 1) - 1]?.itemCount ?? range?.min ?? 1;
+  const fitRange = (count: number) => (range ? clamp(count, range.min, range.max) : count);
 
   const [hideTimer, setHideTimer] = useState(preferences.hideTimer);
-  const [tempCardCount, setTempCardCount] = useState(
-    preferences.cardCount ?? getCardCountForLevel(level),
-  );
+  // Tắt: số lá theo cấp độ hiện tại; bật: ván tự chọn số lá
+  const [useCustomCount, setUseCustomCount] = useState(range !== null && preferences.cardCount !== null);
+  const [tempCardCount, setTempCardCount] = useState(fitRange(preferences.cardCount ?? levelCardCount));
   const [tempGroups, setTempGroups] = useState(preferences.groups || 1);
-  const [tempMemorizeTime, setTempMemorizeTime] = useState(memorizeTime);
-  const [tempRecallTime, setTempRecallTime] = useState(recallTime);
+  const [tempMemorizeTime, setTempMemorizeTime] = useState(
+    game.memorizeSecOptions.includes(memorizeTime) ? memorizeTime : game.defaultMemorizeSec,
+  );
 
   if (!isOpen) return null;
 
   const handleSave = () => {
     setMemorizeTime(tempMemorizeTime);
-    setRecallTime(tempRecallTime);
-    setPreferences({ hideTimer, cardCount: tempCardCount, groups: tempGroups });
+    setPreferences({ hideTimer, cardCount: useCustomCount ? tempCardCount : null, groups: tempGroups });
     onClose();
   };
 
@@ -110,57 +116,72 @@ export const CardPreferencesModal = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4 transition hover:bg-[#f1f7f4]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7ed] text-lg text-[#1a7a4a]">
-                🃏
+          {range && (
+            <div className="space-y-3 rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4 transition hover:bg-[#f1f7f4]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7ed] text-lg text-[#1a7a4a]">
+                    🔢
+                  </div>
+                  <div>
+                    <h4 className="text-[14px] font-bold text-[#1f2937]">
+                      Tự chọn số lượng thẻ
+                    </h4>
+                    <p className="text-[12px] text-[#667085]">
+                      {useCustomCount
+                        ? `Chọn từ ${range.min} đến ${range.max} lá bài`
+                        : `Đang dùng số lá theo cấp độ hiện tại: ${levelCardCount} lá`}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={useCustomCount}
+                  label="Tự chọn số lượng thẻ"
+                  onToggle={() => setUseCustomCount(!useCustomCount)}
+                />
               </div>
-              <div>
-                <h4 className="text-[14px] font-bold text-[#1f2937]">
-                  Số lượng thẻ
-                </h4>
-                <p className="text-[12px] text-[#667085]">
-                  Chọn từ {MIN_CARD_COUNT} đến {MAX_CARD_COUNT} lá bài
-                </p>
-              </div>
+
+              {useCustomCount && (
+                <>
+                  <div className="flex justify-end">
+                    <div className="flex items-center rounded-xl border border-[#d7e5dd] bg-white p-1 shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => setTempCardCount(fitRange(tempCardCount - 1))}
+                        disabled={tempCardCount <= range.min}
+                        aria-label="Giảm số lượng thẻ"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-[#40493d] transition hover:bg-[#e6f7ed] disabled:opacity-30 cursor-pointer"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={range.min}
+                        max={range.max}
+                        step={1}
+                        value={tempCardCount}
+                        onChange={(event) => setTempCardCount(fitRange(Number(event.target.value)))}
+                        aria-label="Số lượng thẻ"
+                        className="w-12 appearance-none bg-transparent text-center text-sm font-bold text-[#1f2937] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setTempCardCount(fitRange(tempCardCount + 1))}
+                        disabled={tempCardCount >= range.max}
+                        aria-label="Tăng số lượng thẻ"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-[#40493d] transition hover:bg-[#e6f7ed] disabled:opacity-30 cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <p className="rounded-xl bg-[#fef7e0] px-3 py-2 text-[12px] font-semibold text-[#92400e]">
+                    Ván tự chọn vẫn được cộng EXP và tính chuỗi ngày chơi, nhưng không mở khoá cấp độ mới và không tính kỷ lục.
+                  </p>
+                </>
+              )}
             </div>
-            <div className="flex items-center rounded-xl border border-[#d7e5dd] bg-white p-1 shadow-xs">
-              <button
-                type="button"
-                onClick={() =>
-                  setTempCardCount(clampCardCount(tempCardCount - 1))
-                }
-                disabled={tempCardCount <= MIN_CARD_COUNT}
-                aria-label="Giảm số lượng thẻ"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-[#40493d] transition hover:bg-[#e6f7ed] disabled:opacity-30 cursor-pointer"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min={MIN_CARD_COUNT}
-                max={MAX_CARD_COUNT}
-                step={1}
-                value={tempCardCount}
-                onChange={(event) =>
-                  setTempCardCount(clampCardCount(Number(event.target.value)))
-                }
-                aria-label="Số lượng thẻ"
-                className="w-12 appearance-none bg-transparent text-center text-sm font-bold text-[#1f2937] outline-none"
-              />
-              <button
-                type="button"
-                onClick={() =>
-                  setTempCardCount(clampCardCount(tempCardCount + 1))
-                }
-                disabled={tempCardCount >= MAX_CARD_COUNT}
-                aria-label="Tăng số lượng thẻ"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-[#40493d] transition hover:bg-[#e6f7ed] disabled:opacity-30 cursor-pointer"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4 transition hover:bg-[#f1f7f4]">
             <div className="flex items-center gap-3">
@@ -178,21 +199,19 @@ export const CardPreferencesModal = ({
             </div>
             <select
               value={tempMemorizeTime}
-              onChange={(event) =>
-                setTempMemorizeTime(Number(event.target.value))
-              }
+              onChange={(event) => setTempMemorizeTime(Number(event.target.value))}
               aria-label="Thời gian ghi nhớ"
               className="rounded-xl border border-[#d7e5dd] bg-white px-3.5 py-2 text-sm font-bold text-[#1f2937] shadow-xs transition focus:border-[#2e7d32] focus:ring-2 focus:ring-[#2e7d32]/20 focus:outline-none cursor-pointer"
             >
-              <option value={30}>30 giây</option>
-              <option value={60}>1 phút</option>
-              <option value={120}>2 phút</option>
-              <option value={180}>3 phút</option>
-              <option value={300}>5 phút</option>
+              {game.memorizeSecOptions.map((seconds) => (
+                <option key={seconds} value={seconds}>
+                  {formatSeconds(seconds)}
+                </option>
+              ))}
             </select>
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4 transition hover:bg-[#f1f7f4]">
+          <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7ed] text-lg text-[#1a7a4a]">
                 🎯
@@ -202,24 +221,13 @@ export const CardPreferencesModal = ({
                   Thời gian hoàn thành
                 </h4>
                 <p className="text-[12px] text-[#667085]">
-                  Thời gian tối đa để xếp lại các lá bài
+                  Thời gian tối đa để xếp lại các lá bài, giống nhau với mọi người chơi
                 </p>
               </div>
             </div>
-            <select
-              value={tempRecallTime}
-              onChange={(event) =>
-                setTempRecallTime(Number(event.target.value))
-              }
-              aria-label="Thời gian hoàn thành"
-              className="rounded-xl border border-[#d7e5dd] bg-white px-3.5 py-2 text-sm font-bold text-[#1f2937] shadow-xs transition focus:border-[#2e7d32] focus:ring-2 focus:ring-[#2e7d32]/20 focus:outline-none cursor-pointer"
-            >
-              <option value={60}>1 phút</option>
-              <option value={120}>2 phút</option>
-              <option value={180}>3 phút</option>
-              <option value={300}>5 phút</option>
-              <option value={600}>10 phút</option>
-            </select>
+            <span className="rounded-xl border border-[#d7e5dd] bg-white px-3.5 py-2 text-sm font-bold text-[#1f2937]">
+              {formatSeconds(game.recallSec)}
+            </span>
           </div>
 
           <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4 transition hover:bg-[#f1f7f4]">
@@ -236,18 +244,7 @@ export const CardPreferencesModal = ({
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-label="Ẩn đồng hồ bấm giờ"
-              aria-checked={hideTimer}
-              onClick={() => setHideTimer(!hideTimer)}
-              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${hideTimer ? "bg-[#2e7d32]" : "bg-[#d1d5db]"}`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${hideTimer ? "translate-x-5" : "translate-x-0"}`}
-              />
-            </button>
+            <Switch checked={hideTimer} label="Ẩn đồng hồ bấm giờ" onToggle={() => setHideTimer(!hideTimer)} />
           </div>
         </div>
 

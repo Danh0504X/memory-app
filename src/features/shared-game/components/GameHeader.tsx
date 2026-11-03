@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 interface GameHeaderProps {
     gameName: string;
-    level: number;
+    level: number | null;   // null với ván tự chọn số lượng
     subtitle: string;
     formattedTime?: string;
     actionButtonText?: ReactNode;
@@ -28,7 +28,7 @@ export const GameHeader = ({
                     <span className="text-[#1a7a4a]">{gameName}</span>
                     <span className="text-[#c8d8d0]">•</span>
                     <span className="rounded-full bg-[#e6f7ed] px-2.5 py-0.5 text-xs font-semibold text-[#1a7a4a]">
-                        Cấp độ {level}
+                        {level === null ? "Tự chọn" : `Cấp độ ${level}`}
                     </span>
                 </div>
                 <p className="mt-0.5 truncate text-xs text-[#77839a]">{subtitle}</p>

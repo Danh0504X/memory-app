@@ -2,39 +2,20 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, Check, Flame, LoaderCircle, Pencil, RefreshCw, Sparkle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
-import { apiClient } from '@/lib/api-client';
-
-interface UserProfile {
-    username: string | null;
-    fullname: string | null;
-    exp: number | null;
-    streaks: number | null;
-    streakExpired: boolean;
-}
-
-interface ProfileResponse {
-    status: string;
-    data: {
-        profile: UserProfile;
-        unavailableFields: string[];
-    };
-}
+import { GAME_SESSION_RECORDED_EVENT } from '@/features/shared-game/events';
+import { profileApi, type UserProfile } from '../api/profile.api';
+import { formatNumber, getLevelProgress } from '../utils/profileProgress';
 
 interface ApiError {
     message?: string;
 }
 
-const formatExperience = (experience: number | null): string =>
-    experience === null ? 'Chưa có dữ liệu' : `${new Intl.NumberFormat('vi-VN').format(experience)} EXP`;
-
-const getExperienceProgress = (experience: number | null) => {
-    if (experience === null) return null;
-
-    const nextMilestone = (Math.floor(experience / 1000) + 1) * 1000;
-    return {
-        remaining: nextMilestone - experience,
-        percentage: (experience / nextMilestone) * 100,
-    };
+// Lời nhắn dưới chuỗi ngày chơi, theo trạng thái backend trả về
+const describeStreak = (profile: UserProfile): string => {
+    if (profile.streakExpired) return 'Ôi, chuỗi ngày chơi của bạn đã bị ngắt mất rồi! Hôm nay mình cùng chơi lại nhé!';
+    if (profile.streaks === 0) return 'Hoàn thành một ván để bắt đầu chuỗi ngày chơi.';
+    if (profile.playedToday) return `Bạn đã hoàn thành game liên tục ${profile.streaks} ngày. Hôm nay bạn đã chơi rồi!`;
+    return `Bạn đã hoàn thành game liên tục ${profile.streaks} ngày. Chơi một ván hôm nay để giữ chuỗi nhé!`;
 };
 
 export const ProfilePage = () => {
@@ -55,7 +36,7 @@ export const ProfilePage = () => {
             setError(null);
 
             try {
-                const response = await apiClient.get('/profile/') as unknown as ProfileResponse;
+                const response = await profileApi.getProfile();
                 if (isCurrent && requestId === latestRequest) {
                     setProfile(response.data.profile);
                     setUnavailableFields(response.data.unavailableFields ?? []);
@@ -69,18 +50,17 @@ export const ProfilePage = () => {
             }
         };
 
-        window.addEventListener('memio:game-session-recorded', loadProfile);
+        window.addEventListener(GAME_SESSION_RECORDED_EVENT, loadProfile);
         void loadProfile();
         return () => {
             isCurrent = false;
-            window.removeEventListener('memio:game-session-recorded', loadProfile);
+            window.removeEventListener(GAME_SESSION_RECORDED_EVENT, loadProfile);
         };
     }, [reloadKey]);
 
     const hasUnavailableStats = unavailableFields.includes('exp') || unavailableFields.includes('streaks');
     const playStreak = profile?.streaks ?? null;
-    const experience = profile?.exp ?? null;
-    const experienceProgress = getExperienceProgress(experience);
+    const levelProgress = profile ? getLevelProgress(profile.level) : null;
 
     return (
         <div className="min-h-screen bg-[#f8fbf8] font-sans text-[#1f2937]">
@@ -158,26 +138,31 @@ export const ProfilePage = () => {
                                     <div className="min-w-0">
                                         <h2 id="experience-title" className="text-[10px] font-semibold tracking-[0.04em] text-[#748277]">KINH NGHIỆM</h2>
                                         <p className="mt-0.5 text-[20px] font-bold leading-tight sm:text-[22px]">
-                                            {isLoading ? 'Đang tải...' : formatExperience(experience)}
+                                            {isLoading ? 'Đang tải...' : profile ? `${formatNumber(profile.exp)} EXP` : 'Chưa có dữ liệu'}
                                         </p>
                                     </div>
+                                    {!isLoading && profile && (
+                                        <span className="ml-auto shrink-0 rounded-full bg-white px-3 py-1 text-[12px] font-bold text-[#2e7d32]">
+                                            Cấp {profile.level.level}
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="mt-4 text-xs text-[#748277]">
-                                    {isLoading ? ' ' : experienceProgress
-                                        ? `Còn ${new Intl.NumberFormat('vi-VN').format(experienceProgress.remaining)} EXP để chạm mốc tiếp theo`
+                                    {isLoading ? ' ' : levelProgress
+                                        ? `Còn ${formatNumber(levelProgress.remaining)} EXP để lên cấp ${levelProgress.nextLevel}`
                                         : 'Dữ liệu kinh nghiệm hiện chưa khả dụng.'}
                                 </p>
                                 <div
                                     className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#e7eadc]"
                                     role="progressbar"
-                                    aria-label="Tiến độ kinh nghiệm tới mốc tiếp theo"
+                                    aria-label="Tiến độ lên cấp tiếp theo"
                                     aria-valuemin={0}
                                     aria-valuemax={100}
-                                    aria-valuenow={experienceProgress ? Math.round(experienceProgress.percentage) : 0}
+                                    aria-valuenow={levelProgress ? Math.round(levelProgress.percentage) : 0}
                                 >
                                     <div
                                         className="h-full rounded-full bg-[#2e7d32] transition-[width]"
-                                        style={{ width: `${experienceProgress?.percentage ?? 0}%` }}
+                                        style={{ width: `${levelProgress?.percentage ?? 0}%` }}
                                     />
                                 </div>
                             </section>
@@ -201,21 +186,24 @@ export const ProfilePage = () => {
                                     </div>
                                 </div>
                                 <p className="mt-4 text-xs text-[#748277]">
-                                    {isLoading ? ' ' : playStreak === null
-                                        ? 'Chưa có dữ liệu về chuỗi ngày chơi.'
-                                        : profile?.streakExpired
-                                            ? 'Ôi, chuỗi ngày chơi của bạn đã bị ngắt mất rồi! Hôm nay mình cùng chơi lại nhé!'
-                                        : playStreak === 0
-                                            ? 'Hoàn thành một ván để bắt đầu chuỗi ngày chơi.'
-                                            : `Bạn đã hoàn thành game liên tục ${playStreak} ngày.`}
+                                    {isLoading ? ' ' : profile ? describeStreak(profile) : 'Chưa có dữ liệu về chuỗi ngày chơi.'}
                                 </p>
-                                {!isLoading && playStreak !== null && (
-                                    <div className="mt-3 flex gap-1.5" aria-label={`${playStreak} ngày chơi liên tiếp`}>
-                                        {Array.from({ length: Math.min(playStreak, 7) }, (_, day) => (
-                                            <span key={day} className="flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#2e7d32] text-white">
-                                                <Check size={10} strokeWidth={3} aria-hidden="true" />
+                                {!isLoading && profile && (
+                                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                                        {profile.streaks > 0 && (
+                                            <div className="flex gap-1.5" aria-label={`${profile.streaks} ngày chơi liên tiếp`}>
+                                                {Array.from({ length: Math.min(profile.streaks, 7) }, (_, day) => (
+                                                    <span key={day} className="flex h-[15px] w-[15px] items-center justify-center rounded-full bg-[#2e7d32] text-white">
+                                                        <Check size={10} strokeWidth={3} aria-hidden="true" />
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {profile.longestStreak > 0 && (
+                                            <span className="text-[11px] font-medium text-[#3d9f83]">
+                                                Chuỗi dài nhất: {profile.longestStreak} ngày
                                             </span>
-                                        ))}
+                                        )}
                                     </div>
                                 )}
                             </section>

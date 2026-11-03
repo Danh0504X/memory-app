@@ -1,35 +1,13 @@
 import { create } from "zustand";
+import { gamesApi, type CompletedRound, type RoundRules } from "@/features/shared-game/api/games.api";
+import { notifyGameSessionRecorded } from "@/features/shared-game/events";
+import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
+import { describeRoundError, isRoundClosed } from "@/features/shared-game/utils/roundErrors";
 import type { ImageCard, GamePhase } from "../types/imageTypes";
-import { generateImageDeck, getImageCountForLevel, shuffle } from "../utils/imageUtils";
+import { imageFromView, preloadImages } from "../utils/imageUtils";
 
-interface ImagesGameState {
-    preferences: ImagesPreferences;
-    phase: GamePhase;
-    level: number;
-    memorizeTime: number;
-    recallTime: number;
-    imagesToMemorize: ImageCard[];
-    userRecall: (ImageCard | null)[];
-    shuffledDeck: ImageCard[];
-    currentMemorizeIndex: number;
-    selectedSlotIndex: number | null;
-    lastPlayTime: number;
-    phaseDeadline: number | null;
-
-    setPreferences: (preferences: ImagesPreferences) => void;
-    setLevel: (level: number) => void;
-    setMemorizeTime: (time: number) => void;
-    setRecallTime: (time: number) => void;
-    startGame: () => void;
-    nextMemorizeCard: () => void;
-    prevMemorizeCard: () => void;
-    finishMemorize: () => void;
-    placeImage: (image: ImageCard) => void;
-    removeImage: (slotIndex: number) => void;
-    selectSlot: (index: number | null) => void;
-    finishGame: () => void;
-    resetGame: () => void;
-}
+// Thao tác đang chờ backend trả lời; dùng để khoá nút và tránh gửi hai lần (bấm nút cùng lúc hết giờ)
+type PendingAction = "start" | "recall" | "submit" | null;
 
 export interface ImagesPreferences {
     groups: number;
@@ -37,43 +15,96 @@ export interface ImagesPreferences {
     prepTime: number;
 }
 
+interface ImagesGameState {
+    preferences: ImagesPreferences;
+    memorizeTime: number; // giây; phải là một lựa chọn backend cho phép
+    // Level muốn chơi, chỉ giữ trong phiên; null: level cao nhất đã mở (tự lên khi mở level mới)
+    selectedLevel: number | null;
+
+    // Ván đang chơi; luật, đề và kết quả đều do backend quyết định
+    phase: GamePhase;
+    sessionId: string | null;
+    rules: RoundRules | null;
+    level: number | null;
+    imagesToMemorize: ImageCard[];
+    userRecall: (ImageCard | null)[];
+    shuffledDeck: ImageCard[];
+    currentMemorizeIndex: number;
+    selectedSlotIndex: number | null;
+    phaseDeadline: number | null;
+    result: CompletedRound | null;
+    pending: PendingAction;
+    error: string | null;
+
+    setPreferences: (preferences: ImagesPreferences) => void;
+    setMemorizeTime: (time: number) => void;
+    setSelectedLevel: (level: number | null) => void;
+    startGame: (memorizeSec: number, gameLevel: number) => Promise<void>;
+    nextMemorizeCard: () => void;
+    prevMemorizeCard: () => void;
+    finishMemorize: () => Promise<void>;
+    placeImage: (image: ImageCard) => void;
+    removeImage: (slotIndex: number) => void;
+    selectSlot: (index: number | null) => void;
+    finishGame: () => Promise<void>;
+    resetGame: () => void;
+}
+
+const EMPTY_ROUND = {
+    phase: "idle" as GamePhase,
+    sessionId: null,
+    rules: null,
+    level: null,
+    imagesToMemorize: [],
+    userRecall: [],
+    shuffledDeck: [],
+    currentMemorizeIndex: 0,
+    selectedSlotIndex: null,
+    phaseDeadline: null,
+    result: null,
+    pending: null,
+};
+
+// Đếm ngược theo đồng hồ máy người chơi, tính từ lúc nhận phản hồi, để không lệch khi giờ máy khác giờ server
+const deadlineIn = (seconds: number) => Date.now() + seconds * 1000;
+
 export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
     preferences: {
         groups: 1,
         hideTimer: false,
         prepTime: 20,
     },
-    phase: "idle",
-    level: 1,
     memorizeTime: 60,
-    recallTime: 180,
-    imagesToMemorize: [],
-    userRecall: [],
-    shuffledDeck: [],
-    currentMemorizeIndex: 0,
-    selectedSlotIndex: null,
-    lastPlayTime: 0,
-    phaseDeadline: null,
+    selectedLevel: null,
+    ...EMPTY_ROUND,
+    error: null,
 
     setPreferences: (preferences) => set({ preferences }),
-    setLevel: (level) => set({ level: Math.max(1, level) }),
     setMemorizeTime: (time) => set({ memorizeTime: time }),
-    setRecallTime: (time) => set({ recallTime: time }),
+    setSelectedLevel: (level) => set({ selectedLevel: level }),
 
-    startGame: () => {
-        const { level, memorizeTime } = get();
-        const count = getImageCountForLevel(level);
-        const selectedImages = generateImageDeck(count);
-
-        set({
-            phase: "memorize",
-            imagesToMemorize: selectedImages,
-            userRecall: Array(count).fill(null),
-            shuffledDeck: shuffle([...selectedImages]),
-            currentMemorizeIndex: 0,
-            selectedSlotIndex: null,
-            phaseDeadline: Date.now() + memorizeTime * 1000,
-        });
+    startGame: async (memorizeSec, gameLevel) => {
+        if (get().pending) return;
+        set({ pending: "start", error: null });
+        try {
+            const { data } = await gamesApi.startRound({ gameName: "image", memorizeSec, gameLevel });
+            const { session } = data;
+            const images = session.items.map(imageFromView);
+            // Nút Bắt đầu vẫn ở trạng thái chờ trong lúc tải ảnh; phần lệch giờ do tải ảnh nằm trong thời gian bù trễ của backend
+            await preloadImages(images.map((image) => image.imageUrl));
+            set({
+                ...EMPTY_ROUND,
+                phase: "memorize",
+                sessionId: session.sessionId,
+                rules: session.rules,
+                level: session.rules.gameLevel,
+                imagesToMemorize: images,
+                userRecall: Array(images.length).fill(null),
+                phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
+            });
+        } catch (error) {
+            set({ pending: null, error: describeRoundError(error, "start") });
+        }
     },
 
     nextMemorizeCard: () => {
@@ -87,60 +118,67 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
     prevMemorizeCard: () => {
         const { currentMemorizeIndex, preferences } = get();
         const step = preferences.groups || 1;
-        if (currentMemorizeIndex - step >= 0) {
-            set({ currentMemorizeIndex: currentMemorizeIndex - step });
-        } else {
-            set({ currentMemorizeIndex: 0 });
-        }
+        set({ currentMemorizeIndex: Math.max(0, currentMemorizeIndex - step) });
     },
 
-    finishMemorize: () => {
-        const { recallTime } = get();
-        set({
-            phase: "recall",
-            selectedSlotIndex: null,
-            phaseDeadline: Date.now() + recallTime * 1000,
-        });
+    // Gọi khi người chơi bấm "đã nhớ xong" hoặc khi hết giờ ghi nhớ; backend trả các ảnh đã xáo thứ tự
+    finishMemorize: async () => {
+        const { sessionId, pending, phase } = get();
+        if (!sessionId || pending || phase !== "memorize") return;
+        set({ pending: "recall", error: null });
+        try {
+            const { data } = await gamesApi.startRecall(sessionId);
+            set({
+                phase: "recall",
+                shuffledDeck: data.session.recallOptions.map(imageFromView),
+                selectedSlotIndex: null,
+                phaseDeadline: deadlineIn(data.session.rules.recallLimitSec),
+                pending: null,
+            });
+        } catch (error) {
+            const message = describeRoundError(error, "recall");
+            set(isRoundClosed(error) ? { ...EMPTY_ROUND, error: message } : { pending: null, error: message });
+        }
     },
 
     placeImage: (image) => {
-        const { userRecall, selectedSlotIndex } = get();
-        const isUsed = userRecall.some((c) => c?.id === image.id);
-        if (isUsed) return;
+        const { userRecall, selectedSlotIndex, pending } = get();
+        if (pending || userRecall.some((placed) => placed?.id === image.id)) return;
 
-        let targetIndex = selectedSlotIndex;
-        if (targetIndex === null) {
-            targetIndex = userRecall.findIndex((c) => c === null);
-        }
+        const targetIndex = selectedSlotIndex ?? userRecall.findIndex((placed) => placed === null);
+        if (targetIndex === -1) return;
 
-        if (targetIndex !== -1 && targetIndex !== null) {
-            const newUserRecall = [...userRecall];
-            newUserRecall[targetIndex] = image;
-            set({ userRecall: newUserRecall, selectedSlotIndex: null });
-        }
+        const newUserRecall = [...userRecall];
+        newUserRecall[targetIndex] = image;
+        set({ userRecall: newUserRecall, selectedSlotIndex: null });
     },
 
     removeImage: (slotIndex) => {
-        const { userRecall } = get();
-        const newUserRecall = [...userRecall];
+        if (get().pending) return;
+        const newUserRecall = [...get().userRecall];
         newUserRecall[slotIndex] = null;
         set({ userRecall: newUserRecall });
     },
 
     selectSlot: (index) => set({ selectedSlotIndex: index }),
-    finishGame: () => {
-        const { phaseDeadline, recallTime } = get();
-        // Tính thời gian thực tế người chơi đã xếp bài (giây)
-        const remainingSeconds = phaseDeadline
-            ? Math.max(0, Math.round((phaseDeadline - Date.now()) / 1000))
-            : 0;
-        const timeSpent = Math.max(1, recallTime - remainingSeconds);
-        set({
-            phase: "result",
-            phaseDeadline: null,
-            lastPlayTime: timeSpent, // ➔ Lưu lại số giây đã chơi
-        });
+
+    // Gọi khi người chơi nộp bài hoặc khi hết giờ nhớ lại; backend chấm và trả phần thưởng
+    finishGame: async () => {
+        const { sessionId, pending, phase, userRecall } = get();
+        if (!sessionId || pending || phase !== "recall") return;
+        set({ pending: "submit", error: null });
+        try {
+            const { data } = await gamesApi.submitRound(sessionId, userRecall.map((image) => image?.id ?? null));
+            set({ phase: "result", result: data.session, phaseDeadline: null, pending: null });
+            // Trang hồ sơ và level đã mở cần số liệu mới sau mỗi ván
+            notifyGameSessionRecorded();
+            void reloadGameCatalog();
+        } catch (error) {
+            const message = describeRoundError(error, "submit");
+            set(isRoundClosed(error) ? { ...EMPTY_ROUND, error: message } : { pending: null, error: message });
+        }
     },
 
-    resetGame: () => set({ phase: "idle", phaseDeadline: null }),
+    // Thoát ván: backend tự xoá ván chưa nộp sau một thời gian
+    resetGame: () => set({ ...EMPTY_ROUND, error: null }),
 }));

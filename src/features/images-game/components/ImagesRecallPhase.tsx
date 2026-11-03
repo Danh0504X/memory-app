@@ -1,6 +1,7 @@
 import { useImagesGameStore } from "../store/imagesGameStore";
 import { usePhaseTimer } from "@/features/cards-game/hooks/usePhaseTimer";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
+import { RoundStatusBar } from "@/features/shared-game/components/RoundStatusBar";
 
 export const ImagesRecallPhase = () => {
     const {
@@ -15,6 +16,8 @@ export const ImagesRecallPhase = () => {
         finishGame,
         resetGame,
         level,
+        pending,
+        error,
     } = useImagesGameStore();
 
     const { formattedTime } = usePhaseTimer(phaseDeadline, finishGame);
@@ -28,11 +31,12 @@ export const ImagesRecallPhase = () => {
                 level={level}
                 subtitle={`Đã điền ${filledCount}/${imagesToMemorize.length} hình ảnh`}
                 formattedTime={formattedTime}
-                actionButtonText="Nộp bài ➔"
+                actionButtonText={pending === "submit" ? "Đang chấm..." : "Nộp bài ➔"}
                 onAction={finishGame}
                 onReset={resetGame}
                 actionButtonColor={isComplete ? "#2e7d32" : "#1a7a4a"}
             />
+            <RoundStatusBar pendingText={pending === "submit" ? "Đang chấm bài..." : null} error={error} />
 
             <main className="flex flex-1 flex-col items-center justify-between gap-8 p-6">
                 <section className="flex w-full max-w-4xl flex-col items-center gap-4 rounded-3xl border border-[#e0eee6] bg-white p-6 shadow-sm">

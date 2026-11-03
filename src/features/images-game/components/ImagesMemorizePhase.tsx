@@ -3,6 +3,7 @@ import { useImagesGameStore } from "../store/imagesGameStore";
 import { usePhaseTimer } from "@/features/cards-game/hooks/usePhaseTimer";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
 import { GameFooterNav } from "@/features/shared-game/components/GameFooterNav";
+import { RoundStatusBar } from "@/features/shared-game/components/RoundStatusBar";
 import type { ImageCard } from "../types/imageTypes";
 
 const THUMB_W = 40;
@@ -136,6 +137,8 @@ export const ImagesMemorizePhase = () => {
         level,
         resetGame,
         preferences, // ➔ Lấy preferences từ store
+        pending,
+        error,
     } = useImagesGameStore();
     const { formattedTime } = usePhaseTimer(phaseDeadline, finishMemorize);
 
@@ -173,9 +176,13 @@ export const ImagesMemorizePhase = () => {
                 level={level}
                 subtitle={`Mục tiêu: Ghi nhớ chuẩn xác thứ tự ${imagesToMemorize.length} hình ảnh`}
                 formattedTime={preferences.hideTimer ? undefined : formattedTime}
-                actionButtonText="✓ Tôi đã nhớ xong"
+                actionButtonText={pending === "recall" ? "Đang chuyển..." : "✓ Tôi đã nhớ xong"}
                 onAction={finishMemorize}
                 onReset={resetGame}
+            />
+            <RoundStatusBar
+                pendingText={pending === "recall" ? "Đang chuẩn bị phần nhớ lại..." : null}
+                error={error}
             />
 
             <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8">

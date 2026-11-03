@@ -1,42 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import type { GameCatalogItem } from "@/features/shared-game/api/games.api";
+import { formatSeconds } from "@/features/shared-game/utils/formatTime";
 import { useImagesGameStore } from "../store/imagesGameStore";
 
 interface ImagesPreferencesModalProps {
     isOpen: boolean;
     onClose: () => void;
+    game: GameCatalogItem; // Các lựa chọn thời gian lấy từ backend
 }
 
-export const ImagesPreferencesModal = ({ isOpen, onClose }: ImagesPreferencesModalProps) => {
+export const ImagesPreferencesModal = ({ isOpen, onClose, game }: ImagesPreferencesModalProps) => {
     const {
         preferences,
         setPreferences,
         memorizeTime,
         setMemorizeTime,
-        recallTime,
-        setRecallTime,
     } = useImagesGameStore();
 
+    // Modal chỉ được render khi mở, nên state luôn khởi tạo từ giá trị hiện tại của store
     const [groups, setGroups] = useState(preferences.groups);
     const [hideTimer, setHideTimer] = useState(preferences.hideTimer);
-    const [tempMemorizeTime, setTempMemorizeTime] = useState(memorizeTime);
-    const [tempRecallTime, setTempRecallTime] = useState(recallTime);
-
-    // Đồng bộ dữ liệu hiện tại khi mở modal
-    useEffect(() => {
-        if (isOpen) {
-            setGroups(preferences.groups);
-            setHideTimer(preferences.hideTimer);
-            setTempMemorizeTime(memorizeTime);
-            setTempRecallTime(recallTime);
-        }
-    }, [isOpen, preferences, memorizeTime, recallTime]);
+    const [tempMemorizeTime, setTempMemorizeTime] = useState(
+        game.memorizeSecOptions.includes(memorizeTime) ? memorizeTime : game.defaultMemorizeSec,
+    );
 
     if (!isOpen) return null;
 
     const handleSave = () => {
         // Lưu thời gian vào Store
         setMemorizeTime(tempMemorizeTime);
-        setRecallTime(tempRecallTime);
 
         // Lưu cài đặt nhóm và ẩn đồng hồ
         setPreferences({
@@ -129,39 +121,32 @@ export const ImagesPreferencesModal = ({ isOpen, onClose }: ImagesPreferencesMod
                         <select
                             value={tempMemorizeTime}
                             onChange={(e) => setTempMemorizeTime(Number(e.target.value))}
+                            aria-label="Thời gian ghi nhớ"
                             className="rounded-xl border border-[#d7e5dd] bg-white px-3.5 py-2 text-sm font-bold text-[#1f2937] shadow-xs transition focus:border-[#2e7d32] focus:ring-2 focus:ring-[#2e7d32]/20 focus:outline-none cursor-pointer"
                         >
-                            <option value={30}>30 giây</option>
-                            <option value={60}>1 phút</option>
-                            <option value={120}>2 phút</option>
-                            <option value={180}>3 phút</option>
-                            <option value={300}>5 phút</option>
+                            {game.memorizeSecOptions.map((seconds) => (
+                                <option key={seconds} value={seconds}>
+                                    {formatSeconds(seconds)}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
-                    {/* 3. Thời gian hoàn thành game (Xếp hình) */}
-                    <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4 transition hover:bg-[#f1f7f4]">
+                    {/* 3. Thời gian hoàn thành game (Xếp hình): cố định theo luật của backend */}
+                    <div className="flex items-center justify-between rounded-2xl border border-[#e0eee6] bg-[#f8faf9] p-4">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7ed] text-lg text-[#1a7a4a]">
                                 🎯
                             </div>
                             <div>
                                 <h4 className="text-[14px] font-bold text-[#1f2937]">Thời gian hoàn thành</h4>
-                                <p className="text-[12px] text-[#667085]">Thời gian tối đa để xếp lại các hình ảnh</p>
+                                <p className="text-[12px] text-[#667085]">Thời gian tối đa để xếp lại các hình ảnh, giống nhau với mọi người chơi</p>
                             </div>
                         </div>
 
-                        <select
-                            value={tempRecallTime}
-                            onChange={(e) => setTempRecallTime(Number(e.target.value))}
-                            className="rounded-xl border border-[#d7e5dd] bg-white px-3.5 py-2 text-sm font-bold text-[#1f2937] shadow-xs transition focus:border-[#2e7d32] focus:ring-2 focus:ring-[#2e7d32]/20 focus:outline-none cursor-pointer"
-                        >
-                            <option value={60}>1 phút</option>
-                            <option value={120}>2 phút</option>
-                            <option value={180}>3 phút</option>
-                            <option value={300}>5 phút</option>
-                            <option value={600}>10 phút</option>
-                        </select>
+                        <span className="rounded-xl border border-[#d7e5dd] bg-white px-3.5 py-2 text-sm font-bold text-[#1f2937]">
+                            {formatSeconds(game.recallSec)}
+                        </span>
                     </div>
 
                     {/* 4. Ẩn đồng hồ bấm giờ */}

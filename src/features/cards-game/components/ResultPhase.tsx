@@ -1,8 +1,8 @@
-import { useRecordGameSession } from "@/features/shared-game/hooks/useRecordGameSession";
-import { useGameStore } from "../store/gameStore";
-import { calculateScore } from "../utils/cardUtils";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
-import { GameResultCard } from "@/features/shared-game/components/GameResultCard";
+import { RoundResultCard } from "@/features/shared-game/components/RoundResultCard";
+import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
+import { useGameStore } from "../store/gameStore";
+import { cardFromCode } from "../utils/cardUtils";
 import type { Card, Suit } from "../types/types";
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -20,7 +20,6 @@ const SUIT_LABELS: Record<Suit, string> = {
 };
 
 const isRed = (suit: Suit) => suit === "hearts" || suit === "diamonds";
-const MAX_LEVEL = 10;
 
 const CardChip = ({ card, isCorrect, showMark = false }: { card: Card | null; isCorrect?: boolean; showMark?: boolean }) => {
     if (!card) {
@@ -47,26 +46,20 @@ const CardChip = ({ card, isCorrect, showMark = false }: { card: Card | null; is
 };
 
 export const ResultPhase = () => {
-    const { cardsToMemorize, userRecall, resetGame, level, setLevel, lastPlayTime } = useGameStore();
+    const { result, resetGame, level } = useGameStore();
+    const { game } = useGameCatalog("card");
 
-    const score = calculateScore(cardsToMemorize, userRecall as Card[]);
-    const isPerfect = score === cardsToMemorize.length;
+    if (!result) return null;
 
-    // Gửi kết quả ngầm qua hook dùng chung
-    useRecordGameSession({
-        gameName: "card",
-        score,
-        time: lastPlayTime,
-    });
-
-    const handlePlayAgain = () => {
-        if (isPerfect && level < MAX_LEVEL) setLevel(level + 1);
-        resetGame();
-    };
+    // Đúng/sai từng vị trí do backend chấm
+    const perItem = result.result.perItem.map((item) => ({
+        expected: cardFromCode(item.expected.code),
+        answer: item.answer ? cardFromCode(item.answer.code) : null,
+        correct: item.correct,
+    }));
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f5faf7] font-sans text-[#202b39]">
-            {/* Header dùng chung */}
             <GameHeader
                 gameName="Thẻ bài"
                 level={level}
@@ -75,36 +68,29 @@ export const ResultPhase = () => {
             />
 
             <main className="flex flex-1 flex-col items-center gap-8 overflow-auto px-4 py-8">
-                {/* Khối Điểm số dùng chung */}
-                <GameResultCard
-                    correctCount={score}
-                    totalCount={cardsToMemorize.length}
-                    level={level}
-                    maxLevel={MAX_LEVEL}
-                    onPlayAgain={handlePlayAgain}
+                <RoundResultCard
+                    round={result}
+                    maxLevel={game?.maxLevel ?? 0}
+                    onPlayAgain={resetGame}
                     onReset={resetGame}
                 />
 
                 <section className="w-full max-w-4xl rounded-2xl border border-[#e0eee6] bg-white p-6 shadow-sm">
                     <h2 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-[#77839a]">Bài làm của bạn</h2>
                     <div className="flex flex-wrap justify-center gap-3">
-                        {userRecall.map((card, index) => {
-                            const correct = cardsToMemorize[index];
-                            const isCorrect = card?.suit === correct.suit && card?.rank === correct.rank;
-                            return (
-                                <div key={`user-${index}`} className="flex flex-col items-center gap-1">
-                                    <span className="text-[10px] text-[#77839a]">{index + 1}</span>
-                                    <CardChip card={card} isCorrect={isCorrect} showMark />
-                                </div>
-                            );
-                        })}
+                        {perItem.map((item, index) => (
+                            <div key={`user-${index}`} className="flex flex-col items-center gap-1">
+                                <span className="text-[10px] text-[#77839a]">{index + 1}</span>
+                                <CardChip card={item.answer} isCorrect={item.correct} showMark />
+                            </div>
+                        ))}
                     </div>
                 </section>
 
                 <section className="w-full max-w-4xl rounded-2xl border border-[#e0eee6] bg-white p-6 shadow-sm">
                     <h2 className="mb-4 text-center text-sm font-semibold uppercase tracking-wide text-[#77839a]">Thứ tự đúng</h2>
                     <div className="flex flex-wrap justify-center gap-3">
-                        {cardsToMemorize.map((card, index) => (
+                        {perItem.map(({ expected: card }, index) => (
                             <div key={`correct-${index}`} className="flex flex-col items-center gap-1">
                                 <span className="text-[10px] text-[#77839a]">{index + 1}</span>
                                 <div className="flex h-16 w-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-[#1a7a4a] bg-[#e6f7ed] text-[11px] font-bold">

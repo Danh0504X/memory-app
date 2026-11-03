@@ -1,44 +1,29 @@
+import type { ItemView } from "@/features/shared-game/api/games.api";
 import type { ImageCard } from "../types/imageTypes";
 
-export const shuffle = <T>(array: T[]): T[] => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
+// Backend gửi mã ảnh kèm đường dẫn; mã được dùng làm id và gửi lại khi nộp bài
+export const imageFromView = (item: ItemView): ImageCard => ({
+    id: item.code,
+    imageUrl: item.imageUrl ?? "",
+});
 
-export const getImageCountForLevel = (level: number): number => {
-  const safeLevel = Math.max(1, Math.min(10, level));
-  return 6 + (safeLevel - 1) * 2;
-};
+// Chờ tối đa vài giây khi mạng chậm để không giữ người chơi ở màn cài đặt quá lâu
+const PRELOAD_TIMEOUT_MS = 3500;
 
-export const generateImageDeck = (count: number): ImageCard[] => {
-  const gameSession = Math.random().toString(36).substring(2, 9);
+// Tải trước ảnh vào cache trình duyệt để ảnh hiện ngay khi vào phase ghi nhớ; ảnh lỗi vẫn bỏ qua để không treo ván
+export const preloadImages = (urls: string[]): Promise<void> => {
+    if (urls.length === 0) return Promise.resolve();
 
-  fetch("https://picsum.photos/seed/1/400/400")
-    .then((response) => {
-      console.log("ABC Fetching image for seed 1, response:", response);
-      if (!response.ok) {
-        throw new Error("Failed to fetch image");
-      }
-      console.log("URL response:", response.url);
-      return response.blob();
-    })
-    .then((blob) => {
-      const imageUrl = URL.createObjectURL(blob);
-      console.log("ABC Fetched image URL:", imageUrl);
-    })
-    .catch((error) => {
-      console.error("Error fetching image:", error);
-    });
+    const loads = urls.map(
+        (url) =>
+            new Promise<void>((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+                img.src = url;
+            }),
+    );
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, PRELOAD_TIMEOUT_MS));
 
-  return Array.from({ length: count }, (_, index) => {
-    const seed = `memio_${gameSession}_${index}`;
-    return {
-      id: `img-${seed}`,
-      imageUrl: `https://picsum.photos/seed/${seed}/400/400`,
-    };
-  });
+    return Promise.race([Promise.all(loads).then(() => undefined), timeout]);
 };
