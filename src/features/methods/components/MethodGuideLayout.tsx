@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 
@@ -25,9 +25,6 @@ export const MethodGuideLayout: React.FC<MethodGuideLayoutProps> = ({
     nextMethodLink,
     nextMethodLabel = "Xem kỹ thuật khác",
 }) => {
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, []);
 
     return (
         <div className="min-h-screen bg-[#F8FBF8] font-sans text-[#1F2937]">

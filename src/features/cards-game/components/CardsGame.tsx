@@ -1,9 +1,11 @@
+import { LoaderCircle } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useGameStore } from "../store/gameStore";
 import { SettingsPhase } from "./SettingsPhase";
 import { MemorizePhase } from "./MemorizePhase";
 import { RecallPhase } from "./RecallPhase";
 import { ResultPhase } from "./ResultPhase";
+import "@/features/shared-game/game.css";
 
 export const CardsGame = () => {
     const isLoading = useAuthStore((state) => state.isLoading);
@@ -11,18 +13,15 @@ export const CardsGame = () => {
 
     // Chờ biết là khách hay đã đăng nhập để tải đúng level đã mở
     if (isLoading) {
-        return <div className="flex min-h-screen items-center justify-center bg-[#f5faf7]">Đang tải...</div>;
+        return (
+            <div className="grid min-h-dvh place-items-center">
+                <LoaderCircle size={28} className="animate-spin text-[var(--color-brand)]" aria-label="Đang tải" />
+            </div>
+        );
     }
 
-    let content = null;
-    if (phase === "idle") content = <SettingsPhase />;
-    else if (phase === "memorize") content = <MemorizePhase />;
-    else if (phase === "recall") content = <RecallPhase />;
-    else if (phase === "result") content = <ResultPhase />;
-
-    return (
-        <div className="min-h-screen bg-[#f5faf7]">
-            {content}
-        </div>
-    );
+    if (phase === "memorize") return <MemorizePhase />;
+    if (phase === "recall") return <RecallPhase />;
+    if (phase === "result") return <ResultPhase />;
+    return <SettingsPhase />;
 };

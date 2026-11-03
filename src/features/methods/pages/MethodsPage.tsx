@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { useHashScroll } from '@/lib/useHashScroll';
 import { useReveal } from '@/lib/useReveal';
 import { MethodChapters } from '../components/MethodChapters';
+import { MethodDoors } from '../components/MethodDoors';
 import { METHODS, type MethodId } from '../methodsData';
 import '../methods.css';
 
@@ -42,32 +43,18 @@ export const MethodsPage = () => {
             <Header />
             <main ref={root}>
                 <section className="methods-hero page-col" aria-labelledby="methods-title">
-                    <div className="methods-hero__copy">
+                    <div className="methods-hero__top">
                         <h1 id="methods-title" className="text-display">
                             <span data-reveal="line"><span>Ba cách</span></span>
                             <span data-reveal="line" style={delay(1)}><span>để nhớ</span></span>
                         </h1>
                         <p className="text-lead" data-reveal style={delay(2)}>
-                            Mỗi cách hợp với một kiểu thông tin. Chọn điều bạn muốn nhớ, Memio chỉ cho bạn cách hợp nhất,
-                            kèm trò thử ngay tại chỗ.
+                            Mỗi cách hợp với một kiểu thông tin. Chọn một việc bạn hay phải nhớ, Memio chỉ cách hợp nhất
+                            và gợi ý dùng ngay.
                         </p>
                     </div>
-
-                    <div className="chooser" data-reveal style={delay(2)}>
-                        <h2 className="chooser__title">Bạn muốn nhớ gì?</h2>
-                        <ul>
-                            {METHODS.map((method) => (
-                                <li key={method.id}>
-                                    <Link to={`#method-${method.id}`} className={`chooser__row chooser__row--${method.tone}`}>
-                                        <span className="chooser__what">{method.goodFor}</span>
-                                        <span className="chooser__how">
-                                            {method.name}
-                                            <ArrowRight size={18} aria-hidden="true" />
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
+                    <div data-reveal style={delay(3)}>
+                        <MethodDoors />
                     </div>
                 </section>
 

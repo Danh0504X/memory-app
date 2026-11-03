@@ -1,18 +1,55 @@
-import { useEffect } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, Flame, Medal, RotateCcw, Star } from "lucide-react";
 import type { CompletedRound, RecordKey, RoundResult } from "../api/games.api";
 import { formatSeconds } from "../utils/formatTime";
 
-const RESULT_META: Record<RoundResult, { label: string; color: string; glow: string }> = {
-    perfect: { label: "Hoàn hảo!", color: "#1a7a4a", glow: "radial-gradient(circle, #a8e0c4, #d4f0e0)" },
-    pass: { label: "Đạt", color: "#2a78d6", glow: "radial-gradient(circle, #bfdbfe, #e0efff)" },
-    fail: { label: "Chưa đạt", color: "#e45454", glow: "radial-gradient(circle, #fca5a5, #fee2e2)" },
+const VERDICTS: Record<RoundResult, string> = {
+    perfect: "Hoàn hảo!",
+    pass: "Đạt rồi!",
+    fail: "Chưa đạt",
 };
 
 const RECORD_LABELS: Record<RecordKey, string> = {
     bestLevel: "Cấp cao nhất mới",
     fastestMemorize: "Ghi nhớ nhanh nhất ở cấp này",
 };
+
+const CONFETTI_COLORS = ["#f4c95d", "#ffffff", "#cdebd6", "#cfe7f3", "#f7dc8e"];
+
+// Vị trí và nhịp rơi tính từ thứ tự mảnh, không ngẫu nhiên, để render luôn giống nhau
+const CONFETTI = Array.from({ length: 36 }, (_, i) => ({
+    "--x": `${(i * 37) % 100}%`,
+    "--c": CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    "--d": `${(i % 9) * 90}ms`,
+    "--t": `${1600 + ((i * 53) % 900)}ms`,
+    "--r": `${((i * 71) % 540) - 270}deg`,
+})) as CSSProperties[];
+
+const prefersReducedMotion = () =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Số đúng đếm dần từ 0 lên
+const useCountUp = (target: number, ms = 800) => {
+    const [value, setValue] = useState(() => (prefersReducedMotion() ? target : 0));
+
+    useEffect(() => {
+        if (prefersReducedMotion()) return;
+        let frame = 0;
+        const start = performance.now();
+        const tick = (now: number) => {
+            const t = Math.min(1, (now - start) / ms);
+            setValue(Math.round(target * (1 - (1 - t) ** 3)));
+            if (t < 1) frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(frame);
+    }, [target, ms]);
+
+    return value;
+};
+
+const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
 interface RoundResultCardProps {
     round: CompletedRound;
@@ -21,28 +58,20 @@ interface RoundResultCardProps {
     onReset: () => void;
 }
 
-// Kết quả và phần thưởng đều do backend chấm, thẻ này chỉ hiển thị
+// Kết quả và phần thưởng đều do backend chấm, bảng điểm này chỉ hiển thị
 export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset }: RoundResultCardProps) => {
     const navigate = useNavigate();
     const location = useLocation();
     // rewards null: ván của khách, không có EXP, kỷ lục hay chuỗi ngày chơi
     const { result, rewards, rules, unlockedLevel } = round;
-    const meta = RESULT_META[result.result];
     const percentage = Math.round(result.accuracy * 100);
+    const shown = useCountUp(result.correctItems);
     const unlocked = unlockedLevel.after > unlockedLevel.before;
     // Chơi lại cấp đã vượt qua thì không mở thêm cấp nào
     const isReplay = rules.mode === "level" && rules.gameLevel !== null && rules.gameLevel < unlockedLevel.before;
     const leveledUp = rewards !== null && rewards.userLevel.after > rewards.userLevel.before;
     const conqueredMax = result.result === "perfect" && rules.mode === "level" && rules.gameLevel === maxLevel;
-    const breakdown = rewards?.exp.breakdown;
-    const expLines = breakdown
-        ? [
-              { label: "Kết quả ván", value: breakdown.round },
-              { label: "Hoàn hảo", value: breakdown.perfectBonus },
-              { label: "Ván đầu tiên hôm nay", value: breakdown.firstGameOfDayBonus },
-              { label: "Phá kỷ lục", value: breakdown.newRecordBonus },
-          ].filter((line) => line.value > 0)
-        : [];
+    const celebrate = result.result !== "fail";
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -52,106 +81,76 @@ export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset }: Round
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onPlayAgain]);
 
+    let line = "Nhớ đúng tất cả để mở khoá cấp độ mới. Thử nối chúng thành một câu chuyện rồi chơi lại nhé.";
+    if (unlocked) line = `Bạn đã mở khoá cấp độ ${unlockedLevel.after}.`;
+    else if (conqueredMax) line = "Bạn đã chinh phục cấp độ cao nhất!";
+    else if (result.result === "perfect" || isReplay) line = "Đúng hết. Thử ghi nhớ nhanh hơn ở lần sau nhé.";
+    else if (result.result === "pass") line = "Đúng hết tất cả mới mở được cấp độ mới. Còn chút nữa thôi!";
+
     return (
-        <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#e0eee6] bg-white p-8 text-center shadow-sm">
-            <div
-                aria-hidden="true"
-                className="pointer-events-none absolute right-0 top-0 h-40 w-40 translate-x-1/3 -translate-y-1/3 rounded-full opacity-40 blur-2xl"
-                style={{ background: meta.glow }}
-            />
-
-            <p className="mb-1 text-sm font-extrabold uppercase tracking-wide" style={{ color: meta.color }}>
-                {meta.label}
-            </p>
-            <div className="mb-1 text-6xl font-extrabold" style={{ color: meta.color }}>
-                {result.correctItems}
-                <span className="text-2xl font-medium text-[#77839a]">/{result.totalItems}</span>
-            </div>
-            <div className="mb-4 text-sm font-semibold text-[#77839a]">
-                Độ chính xác:{" "}
-                <span className="font-extrabold" style={{ color: meta.color }}>
-                    {percentage}%
-                </span>
-            </div>
-            <div className="mb-5 h-2.5 w-full overflow-hidden rounded-full bg-[#e6f7ed]">
-                <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${percentage}%`, backgroundColor: meta.color }}
-                />
-            </div>
-
-            {/* Phần thưởng */}
-            {rewards ? (
-                <div className="mb-5 rounded-xl bg-[#fff7df] p-4 text-left">
-                    <p className="text-center text-2xl font-extrabold text-[#92400e]">+{rewards.exp.total} EXP</p>
-                    {expLines.length > 1 && (
-                        <ul className="mt-2 space-y-0.5 text-[12px] text-[#78716c]">
-                            {expLines.map((line) => (
-                                <li key={line.label} className="flex justify-between">
-                                    <span>{line.label}</span>
-                                    <span className="font-bold">+{line.value}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <div className="mt-3 flex flex-wrap justify-center gap-1.5 text-[12px] font-bold">
-                        {rewards.newRecords.map((record) => (
-                            <span key={record} className="rounded-full bg-[#fef3c7] px-2.5 py-1 text-[#92400e]">
-                                🏅 {RECORD_LABELS[record]}
-                            </span>
-                        ))}
-                        {leveledUp && (
-                            <span className="rounded-full bg-[#eaf8ef] px-2.5 py-1 text-[#1a7a4a]">
-                                ⭐ Lên cấp tài khoản {rewards.userLevel.after}
-                            </span>
-                        )}
-                        {rewards.streak.currentStreak > 0 && (
-                            <span className="rounded-full bg-[#ffedd5] px-2.5 py-1 text-[#c2410c]">
-                                🔥 Chuỗi {rewards.streak.currentStreak} ngày
-                            </span>
-                        )}
-                    </div>
+        <section className="play__table score" data-result={result.result} aria-labelledby="score-verdict">
+            {celebrate && (
+                <div className="confetti" aria-hidden="true">
+                    {CONFETTI.map((style, i) => (
+                        <i key={i} style={style} />
+                    ))}
                 </div>
+            )}
+
+            <h1 id="score-verdict" className="score__verdict" style={rise(0)}>
+                {VERDICTS[result.result]}
+            </h1>
+            <p className="score__count" style={rise(1)}>
+                <span aria-hidden="true">{shown}</span>
+                <small aria-hidden="true"> / {result.totalItems} đúng</small>
+                <span className="sr-only">
+                    Đúng {result.correctItems} trên {result.totalItems}, độ chính xác {percentage}%
+                </span>
+            </p>
+            <div className="score__meter" style={rise(2)} aria-hidden="true">
+                <span style={{ width: `${percentage}%` }} />
+            </div>
+            <p className="score__line" style={rise(3)}>
+                Độ chính xác <strong>{percentage}%</strong>. {line}
+            </p>
+
+            {rewards ? (
+                <ul className="rewards" style={rise(4)} aria-label="Phần thưởng">
+                    <li className="reward reward--exp">+{rewards.exp.total} EXP</li>
+                    {rewards.newRecords.map((record) => (
+                        <li key={record} className="reward">
+                            <Medal size={16} aria-hidden="true" />
+                            {RECORD_LABELS[record]}
+                        </li>
+                    ))}
+                    {leveledUp && (
+                        <li className="reward">
+                            <Star size={16} aria-hidden="true" />
+                            Lên cấp tài khoản {rewards.userLevel.after}
+                        </li>
+                    )}
+                    {rewards.streak.currentStreak > 0 && (
+                        <li className="reward">
+                            <Flame size={16} aria-hidden="true" />
+                            Chuỗi {rewards.streak.currentStreak} ngày
+                        </li>
+                    )}
+                </ul>
             ) : (
-                <p className="mb-5 rounded-xl bg-[#eff4ff] p-4 text-[13px] leading-relaxed text-[#40493d]">
+                <p className="score__note" style={rise(4)}>
                     Bạn đang chơi với tư cách khách nên ván này không tính EXP, kỷ lục hay chuỗi ngày chơi.{" "}
                     {/* Thoát ván trước khi rời trang, để đăng nhập xong quay lại màn chọn cấp độ */}
-                    <Link
-                        to="/login"
-                        state={{ from: location }}
-                        onClick={onReset}
-                        className="font-bold text-[#2e7d32] hover:underline"
-                    >
+                    <Link to="/login" state={{ from: location }} onClick={onReset}>
                         Đăng nhập
                     </Link>{" "}
                     để lưu tiến độ.
                 </p>
             )}
 
-            {unlocked && (
-                <p className="mb-4 text-sm font-semibold text-[#1a7a4a]">
-                    🎉 Tuyệt vời! Bạn đã mở khoá <strong>Cấp độ {unlockedLevel.after}</strong>
-                </p>
-            )}
-            {!unlocked && conqueredMax && (
-                <p className="mb-4 text-sm font-semibold text-[#1a7a4a]">🏆 Chúc mừng! Bạn đã chinh phục cấp độ cao nhất!</p>
-            )}
-            {result.result !== "perfect" && !isReplay && (
-                <p className="mb-4 text-sm text-[#77839a]">Nhớ đúng tất cả để mở khoá cấp độ mới. Cố lên nhé!</p>
-            )}
-
-            <p className="mb-5 text-[12px] text-[#77839a]">
-                Ghi nhớ {formatSeconds(result.memorizeSec)} · Nhớ lại {formatSeconds(result.recallSec)}
-            </p>
-
-            <div className="flex flex-col gap-2.5">
-                <button
-                    type="button"
-                    onClick={onPlayAgain}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[15px] font-bold text-white shadow-md transition hover:shadow-lg active:scale-95 cursor-pointer"
-                    style={{ backgroundColor: "#1a7a4a" }}
-                >
-                    {unlocked ? `Chơi Cấp độ ${unlockedLevel.after}` : "Chơi ván mới"}
+            <div className="score__actions" style={rise(5)}>
+                <button type="button" onClick={onPlayAgain} className="btn btn--sun">
+                    {unlocked ? `Chơi cấp độ ${unlockedLevel.after}` : "Chơi ván mới"}
+                    {unlocked ? <ArrowRight size={18} aria-hidden="true" /> : <RotateCcw size={18} aria-hidden="true" />}
                 </button>
                 <button
                     type="button"
@@ -159,18 +158,16 @@ export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset }: Round
                         onReset();
                         navigate("/games");
                     }}
-                    className="w-full rounded-xl border border-[#e0eee6] bg-white py-2.5 text-sm font-bold text-[#77839a] transition hover:border-[#1a7a4a] hover:text-[#1a7a4a] cursor-pointer"
+                    className="btn btn--on-table"
                 >
-                    Trang chọn trò chơi
+                    Chọn trò khác
                 </button>
             </div>
 
-            <p className="mt-3 text-xs text-[#c8d8d0]">
-                hoặc nhấn{" "}
-                <kbd className="rounded border border-[#e0eee6] bg-[#f5faf7] px-1 py-0.5 font-mono text-[10px] text-[#77839a]">
-                    Enter
-                </kbd>
+            <p className="score__meta" style={rise(6)}>
+                Ghi nhớ {formatSeconds(result.memorizeSec)} · Nhớ lại {formatSeconds(result.recallSec)} · Nhấn Enter để
+                chơi tiếp
             </p>
-        </div>
+        </section>
     );
 };

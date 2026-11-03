@@ -372,66 +372,188 @@
   }
 }
 
-/* Trang Phương pháp: phần đầu với bộ chọn "Bạn muốn nhớ gì?" */
+/* Trang Phương pháp: phần đầu = tiêu đề, hàng ví dụ "Bạn muốn nhớ gì?" và ba cột màu mở rộng khi chọn */
 .methods-hero {
+  padding-block: clamp(24px, 4vw, 56px) clamp(48px, 6vw, 88px);
+}
+
+.methods-hero__top {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: clamp(32px, 5vw, 80px);
+  gap: clamp(24px, 5vw, 80px);
   align-items: end;
-  padding-block: clamp(32px, 5vw, 72px) clamp(48px, 6vw, 88px);
+  margin-bottom: clamp(28px, 3vw, 40px);
 }
 
 .methods-hero h1 {
   margin: 0;
 }
 
-.methods-hero__copy > p {
-  margin: 24px 0 0;
-  max-width: 36ch;
+.methods-hero__top > p {
+  margin: 0;
+  max-width: 40ch;
 }
 
-.chooser__title {
-  margin: 0 0 12px;
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+}
+
+.examples__title {
+  margin: 0;
   font-size: var(--text-lead);
   font-weight: 800;
 }
 
-.chooser ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
+.examples__list {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.chooser__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-  border-left: 6px solid var(--row-tone);
-  border-radius: var(--radius-ui);
+.examples__chip {
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
   background: var(--color-step);
   color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 140ms var(--ease-out);
+}
+
+.examples__chip:active {
+  transform: scale(0.96);
+}
+
+.examples__chip[aria-pressed='true'] {
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .examples__chip[aria-pressed='false']:hover {
+    background: #d6e6da;
+  }
+}
+
+/* Ba cột: cột đang mở giãn rộng (flex-grow), phần gợi ý hiện ra; cột khác thu hẹp nhưng vẫn đọc được tên */
+.doors {
+  display: flex;
+  gap: 12px;
+  height: clamp(320px, 34vw, 400px);
+}
+
+.door {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: 16px;
+  color: var(--color-ink);
   text-decoration: none;
-  transition: background-color 180ms ease, transform 140ms var(--ease-out);
+  overflow: hidden;
+  transition: flex-grow 650ms var(--ease-expo);
 }
 
-.chooser__row--mint { --row-tone: var(--color-mint); }
-.chooser__row--sun { --row-tone: var(--color-sun-field); }
-.chooser__row--sky { --row-tone: var(--color-sky); }
+.door--mint { background: var(--color-mint); }
+.door--sun { background: var(--color-sun-field); }
+.door--sky { background: var(--color-sky); }
 
-.chooser__row:active {
-  transform: scale(0.99);
+.door[data-open='true'] {
+  flex-grow: 2.3;
 }
 
-.chooser__what {
-  font-size: var(--text-body);
+.door__art {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 88px;
+  margin-bottom: auto;
 }
 
-.chooser__how {
+/* Phóng to bằng scale trên lớp bọc, để không đụng chuyển động transform riêng của từng hình */
+.door__item {
+  position: relative;
   flex: none;
+  scale: 0.8;
+  transform-origin: bottom left;
+  transition: scale 500ms var(--ease-expo);
+}
+
+.door[data-open='true'] .door__item {
+  scale: 1;
+}
+
+.door__item img {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+
+.door__digit {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  min-width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-brand);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.door__name {
+  margin-top: 16px;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.door__for {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+}
+
+/* Phần gợi ý giữ bề rộng cố định để chữ không chảy lại liên tục trong lúc cột giãn */
+.door__more {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 100%);
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: opacity 200ms ease, max-height 400ms var(--ease-out), margin-top 400ms var(--ease-out);
+}
+
+.door[data-open='true'] .door__more {
+  max-height: 200px;
+  margin-top: 14px;
+  opacity: 1;
+  transition: opacity 400ms ease 200ms, max-height 500ms var(--ease-out), margin-top 500ms var(--ease-out);
+}
+
+.door__tip {
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+.door__go {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -439,17 +561,56 @@
   font-weight: 700;
 }
 
-.chooser__how svg {
+.door__go svg {
   transition: transform 320ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .chooser__row:hover {
-    background: #d6e6da;
+  .door:hover .door__go svg {
+    transform: translateX(4px);
+  }
+}
+
+.door:focus-visible {
+  outline-offset: 4px;
+}
+
+/* Màn hẹp: ba cột thành ba hàng; hàng đang mở hiện gợi ý */
+@media (max-width: 900px) {
+  .methods-hero__top {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
   }
 
-  .chooser__row:hover .chooser__how svg {
-    transform: translateX(4px);
+  .doors {
+    flex-direction: column;
+    height: auto;
+  }
+
+  /* Xếp dọc: mỗi hàng cao theo nội dung (flex-basis 0 sẽ làm hàng co về 0 khi khung không có chiều cao) */
+  .door,
+  .door[data-open='true'] {
+    flex: none;
+    padding: 18px;
+  }
+
+  .door__art {
+    height: auto;
+    margin-bottom: 0;
+  }
+
+  .door__item,
+  .door[data-open='true'] .door__item {
+    scale: 1;
+  }
+
+  .door__item img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .door__more {
+    width: 100%;
   }
 }
 
@@ -585,20 +746,7 @@
   max-width: 40ch;
 }
 
-@media (max-width: 900px) {
-  .methods-hero {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
-  }
-}
-
 @media (max-width: 560px) {
-  .chooser__row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
   .method-nav__link {
     padding: 0 10px;
     font-size: 14px;

@@ -3,6 +3,7 @@ import { RoundSettings, RoundSettingsStatus } from "@/features/shared-game/compo
 import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { useImagesGameStore } from "../store/imagesGameStore";
 import { ImagesPreferencesModal } from "./ImagesPreferencesModal";
+import { PhotoBack } from "./PhotoTile";
 
 export const ImagesSettingsPhase = () => {
     const { game, status, error: catalogError, reload } = useGameCatalog("image");
@@ -22,6 +23,8 @@ export const ImagesSettingsPhase = () => {
             <RoundSettings
                 title="Hình ảnh"
                 itemUnit="hình ảnh"
+                shortUnit="hình"
+                renderBack={() => <PhotoBack size="sm" />}
                 game={game}
                 customItemCount={null}
                 selectedLevel={selectedLevel}

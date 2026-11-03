@@ -4,6 +4,7 @@ import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { useGameStore } from "../store/gameStore";
 import { clamp } from "../utils/cardUtils";
 import { CardPreferencesModal } from "./CardPreferencesModal";
+import { CardBack } from "./PlayingCard";
 
 export const SettingsPhase = () => {
   const { game, status, error: catalogError, reload } = useGameCatalog("card");
@@ -27,6 +28,8 @@ export const SettingsPhase = () => {
       <RoundSettings
         title="Thẻ bài"
         itemUnit="thẻ bài"
+        shortUnit="lá"
+        renderBack={() => <CardBack size="sm" />}
         game={game}
         customItemCount={customCardCount}
         selectedLevel={selectedLevel}
