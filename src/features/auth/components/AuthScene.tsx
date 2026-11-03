@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type InputHTMLAttributes, type ReactElement, type ReactNode, type Ref } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 import memioLogo from '@/assets/memio/Logo/Memio.svg';
@@ -46,7 +46,9 @@ export const AuthScene = ({
     lead,
     children,
 }: AuthSceneProps): ReactElement => {
-    const [intro] = useState(() => !introPlayed);
+    // Đến từ nút "nở thành thẻ" (state.morph) thì view transition đã lo chuyển động, bỏ qua mở màn
+    const morphed = Boolean((useLocation().state as { morph?: boolean } | null)?.morph);
+    const [intro] = useState(() => !introPlayed && !morphed);
     const wallRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -78,11 +80,11 @@ export const AuthScene = ({
         <main className="auth" data-intro={intro}>
             <header className="auth__bar">
                 <div className="auth__start">
-                    <Link to="/" className="auth-back" aria-label="Quay lại trang chủ">
+                    <Link to="/" viewTransition className="auth-back" aria-label="Quay lại trang chủ">
                         <ArrowLeft size={18} aria-hidden="true" />
                         <span className="auth-back__label">Trang chủ</span>
                     </Link>
-                    <Link to="/" className="auth__mark" aria-label="Memio, về trang chủ">
+                    <Link to="/" viewTransition className="auth__mark" aria-label="Memio, về trang chủ">
                         <img src={memioLogo} alt="" width={147} height={36} />
                     </Link>
                 </div>

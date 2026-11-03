@@ -1,60 +1,47 @@
-@import "@fontsource-variable/geist";
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --memio-body-default-font-family: "Be Vietnam Pro", sans-serif;
-    --memio-primitives-green: #2e7d32;
-    --memio-primitives-hover: #236527;
-    --memio-primitives-ink: #1f2937;
-    --memio-primitives-mint: #eaf8ef;
-    --memio-primitives-muted: #667085;
-    --memio-primitives-border: #e3ebe6;
-    --memio-primitives-page: #f8fbf8;
-    --memio-shadow-soft: 0px 8px 24px 0px rgba(31, 77, 51, 0.08);
+/* Hệ thống thiết kế Memio: một font, năm cỡ chữ, một bộ màu, một bộ đường cong chuyển động */
+@theme {
+  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
 
-    /* Motion system tokens */
-    --memio-duration-fast: 150ms;
-    --memio-duration-base: 250ms;
-    --memio-duration-slow: 350ms;
-    --memio-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  }
+  --color-brand: #2e7d32;
+  --color-brand-deep: #1f5c23;
+  --color-ink: #1f2937;
+  --color-ink-soft: #3d4a5c;
+  --color-wall: #f8fbf8;
+  --color-step: #e6efe8;
+  --color-mint: #cdebd6;
+  --color-sun: #f4c95d;
+  --color-sun-field: #f7dc8e;
+  --color-sky: #cfe7f3;
+
+  /* Năm cỡ chữ cho cả web: tiêu đề lớn, tiêu đề mục, câu dẫn, chữ thường, chữ nhỏ */
+  --text-display: clamp(3rem, 6.6vw, 6rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.04em;
+  --text-display--font-weight: 800;
+  --text-title: clamp(2rem, 4.2vw, 3.5rem);
+  --text-title--line-height: 1.04;
+  --text-title--letter-spacing: -0.03em;
+  --text-title--font-weight: 800;
+  --text-lead: clamp(1.125rem, 1.4vw, 1.3125rem);
+  --text-lead--line-height: 1.5;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.45;
+
+  --radius-ui: 12px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-exit: cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
-/* Hero Carousel Layout */
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-areas:
-    "text"
-    "media"
-    "nav";
-  row-gap: 2rem;
-}
-
-@media (min-width: 768px) {
-  .hero-grid {
-    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "text  media"
-      "nav   media";
-    column-gap: 2.5rem;
-    row-gap: 1.5rem;
-    align-items: center;
-  }
-}
-
-.hero-area-text {
-  grid-area: text;
-}
-
-.hero-area-media {
-  grid-area: media;
-}
-
-.hero-area-nav {
-  grid-area: nav;
+:root {
+  --page-margin: clamp(20px, 5vw, 120px);
+  --page-col: min(calc(100% - 2 * var(--page-margin)), 1200px);
 }
 
 html {
@@ -63,12 +50,169 @@ html {
 }
 
 body {
-  font-family: var(--memio-body-default-font-family);
-  background-color: var(--memio-primitives-page);
-  color: var(--memio-primitives-ink);
+  font-family: var(--font-sans);
+  background-color: var(--color-wall);
+  color: var(--color-ink);
+  overflow-x: clip;
+}
+
+/* Khung nội dung chung: một cặp lề bằng nhau trên mọi trang */
+.page-col {
+  width: var(--page-col);
+  margin-inline: auto;
+}
+
+/* Nút dùng chung: một kiểu bo góc, phản hồi khi rê và khi bấm */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 56px;
+  padding-inline: 28px;
+  border-radius: var(--radius-ui);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out), background-color 180ms ease, color 180ms ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn svg {
+  transition: transform 320ms var(--ease-out);
+}
+
+.btn--brand {
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.btn--sun {
+  background: var(--color-sun);
+  color: var(--color-ink);
+}
+
+.btn--quiet {
+  background: var(--color-step);
+  color: var(--color-brand-deep);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn--brand:hover {
+    background: var(--color-brand-deep);
+  }
+
+  .btn--sun:hover {
+    background: #edb73a;
+  }
+
+  .btn--quiet:hover {
+    background: #d6e6da;
+  }
+
+  .btn:hover svg {
+    transform: translateX(4px);
+  }
+}
+
+/* Link chữ: gạch chân hiện dần khi rê */
+.text-link {
+  color: var(--color-brand);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: color-mix(in oklab, currentColor 30%, transparent);
+  transition: text-decoration-color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .text-link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Hiện dần khi cuộn tới (useReveal gắn .is-in), chỉ ẩn khi có JS và người dùng cho phép chuyển động */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-expo);
+    transition-delay: calc(var(--d, 0) * 80ms);
+  }
+
+  .js [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  .js [data-reveal='line'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .js [data-reveal='line'] > span {
+    display: block;
+    transform: translateY(105%);
+    transition: transform 900ms var(--ease-expo);
+    transition-delay: calc(var(--d, 0) * 90ms);
+  }
+
+  .js [data-reveal='line'].is-in > span {
+    transform: none;
+  }
+}
+
+[data-reveal='line'] {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+/* Chuyển trang (View Transitions): trang cũ mờ nhanh, trang mới trồi lên, header đứng yên */
+::view-transition-old(root) {
+  animation: vt-leave 200ms var(--ease-exit) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-arrive 420ms var(--ease-out) 60ms both;
+}
+
+::view-transition-group(*) {
+  animation-duration: 520ms;
+  animation-timing-function: var(--ease-in-out);
+}
+
+@keyframes vt-leave {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 
   *,
   *::before,
@@ -78,4 +222,193 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Header dùng chung: đứng yên khi chuyển trang, link có gạch chân trượt ra khi rê */
+.site-header {
+  view-transition-name: site-header;
+  transition: background-color 300ms ease;
+}
+
+/* Header lấy màu chương đang cuộn qua (Header.tsx đặt data-tint) */
+.site-header[data-tint='mint'] {
+  background-color: var(--color-mint);
+}
+
+.site-header[data-tint='sun'] {
+  background-color: var(--color-sun-field);
+}
+
+.site-header[data-tint='sky'] {
+  background-color: var(--color-sky);
+}
+
+.nav-link {
+  position: relative;
+  padding-block: 6px;
+  transition: color 180ms ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 320ms var(--ease-out);
+}
+
+.nav-link[aria-current] {
+  color: var(--color-brand-deep);
+}
+
+.nav-link[aria-current]::after {
+  transform: scaleX(1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-link:hover {
+    color: var(--color-brand);
+  }
+
+  .nav-link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+/* Chuyển động riêng của từng hình móc số: mỗi hình cử động đúng tính cách của nó.
+   .is-live chạy một lần khi hình vừa hiện; rê chuột lên hình (hoặc nút chứa nó) để xem lại. */
+.shape {
+  display: block;
+}
+
+.shape[data-motion='wobble'],
+.shape[data-motion='rock'],
+.shape[data-motion='tilt'],
+.shape[data-motion='flicker'] {
+  transform-origin: 50% 90%;
+}
+
+.shape[data-motion='swing'] {
+  transform-origin: 50% 8%;
+}
+
+.shape[data-motion='wobble'] { --shape-motion: shape-wobble; }
+.shape[data-motion='flicker'] { --shape-motion: shape-flicker; }
+.shape[data-motion='glide'] { --shape-motion: shape-glide; }
+.shape[data-motion='flap'] { --shape-motion: shape-flap; }
+.shape[data-motion='rock'] { --shape-motion: shape-rock; }
+.shape[data-motion='swing'] { --shape-motion: shape-swing; }
+.shape[data-motion='spin'] { --shape-motion: shape-spin; }
+.shape[data-motion='tilt'] { --shape-motion: shape-tilt; }
+.shape[data-motion='bob'] { --shape-motion: shape-bob; }
+.shape[data-motion='hop'] { --shape-motion: shape-hop; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .shape.is-live {
+    animation:
+      shape-pop 600ms var(--ease-expo) both,
+      var(--shape-motion) 1100ms var(--ease-out) 250ms both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shape:hover,
+    :hover > .shape {
+      animation: var(--shape-motion) 1000ms var(--ease-out);
+    }
+  }
+}
+
+@keyframes shape-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes shape-wobble {
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(3deg); }
+}
+
+@keyframes shape-flicker {
+  20% { transform: scaleY(1.06) skewX(2deg); }
+  40% { transform: scaleY(0.97) skewX(-2deg); }
+  60% { transform: scaleY(1.04) skewX(1deg); }
+  80% { transform: scaleY(0.99); }
+}
+
+@keyframes shape-glide {
+  40% { transform: translateX(10px) rotate(-3deg); }
+  75% { transform: translateX(-4px) rotate(1deg); }
+}
+
+@keyframes shape-flap {
+  15% { transform: scaleX(0.55); }
+  30% { transform: scaleX(1); }
+  45% { transform: scaleX(0.6); }
+  60% { transform: scaleX(1); }
+}
+
+@keyframes shape-rock {
+  20% { transform: rotate(8deg); }
+  45% { transform: rotate(-7deg); }
+  70% { transform: rotate(4deg); }
+  90% { transform: rotate(-1deg); }
+}
+
+@keyframes shape-swing {
+  20% { transform: rotate(14deg); }
+  45% { transform: rotate(-10deg); }
+  70% { transform: rotate(6deg); }
+  90% { transform: rotate(-2deg); }
+}
+
+@keyframes shape-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shape-tilt {
+  30% { transform: rotate(-8deg); }
+  65% { transform: rotate(6deg); }
+}
+
+@keyframes shape-bob {
+  30% { transform: translateY(-14px); }
+  60% { transform: translateY(0); }
+  80% { transform: translateY(-6px); }
+}
+
+@keyframes shape-hop {
+  35% { transform: translateY(-10px) scaleY(1.04); }
+  70% { transform: translateY(0) scaleY(0.96); }
+}
+
+/* Linh vật Memio chớp mắt mỗi vài giây: chuyển động lặp duy nhất của trang */
+.mascot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mascot svg > path:nth-of-type(3),
+  .mascot svg > path:nth-of-type(4) {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mascot-blink 5.5s ease-in-out infinite;
+  }
+}
+
+@keyframes mascot-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
 }

@@ -5,6 +5,11 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import memioLogo from "@/assets/memio/Logo/Memio.svg";
 
+// Nút đăng nhập/đăng ký mang cùng view-transition-name với tấm vé xanh ở trang auth, nên khi chuyển trang nó "nở" thành tấm vé
+const morphIntoAuthCard = (event: React.MouseEvent<HTMLElement>) => {
+  event.currentTarget.style.setProperty("view-transition-name", "auth-card");
+};
+
 const NAV_LINKS = [
   { label: "Phương pháp", href: "/#methods" },
   { label: "Trò chơi", href: "/games" },
@@ -23,6 +28,38 @@ export const Header = () => {
   const logoutItemRef = useRef<HTMLButtonElement>(null);
 
   const { user, isAuthenticated, logout } = useAuthStore();
+
+  // Trang có các vùng data-tint / data-nav (hiện chỉ trang chủ): header lấy màu chương đang nằm ngay dưới nó
+  // và gạch chân link của vùng đó. Trang không có các vùng này thì header giữ nguyên.
+  const [tint, setTint] = useState<string | null>(null);
+  const [currentNav, setCurrentNav] = useState<string | null>(null);
+
+  useEffect(() => {
+    const zones = [...document.querySelectorAll<HTMLElement>("[data-tint], [data-nav]")];
+    if (!zones.length) return;
+
+    const visible = new Set<HTMLElement>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const zone = entry.target as HTMLElement;
+          if (entry.isIntersecting) visible.add(zone);
+          else visible.delete(zone);
+        }
+        // Lúc nhảy tới neo, chương cũ chỉ còn chạm mép dải nên vẫn bị tính là đang hiện: luôn lấy vùng nằm thấp hơn
+        const lowest = (key: "tint" | "nav") =>
+          [...visible]
+            .filter((zone) => zone.dataset[key])
+            .sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0]?.dataset[key] ?? null;
+        setTint(lowest("tint"));
+        setCurrentNav(lowest("nav"));
+      },
+      // Một dải mỏng ngay dưới header (84px)
+      { rootMargin: "-84px 0px -75% 0px" },
+    );
+    zones.forEach((zone) => observer.observe(zone));
+    return () => observer.disconnect();
+  }, []);
   const navigate = useNavigate();
 
   // Đóng dropdown khi click bên ngoài hoặc bấm phím Escape
@@ -119,14 +156,14 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#F8FBF8]/95 backdrop-blur-md font-sans">
-      <div className="mx-auto flex h-[96px] max-w-[1440px] items-center justify-between px-5 md:px-[120px]">
+    <header className="site-header sticky top-0 z-50 bg-wall" data-tint={tint ?? undefined}>
+      <div className="page-col flex h-[84px] items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 z-50">
+        <Link to="/" viewTransition className="flex items-center gap-3 z-50">
           <img
             src={memioLogo}
             alt="Memio Logo"
-            className="h-[44px] w-auto object-contain"
+            className="h-[40px] w-auto object-contain"
           />
         </Link>
 
@@ -137,7 +174,9 @@ export const Header = () => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="text-[16px] font-medium text-[#1F2937] transition hover:text-[#2E7D32]"
+                viewTransition
+                aria-current={currentNav === link.href ? "location" : undefined}
+                className="nav-link text-body font-medium text-ink"
               >
                 {link.label}
               </Link>
@@ -149,13 +188,19 @@ export const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-[16px] font-medium text-[#1F2937] transition hover:text-[#2E7D32]"
+                  viewTransition
+                  state={{ morph: true }}
+                  onClick={morphIntoAuthCard}
+                  className="nav-link text-body font-medium text-ink"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex h-[56px] items-center justify-center rounded-[16px] bg-[#2E7D32] px-8 text-[16px] font-semibold text-white transition hover:bg-[#236527]"
+                  viewTransition
+                  state={{ morph: true }}
+                  onClick={morphIntoAuthCard}
+                  className="btn btn--brand h-12"
                 >
                   Đăng ký
                 </Link>
@@ -279,12 +324,13 @@ export const Header = () => {
         <div className="flex items-center gap-3 md:hidden">
           <Link
             to="/games"
-            className="inline-flex h-[44px] items-center justify-center rounded-[14px] bg-[#2E7D32] px-5 text-[15px] font-semibold text-white"
+            viewTransition
+            className="btn btn--brand h-11 px-5"
           >
             Bắt đầu
           </Link>
           <button
-            className="flex h-[44px] w-[44px] items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white text-[#1F2937]"
+            className="flex h-11 w-11 items-center justify-center rounded-ui bg-step text-ink transition-transform active:scale-95"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-expanded={isMenuOpen}
             aria-label="Toggle menu"
@@ -296,8 +342,8 @@ export const Header = () => {
         {/* Mobile Nav Overlay */}
         <div
           className={cn(
-            "fixed inset-0 top-[96px] z-40 bg-[#F8FBF8] px-6 py-8 transition-transform duration-300 ease-in-out md:hidden",
-            isMenuOpen ? "translate-x-0" : "translate-x-full",
+            "fixed inset-0 top-[84px] z-40 bg-wall px-6 py-8 transition-[transform,visibility] duration-300 ease-in-out md:hidden",
+            isMenuOpen ? "visible translate-x-0" : "invisible translate-x-full",
           )}
         >
           <nav className="flex flex-col gap-6 text-left">
@@ -305,26 +351,29 @@ export const Header = () => {
               <Link
                 key={link.label}
                 to={link.href}
+                viewTransition
                 onClick={() => setIsMenuOpen(false)}
                 className="text-[18px] font-medium text-[#1F2937]"
               >
                 {link.label}
               </Link>
             ))}
-            <hr className="border-[#E3EBE6]" />
+            <div className="h-2" />
             {!isAuthenticated ? (
               <div className="flex flex-col gap-4 mt-2">
                 <Link
                   to="/login"
+                  viewTransition
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex h-[48px] w-full items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white text-[16px] font-semibold text-[#1F2937]"
+                  className="btn btn--quiet w-full"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
+                  viewTransition
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex h-[48px] w-full items-center justify-center rounded-[14px] bg-[#2E7D32] text-[16px] font-semibold text-white"
+                  className="btn btn--brand w-full"
                 >
                   Đăng ký
                 </Link>
