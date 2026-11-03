@@ -22,20 +22,45 @@ const smooth = (edge0: number, edge1: number, t: number) => {
 
 export type MascotWalker = { walkTo: (island: number) => void; stop: () => void };
 
+// getPointAtLength tốn khoảng 0,3ms mỗi lần. Lấy mẫu đường nét đứt đúng một lần (đường không đổi nên lưu
+// theo thuộc tính d, quay lại trang chủ không phải tính lại), rồi mọi vị trí sau đó chỉ nội suy trên mảng này.
+const SAMPLE_COUNT = 160;
+const routeSamples = new Map<string, { total: number; points: Point[] }>();
+
+const sampleRoute = (route: SVGPathElement) => {
+    const key = route.getAttribute("d") ?? "";
+    let sampled = routeSamples.get(key);
+    if (!sampled) {
+        const total = route.getTotalLength();
+        const points = Array.from({ length: SAMPLE_COUNT + 1 }, (_, k) => {
+            const p = route.getPointAtLength((total * k) / SAMPLE_COUNT);
+            return { x: p.x, y: p.y };
+        });
+        sampled = { total, points };
+        routeSamples.set(key, sampled);
+    }
+    return sampled;
+};
+
 export const createMascotWalker = (route: SVGPathElement, mascot: SVGGElement): MascotWalker => {
-    const total = route.getTotalLength();
-    const pointAt = (s: number): Point => route.getPointAtLength(clamp(s, 0, total));
+    const { total, points } = sampleRoute(route);
+    const step = total / SAMPLE_COUNT;
+    const pointAt = (length: number): Point => {
+        const at = clamp(length, 0, total) / step;
+        const i = Math.min(Math.floor(at), SAMPLE_COUNT - 1);
+        const t = at - i;
+        return { x: points[i].x + (points[i + 1].x - points[i].x) * t, y: points[i].y + (points[i + 1].y - points[i].y) * t };
+    };
 
     // Điểm trên đường gần chỗ đứng của từng đảo nhất. Đường nét đứt hở ở đảo Câu chuyện
     // (đi ra từ mép trên, về tới dưới chân đảo) nên đảo này có thêm lối vào ở cuối đường.
-    const samples = Array.from({ length: 241 }, (_, k) => (total * k) / 240);
-    const nearest = (stand: Point) =>
-        samples.reduce((best, s) => {
-            const p = pointAt(s);
-            return Math.hypot(p.x - stand.x, p.y - stand.y) < Math.hypot(pointAt(best).x - stand.x, pointAt(best).y - stand.y)
-                ? s
-                : best;
-        }, 0);
+    const nearest = (stand: Point) => {
+        let best = 0;
+        points.forEach((p, k) => {
+            if (Math.hypot(p.x - stand.x, p.y - stand.y) < Math.hypot(points[best].x - stand.x, points[best].y - stand.y)) best = k;
+        });
+        return best * step;
+    };
     const docks = STANDS.map((stand, index) => (index === 0 ? [nearest(stand), total] : [nearest(stand)]));
 
     const offsetAt = (s: number, stand: Point): Point => {

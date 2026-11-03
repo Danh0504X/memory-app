@@ -6,9 +6,9 @@ import { createMascotWalker, type MascotWalker } from "./mascotWalk";
 
 // Vùng bấm của từng đảo, tính theo khung 580×456 của SVG
 const ISLANDS = [
-    { word: "câu chuyện", label: "Câu chuyện", target: "#method-story", box: { left: "1.8%", top: "24.5%" } },
-    { word: "con số", label: "Con số", target: "#method-numbers", box: { left: "57.5%", top: "11.4%" } },
-    { word: "không gian", label: "Không gian", target: "#method-loci", box: { left: "43.7%", top: "58.6%" } },
+    { word: "câu chuyện", label: "Câu chuyện", target: "/methods#method-story", box: { left: "1.8%", top: "24.5%" } },
+    { word: "con số", label: "Con số", target: "/methods#method-numbers", box: { left: "57.5%", top: "11.4%" } },
+    { word: "không gian", label: "Không gian", target: "/methods#method-loci", box: { left: "43.7%", top: "58.6%" } },
 ];
 
 const CYCLE_MS = 3200;
@@ -46,16 +46,33 @@ export const HeroSection = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // Linh vật đi bộ dọc đường nét đứt sang đảo đang chọn (mascotWalk.ts)
+    // Linh vật đi bộ dọc đường nét đứt sang đảo đang chọn (mascotWalk.ts).
+    // Việc lấy mẫu đường đi tốn vài chục ms nên để lúc trình duyệt rảnh, sau khi trang đã hiện.
+    const activeNow = useRef(active);
     useEffect(() => {
         const route = art.current?.querySelector<SVGPathElement>("svg > g > path");
         const mascot = art.current?.querySelector<SVGGElement>(".mascot-walk");
         if (!route || !mascot) return;
-        walker.current = createMascotWalker(route, mascot);
-        return () => walker.current?.stop();
+
+        const create = () => {
+            walker.current = createMascotWalker(route, mascot);
+            // Người dùng đã chọn đảo khác trước khi linh vật sẵn sàng: đi tới đó luôn
+            if (activeNow.current !== 0) walker.current.walkTo(activeNow.current);
+        };
+        // Safari cũ chưa có requestIdleCallback: dùng setTimeout thay
+        const hasIdle = typeof window.requestIdleCallback === "function";
+        const handle = hasIdle ? window.requestIdleCallback(create, { timeout: 600 }) : window.setTimeout(create, 200);
+
+        return () => {
+            if (hasIdle) window.cancelIdleCallback(handle);
+            else window.clearTimeout(handle);
+            walker.current?.stop();
+            walker.current = null;
+        };
     }, []);
 
     useEffect(() => {
+        activeNow.current = active;
         walker.current?.walkTo(active);
     }, [active]);
 
@@ -85,9 +102,9 @@ export const HeroSection = () => {
                             Bắt đầu chơi
                             <ArrowRight size={18} aria-hidden="true" />
                         </Link>
-                        <a href="#methods" className="btn btn--quiet">
+                        <Link to="/methods" viewTransition className="btn btn--quiet">
                             Xem ba cách nhớ
-                        </a>
+                        </Link>
                     </div>
                     <ul className="hero__facts">
                         <li>Miễn phí</li>
@@ -108,9 +125,10 @@ export const HeroSection = () => {
                         dangerouslySetInnerHTML={{ __html: ISLANDS_ART }}
                     />
                     {ISLANDS.map((island, index) => (
-                        <a
+                        <Link
                             key={island.word}
-                            href={island.target}
+                            to={island.target}
+                            viewTransition
                             className="islands__hit"
                             style={island.box}
                             aria-label={`${island.label}: xem cách nhớ bằng ${island.word}`}

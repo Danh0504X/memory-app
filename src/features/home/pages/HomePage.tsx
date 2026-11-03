@@ -1,13 +1,14 @@
-import { useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Plus } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Mascot } from "@/components/ui/Mascot";
 import { useReveal } from "@/lib/useReveal";
 import { HeroSection } from "../components/HeroSection";
-import { MethodsSection } from "../components/MethodsSection";
+import { MethodsTeaser } from "../components/MethodsTeaser";
 import { GameIntroSection } from "../components/GameIntroSection";
 import { RollingFigure } from "../components/RollingFigure";
+import "@/features/methods/methods.css";
 import "../home.css";
 
 const parentPoints = [
@@ -99,12 +100,20 @@ export const HomePage = () => {
   const root = useRef<HTMLElement>(null);
   useReveal(root);
 
+  // Link cũ từ trang hướng dẫn (/?method=story#methods) giờ trỏ tới chương tương ứng ở trang Phương pháp
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const method = new URLSearchParams(location.search).get("method");
+    if (method) navigate(`/methods#method-${method}`, { replace: true });
+  }, [location.search, navigate]);
+
   return (
     <div className="min-h-svh">
       <Header />
       <main ref={root}>
         <HeroSection />
-        <MethodsSection />
+        <MethodsTeaser />
         <GameIntroSection />
 
         {/* Dành cho phụ huynh */}

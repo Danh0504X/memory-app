@@ -73,3 +73,30 @@ const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
 });
 
 export const formatDateTime = (date: Date) => dateTimeFormatter.format(date);
+
+// Múi giờ backend dùng để tính chuỗi ngày (memory-be/src/config/progression.ts); timeline cũng trả về giá trị này
+export const PROGRESS_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Khoá ngày dạng YYYY-MM-DD theo múi giờ cho trước
+export const dayKey = (date: Date, timeZone: string) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+
+// count ngày liên tiếp, kết thúc ở hôm nay
+export const lastDays = (count: number, timeZone: string, now = new Date()) =>
+    Array.from({ length: count }, (_, index) => {
+        const date = new Date(now.getTime() - (count - 1 - index) * DAY_MS);
+        return { key: dayKey(date, timeZone), date };
+    });
+
+export const formatWeekday = (date: Date, timeZone: string) =>
+    new Intl.DateTimeFormat('vi-VN', { timeZone, weekday: 'long', day: '2-digit', month: '2-digit' }).format(date);
+
+// "Hôm nay, 15:00" · "Hôm qua, 13:05" · "25/10"
+export const formatWhen = (date: Date, timeZone: string, now = new Date()) => {
+    const time = new Intl.DateTimeFormat('vi-VN', { timeZone, hour: '2-digit', minute: '2-digit' }).format(date);
+    const key = dayKey(date, timeZone);
+    if (key === dayKey(now, timeZone)) return `Hôm nay, ${time}`;
+    if (key === dayKey(new Date(now.getTime() - DAY_MS), timeZone)) return `Hôm qua, ${time}`;
+    return formatDayMonth(date, timeZone);
+};

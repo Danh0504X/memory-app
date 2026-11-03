@@ -4,16 +4,7 @@ import type { GameId } from './types';
 export const GAME_IDS: readonly GameId[] = ['card', 'image'];
 
 // Cặp màu đã kiểm tra khả năng phân biệt cho người mù màu (validate_palette, light)
-export const GAME_META: Record<GameId, { label: string; color: string }> = {
-    card: { label: 'Thẻ bài', color: '#2e7d32' },
-    image: { label: 'Hình ảnh', color: '#2a78d6' },
+export const GAME_META: Record<GameId, { label: string; color: string; unit: string; route: string }> = {
+    card: { label: 'Thẻ bài', color: '#2e7d32', unit: 'lá', route: '/games/cards' },
+    image: { label: 'Hình ảnh', color: '#2a78d6', unit: 'hình', route: '/games/images' },
 };
-
-export const CHART_COLORS = {
-    surface: '#ffffff',
-    grid: '#e8eeea',
-    baseline: '#c9d6ce',
-    hoverWash: '#f3f8f4',
-    axisText: '#667085',
-    ink: '#1f2937',
-} as const;

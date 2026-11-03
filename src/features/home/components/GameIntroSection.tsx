@@ -85,7 +85,7 @@ export const GameIntroSection = () => {
     }[phase];
 
     return (
-        <section className="game" ref={root} aria-labelledby="game-title" data-nav="/games">
+        <section className="game" ref={root} aria-labelledby="game-title">
             <div className="game__inner page-col">
                 <div className="game__copy">
                     <h2 id="game-title" className="text-title">

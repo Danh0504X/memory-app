@@ -16,6 +16,7 @@ import StoryGuidePage from "@/features/methods/pages/StoryGuidePage";
 import NumberShapeGuidePage from "@/features/methods/pages/NumberShapeGuidePage";
 import MemoryPalaceGuidePage from "@/features/methods/pages/MemoryPalaceGuidePage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
+import MethodsPage from "@/features/methods/pages/MethodsPage";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
         element: <DashboardPage />,
       },
     ],
+  },
+  {
+    path: "/methods",
+    element: <MethodsPage />,
   },
   {
     path: "/methods/story-linking",
