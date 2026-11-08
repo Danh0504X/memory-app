@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
-import mascot from '@/assets/memio/mascot.svg';
 import { BlockState } from '@/features/dashboard/components/BlockState';
 import { PeriodStats } from '@/features/dashboard/components/PeriodStats';
 import { DailyMini } from '@/features/daily/components/DailyMini';
@@ -37,7 +36,7 @@ export const TodayPage = () => {
 
             <main className="dash today page-col">
                 <header className="today-hello" data-urgent={hello?.urgent ?? false}>
-                    <img src={mascot} alt="" className="today-hello__mascot" />
+                    <img src="/profile-mascot.svg" alt="" className="today-hello__mascot" />
                     <div>
                         <h1>{hello?.title ?? 'Chào bạn'}</h1>
                         <p>{hello?.line ?? 'Đang tải việc hôm nay…'}</p>
