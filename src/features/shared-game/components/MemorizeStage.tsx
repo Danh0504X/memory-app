@@ -17,6 +17,8 @@ interface MemorizeStageProps<T> {
     renderMini: (item: T, index: number, seen: boolean) => ReactNode;
     miniWidth: number;      // bề rộng một lá trong dải dưới, để cuộn dải theo lá đang xem
     keyOf: (item: T, index: number) => string;
+    // Lá bài, ảnh: nhóm nằm ngang; từ (rộng) thì xếp dọc
+    groupDirection?: 'row' | 'column';
 }
 
 const MINI_GAP = 6;
@@ -35,6 +37,7 @@ export function MemorizeStage<T>({
     renderMini,
     miniWidth,
     keyOf,
+    groupDirection = 'row',
 }: MemorizeStageProps<T>) {
     const end = Math.min(index + groupSize, items.length);
     const stripRef = useRef<ScrollViewInstance>(null);
@@ -74,7 +77,7 @@ export function MemorizeStage<T>({
                     disabled={atEnd}
                     accessibilityRole="button"
                     accessibilityLabel={`Chạm để xem ${unit.toLowerCase()} tiếp theo`}
-                    style={styles.group}
+                    style={[styles.group, { flexDirection: groupDirection }]}
                 >
                     {items.slice(index, end).map((item, offset) => (
                         <View key={keyOf(item, index + offset)} style={styles.item}>

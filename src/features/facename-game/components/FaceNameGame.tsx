@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { BookOpen, Check, Minus, SlidersHorizontal, X } from 'lucide-react-native';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View, type ScrollViewInstance, type TextInputInstance } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +14,7 @@ import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
 import { PhotoBack, PhotoTile } from '@/features/shared-game/components/PhotoTile';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RoundResult } from '@/features/shared-game/components/RoundResult';
+import { useFocusChain } from '@/features/shared-game/hooks/useFocusChain';
 import { usePhaseTimer } from '@/features/shared-game/hooks/usePhaseTimer';
 import { formatSeconds } from '@/features/shared-game/utils/formatTime';
 import { useFaceNameStore } from '../store/faceNameStore';
@@ -259,15 +260,8 @@ function RecallPhase() {
     const { recallPeople, userAnswers, updateAnswer, recallDeadline, submitCurrentRound, isSubmitting, goHome, currentMode, currentLevelId, errorMessage } = useFaceNameStore();
     const { timeLeft } = usePhaseTimer(recallDeadline, submitCurrentRound);
     const { width } = useWindowDimensions();
-    const inputs = useRef<(TextInputInstance | null)[]>([]);
-    const scroll = useRef<ScrollViewInstance>(null);
-    // Vị trí từng thẻ trong vùng cuộn: ô vừa được focus cuộn lên đầu để không bị bàn phím che
-    const gridTop = useRef(0);
-    const cardTops = useRef<number[]>([]);
-    const reveal = (index: number) =>
-        scroll.current?.scrollTo({ y: Math.max(0, gridTop.current + (cardTops.current[index] ?? 0) - spacing.sm), animated: true });
-
     const total = recallPeople.length;
+    const chain = useFocusChain(total);
     const filled = Object.values(userAnswers).filter((value) => value.trim() !== '').length;
     const cardWidth = Math.floor((width - spacing.md * 2 - RECALL_GAP * (RECALL_COLUMNS - 1)) / RECALL_COLUMNS);
     const locked = isSubmitting || timeLeft <= 0;
@@ -286,23 +280,15 @@ function RecallPhase() {
             pendingText={isSubmitting ? 'Đang chấm bài...' : null}
             error={errorMessage ? `${errorMessage} Bấm Nộp bài để thử lại.` : null}
         >
-            <ScrollView ref={scroll} contentContainerStyle={styles.recallList} keyboardShouldPersistTaps="handled">
+            <ScrollView ref={chain.scrollRef} contentContainerStyle={styles.recallList} keyboardShouldPersistTaps="handled">
                 <AppText variant="small" style={styles.recallHint}>Gương mặt đã đổi chỗ. Bạn còn nhớ tên ai?</AppText>
-                <View style={styles.recallGrid} onLayout={(event) => (gridTop.current = event.nativeEvent.layout.y)}>
-                    {recallPeople.map((person, index) => {
-                        const last = index === total - 1;
-                        return (
-                            <View
-                                key={person.id}
-                                style={[styles.recallCard, { width: cardWidth }]}
-                                onLayout={(event) => (cardTops.current[index] = event.nativeEvent.layout.y)}
-                            >
+                <View style={styles.recallGrid} {...chain.containerProps}>
+                    {recallPeople.map((person, index) => (
+                            <View key={person.id} style={[styles.recallCard, { width: cardWidth }]} {...chain.itemProps(index)}>
                                 <AppText variant="small" style={styles.badge}>Người {index + 1}</AppText>
                                 <PhotoTile uri={person.imageUrl} width={cardWidth - 16} label={`Người ${index + 1}`} />
                                 <TextInput
-                                    ref={(input) => {
-                                        inputs.current[index] = input;
-                                    }}
+                                    {...chain.inputProps(index)}
                                     value={userAnswers[person.id] ?? ''}
                                     onChangeText={(text) => updateAnswer(person.id, text)}
                                     editable={!locked}
@@ -315,16 +301,10 @@ function RecallPhase() {
                                     autoComplete="off"
                                     spellCheck={false}
                                     maxLength={50}
-                                    // Bấm "Tiếp" để sang ô sau mà không nộp bài; ô cuối thì đóng bàn phím
-                                    returnKeyType={last ? 'done' : 'next'}
-                                    submitBehavior={last ? 'blurAndSubmit' : 'submit'}
-                                    onSubmitEditing={() => inputs.current[index + 1]?.focus()}
-                                    onFocus={() => reveal(index)}
                                     style={styles.input}
                                 />
                             </View>
-                        );
-                    })}
+                    ))}
                 </View>
             </ScrollView>
         </PlayLayout>

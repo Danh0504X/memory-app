@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Stepper } from '@/components/ui/Stepper';
@@ -22,12 +23,15 @@ interface GameOptionsProps {
         onEnabledChange: (enabled: boolean) => void;
         onCountChange: (count: number) => void;
     };
+    // Tuỳ chọn riêng của trò (vd. ngôn ngữ, thời gian chuẩn bị ở ghi nhớ từ), hiện trước các tuỳ chọn chung
+    children?: ReactNode;
 }
 
 // Tuỳ chọn chung của các trò xem lần lượt rồi xếp lại (thẻ bài, hình ảnh)
-export function GameOptions({ unit, groups, onGroupsChange, hideTimer, onHideTimerChange, custom }: GameOptionsProps) {
+export function GameOptions({ unit, groups, onGroupsChange, hideTimer, onHideTimerChange, custom, children }: GameOptionsProps) {
     return (
         <View style={styles.options}>
+            {children}
             <AppText variant="small" style={styles.title}>Số {unit} mỗi lần xem</AppText>
             <Chips
                 accessibilityLabel={`Số ${unit} mỗi lần xem`}
