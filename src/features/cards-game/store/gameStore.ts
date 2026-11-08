@@ -1,96 +1,127 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { gamesApi, type CompletedRound, type RoundRules } from "@/features/shared-game/api/games.api";
+import { notifyGameSessionRecorded } from "@/features/shared-game/events";
+import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
+import { describeRoundError, isRoundClosed } from "@/features/shared-game/utils/roundErrors";
 import type { Card, GamePhase } from "../types/types";
-import {
-  createDeck,
-  shuffle,
-  getCardCountForLevel,
-  clampCardCount,
-} from "../utils/cardUtils";
+import { cardFromCode, cardToCode, isSameCard } from "../utils/cardUtils";
+
+// Thao tác đang chờ backend trả lời; dùng để khoá nút và tránh gửi hai lần (bấm nút cùng lúc hết giờ)
+type PendingAction = "start" | "recall" | "submit" | null;
+
+export interface CardPreferences {
+  hideTimer: boolean;
+  // null: số lá theo cấp độ; số: ván tự chọn (không mở cấp mới, không tính kỷ lục)
+  cardCount: number | null;
+  groups: number;
+}
+
+interface StartOptions {
+  memorizeSec: number;
+  customCardCount: number | null;
+  gameLevel: number; // bỏ qua khi chơi ván tự chọn
+}
 
 interface GameState {
+  // Lưu giữa các lần mở trang
   preferences: CardPreferences;
+  memorizeTime: number; // giây; phải là một lựa chọn backend cho phép
+  // Level muốn chơi, chỉ giữ trong phiên; null: level cao nhất đã mở (tự lên khi mở level mới)
+  selectedLevel: number | null;
+
+  // Ván đang chơi; luật, đề và kết quả đều do backend quyết định
   phase: GamePhase;
-  level: number;
-  memorizeTime: number; // in seconds
-  recallTime: number; // in seconds
+  sessionId: string | null;
+  rules: RoundRules | null;
+  level: number | null; // level của ván hiện tại, null với ván tự chọn
   cardsToMemorize: Card[];
   userRecall: (Card | null)[];
   deckCards: Card[];
   currentMemorizeIndex: number;
   selectedSlotIndex: number | null;
-  lastPlayTime: number;
   phaseDeadline: number | null;
+  result: CompletedRound | null;
+  pending: PendingAction;
+  error: string | null;
 
-  // Actions
   setPreferences: (preferences: CardPreferences) => void;
-  setLevel: (level: number) => void;
   setMemorizeTime: (time: number) => void;
-  setRecallTime: (time: number) => void;
-  startGame: () => void;
+  setSelectedLevel: (level: number | null) => void;
+  startGame: (options: StartOptions) => Promise<void>;
   nextMemorizeCard: () => void;
   prevMemorizeCard: () => void;
-  finishMemorize: () => void;
+  finishMemorize: () => Promise<void>;
   placeCard: (card: Card) => void;
   removeCard: (slotIndex: number) => void;
   selectSlot: (index: number | null) => void;
-  finishGame: () => void;
+  finishGame: () => Promise<void>;
   resetGame: () => void;
 }
 
-interface CardPreferences {
-  hideTimer: boolean;
-  cardCount: number | null;
-  groups: number;
-}
+const DEFAULT_PREFERENCES: CardPreferences = { hideTimer: false, cardCount: null, groups: 1 };
+
+const EMPTY_ROUND = {
+  phase: "idle" as GamePhase,
+  sessionId: null,
+  rules: null,
+  level: null,
+  cardsToMemorize: [],
+  userRecall: [],
+  deckCards: [],
+  currentMemorizeIndex: 0,
+  selectedSlotIndex: null,
+  phaseDeadline: null,
+  result: null,
+  pending: null,
+};
+
+// Đếm ngược theo đồng hồ máy người chơi, tính từ lúc nhận phản hồi, để không lệch khi giờ máy khác giờ server
+const deadlineIn = (seconds: number) => Date.now() + seconds * 1000;
 
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      preferences: { hideTimer: false, cardCount: null, groups: 1 },
-      phase: "idle",
-      level: 1,
+      preferences: DEFAULT_PREFERENCES,
       memorizeTime: 120,
-      recallTime: 300,
-      cardsToMemorize: [],
-      userRecall: [],
-      deckCards: [],
-      currentMemorizeIndex: 0,
-      selectedSlotIndex: null,
-      lastPlayTime: 0,
-      phaseDeadline: null,
+      selectedLevel: null,
+      ...EMPTY_ROUND,
+      error: null,
 
       setPreferences: (preferences) =>
         set({
           preferences: {
             ...preferences,
-            groups: Math.max(
-              1,
-              Math.min(5, Math.round(preferences.groups || 1)),
-            ),
+            groups: Math.max(1, Math.min(5, Math.round(preferences.groups || 1))),
           },
         }),
-      setLevel: (level) => set({ level: Math.max(1, level) }),
       setMemorizeTime: (time) => set({ memorizeTime: time }),
-      setRecallTime: (time) => set({ recallTime: time }),
+      setSelectedLevel: (level) => set({ selectedLevel: level }),
 
-      startGame: () => {
-        const { level, memorizeTime, preferences } = get();
-        const cardCount = clampCardCount(
-          preferences.cardCount ?? getCardCountForLevel(level),
-        );
-        const deck = shuffle(createDeck());
-        const cardsToMemorize = deck.slice(0, cardCount);
-
-        set({
-          phase: "memorize",
-          cardsToMemorize,
-          currentMemorizeIndex: 0,
-          userRecall: Array(cardCount).fill(null),
-          deckCards: createDeck(), // standard deck
-          selectedSlotIndex: null,
-          phaseDeadline: Date.now() + memorizeTime * 1000,
-        });
+      startGame: async ({ memorizeSec, customCardCount, gameLevel }) => {
+        if (get().pending) return;
+        set({ pending: "start", error: null });
+        try {
+          const { data } = await gamesApi.startRound({
+            gameName: "card",
+            memorizeSec,
+            ...(customCardCount !== null ? { mode: "custom", itemCount: customCardCount } : { gameLevel }),
+          });
+          const { session } = data;
+          const cards = session.items.map((item) => cardFromCode(item.code));
+          set({
+            ...EMPTY_ROUND,
+            phase: "memorize",
+            sessionId: session.sessionId,
+            rules: session.rules,
+            level: session.rules.gameLevel,
+            cardsToMemorize: cards,
+            userRecall: Array(cards.length).fill(null),
+            phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
+          });
+        } catch (error) {
+          set({ pending: null, error: describeRoundError(error, "start") });
+        }
       },
 
       nextMemorizeCard: () => {
@@ -104,51 +135,44 @@ export const useGameStore = create<GameState>()(
       prevMemorizeCard: () => {
         const { currentMemorizeIndex, preferences } = get();
         const step = preferences.groups || 1;
-        if (currentMemorizeIndex - step >= 0) {
-          set({ currentMemorizeIndex: currentMemorizeIndex - step });
-        } else {
-          set({ currentMemorizeIndex: 0 });
-        }
+        set({ currentMemorizeIndex: Math.max(0, currentMemorizeIndex - step) });
       },
 
-      finishMemorize: () => {
-        const { recallTime } = get();
-        set({
-          phase: "recall",
-          selectedSlotIndex: null,
-          phaseDeadline: Date.now() + recallTime * 1000,
-        });
+      // Gọi khi người chơi bấm "đã nhớ xong" hoặc khi hết giờ ghi nhớ
+      finishMemorize: async () => {
+        const { sessionId, pending, phase } = get();
+        if (!sessionId || pending || phase !== "memorize") return;
+        set({ pending: "recall", error: null });
+        try {
+          const { data } = await gamesApi.startRecall(sessionId);
+          set({
+            phase: "recall",
+            deckCards: data.session.recallOptions.map((item) => cardFromCode(item.code)),
+            selectedSlotIndex: null,
+            phaseDeadline: deadlineIn(data.session.rules.recallLimitSec),
+            pending: null,
+          });
+        } catch (error) {
+          const message = describeRoundError(error, "recall");
+          set(isRoundClosed(error) ? { ...EMPTY_ROUND, error: message } : { pending: null, error: message });
+        }
       },
 
       placeCard: (card) => {
-        const { userRecall, selectedSlotIndex } = get();
+        const { userRecall, selectedSlotIndex, pending } = get();
+        if (pending || userRecall.some((placed) => isSameCard(placed, card))) return;
 
-        // Check if card already placed
-        const isCardUsed = userRecall.some(
-          (c) => c?.suit === card.suit && c?.rank === card.rank,
-        );
-        if (isCardUsed) return;
+        const targetIndex = selectedSlotIndex ?? userRecall.findIndex((placed) => placed === null);
+        if (targetIndex === -1) return;
 
-        let targetIndex = selectedSlotIndex;
-
-        if (targetIndex === null) {
-          targetIndex = userRecall.findIndex((c) => c === null);
-        }
-
-        if (targetIndex !== -1 && targetIndex !== null) {
-          const newUserRecall = [...userRecall];
-          newUserRecall[targetIndex] = card;
-
-          set({
-            userRecall: newUserRecall,
-            selectedSlotIndex: null,
-          });
-        }
+        const newUserRecall = [...userRecall];
+        newUserRecall[targetIndex] = card;
+        set({ userRecall: newUserRecall, selectedSlotIndex: null });
       },
 
       removeCard: (slotIndex) => {
-        const { userRecall } = get();
-        const newUserRecall = [...userRecall];
+        if (get().pending) return;
+        const newUserRecall = [...get().userRecall];
         newUserRecall[slotIndex] = null;
         set({ userRecall: newUserRecall });
       },
@@ -158,31 +182,42 @@ export const useGameStore = create<GameState>()(
         set({ selectedSlotIndex: index === selectedSlotIndex ? null : index });
       },
 
-      finishGame: () => {
-        const { phaseDeadline, recallTime } = get();
-        const remainingSeconds = phaseDeadline
-          ? Math.max(0, Math.round((phaseDeadline - Date.now()) / 1000))
-          : 0;
-        const timeSpent = Math.max(1, recallTime - remainingSeconds);
-        set({
-          phase: "result",
-          phaseDeadline: null,
-          lastPlayTime: timeSpent,
-        });
+      // Gọi khi người chơi nộp bài hoặc khi hết giờ nhớ lại; backend chấm và trả phần thưởng
+      finishGame: async () => {
+        const { sessionId, pending, phase, userRecall } = get();
+        if (!sessionId || pending || phase !== "recall") return;
+        set({ pending: "submit", error: null });
+        try {
+          const answers = userRecall.map((card) => (card ? cardToCode(card) : null));
+          const { data } = await gamesApi.submitRound(sessionId, answers);
+          set({ phase: "result", result: data.session, phaseDeadline: null, pending: null });
+          // Trang hồ sơ và level đã mở cần số liệu mới sau mỗi ván
+          notifyGameSessionRecorded();
+          void reloadGameCatalog();
+        } catch (error) {
+          const message = describeRoundError(error, "submit");
+          set(isRoundClosed(error) ? { ...EMPTY_ROUND, error: message } : { pending: null, error: message });
+        }
       },
 
-      resetGame: () =>
-        set({
-          phase: "idle",
-          cardsToMemorize: [],
-          userRecall: [],
-          currentMemorizeIndex: 0,
-          selectedSlotIndex: null,
-          phaseDeadline: null,
-        }),
+      // Thoát ván: backend tự xoá ván chưa nộp sau một thời gian
+      resetGame: () => set({ ...EMPTY_ROUND, error: null }),
     }),
     {
       name: "cards-game-storage",
+      // Chỉ lưu tuỳ chọn; ván đang chơi và level giờ do backend giữ
+      version: 1,
+      partialize: (state) => ({ preferences: state.preferences, memorizeTime: state.memorizeTime }),
+      // Bản cũ lưu cả ván đang chơi và level vào localStorage: chỉ giữ lại tuỳ chọn.
+      // Modal cũ luôn lưu cardCount thành một số nên không phải người chơi chủ động chọn ván tự chọn:
+      // đặt lại về null để không bị kẹt ở chế độ không mở được cấp mới.
+      migrate: (persisted) => {
+        const old = (persisted ?? {}) as Partial<Pick<GameState, "preferences" | "memorizeTime">>;
+        return {
+          preferences: { ...DEFAULT_PREFERENCES, ...old.preferences, cardCount: null },
+          memorizeTime: typeof old.memorizeTime === "number" ? old.memorizeTime : 120,
+        };
+      },
     },
   ),
 );

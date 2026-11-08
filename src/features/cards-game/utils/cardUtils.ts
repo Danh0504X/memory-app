@@ -1,68 +1,35 @@
 import type { Card, Rank, Suit } from "../types/types";
 
-export const MIN_CARD_COUNT = 5;
-export const MAX_CARD_COUNT = 52;
+const RANKS: readonly Rank[] = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
-export const clampCardCount = (count: number): number =>
-  Math.max(MIN_CARD_COUNT, Math.min(MAX_CARD_COUNT, Math.round(count)));
+// Backend mã hoá lá bài thành rank + chữ cái của chất, ví dụ "AS" (át bích), "10H" (10 cơ)
+const SUIT_BY_LETTER: Record<string, Suit> = {
+  H: "hearts",
+  D: "diamonds",
+  C: "clubs",
+  S: "spades",
+};
 
-// User selected cards are compared with the correct cards to calculate the score.
-// The score is the number of correct cards selected by the user.
-export const createDeck = (): Card[] => {
-  const deck: Card[] = [];
-  for (const suit of ["hearts", "diamonds", "clubs", "spades"] as Suit[]) {
-    for (const rank of [
-      "A",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "J",
-      "Q",
-      "K",
-    ] as Rank[]) {
-      deck.push({ suit, rank });
-    }
+const LETTER_BY_SUIT: Record<Suit, string> = {
+  hearts: "H",
+  diamonds: "D",
+  clubs: "C",
+  spades: "S",
+};
+
+export const cardFromCode = (code: string): Card => {
+  const suit = SUIT_BY_LETTER[code.slice(-1)];
+  const rank = code.slice(0, -1) as Rank;
+  if (!suit || !RANKS.includes(rank)) {
+    throw new Error(`Unknown card code "${code}"`);
   }
-  return deck;
+  return { suit, rank };
 };
 
-export const createPokerDeck = createDeck;
+export const cardToCode = (card: Card): string => `${card.rank}${LETTER_BY_SUIT[card.suit]}`;
 
-export const shuffle = <T>(array: T[]): T[] => {
-  const shuffledArray = [...array];
+export const isSameCard = (first: Card | null, second: Card | null): boolean =>
+  !!first && !!second && first.suit === second.suit && first.rank === second.rank;
 
-  for (let index = shuffledArray.length - 1; index > 0; index--) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [shuffledArray[index], shuffledArray[randomIndex]] = [
-      shuffledArray[randomIndex],
-      shuffledArray[index],
-    ];
-  }
-
-  return shuffledArray;
-};
-
-export const calculateScore = (correct: Card[], userAnswer: Card[]): number => {
-  return correct.reduce((score, correctCard, index) => {
-    const answerCard = userAnswer[index];
-    const isCorrect =
-      answerCard?.suit === correctCard.suit &&
-      answerCard?.rank === correctCard.rank;
-
-    return score + Number(isCorrect);
-  }, 0);
-};
-
-export const getCardCountForLevel = (level: number): number => {
-  const safeLevel = Math.max(1, Math.min(10, level));
-  // Level 1 = 4 cards, Level 10 = 52 cards
-  // 48 cards distributed over 9 level steps -> ~5.33 cards per step
-  const count = Math.round(4 + (safeLevel - 1) * (48 / 9));
-  return clampCardCount(count);
-};
+export const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, Math.round(value)));

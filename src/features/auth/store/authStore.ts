@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { setSessionHandlers } from '@/lib/api-client';
+import { clearQueries } from '@/lib/queryCache';
 import { authApi } from '@/features/auth/api/auth.api';
 import type { User } from '@/types/auth.types';
 
@@ -38,7 +39,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         set((state) => (state.user ? { user: { ...state.user, ...changes } } : {}));
     },
 
+    // Xoá cả dữ liệu đã lưu đệm (hồ sơ, tiến độ) để người đăng nhập sau không thấy dữ liệu của người trước
     clearSession: () => {
+        clearQueries();
         set({ user: null, isAuthenticated: false, isLoading: false });
     },
 

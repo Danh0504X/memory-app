@@ -1,335 +1,145 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
+import islandsSvg from "@/assets/memio/B · Hero/Ba đảo ghi nhớ.svg?raw";
+import { createMascotWalker, type MascotWalker } from "./mascotWalk";
 
-interface SlideData {
-    id: number;
-    title: React.ReactNode;
-    description: string;
-    primaryBtnText: string;
-    primaryBtnLink?: string;
-    primaryBtnHref?: string;
-    secondaryBtnText?: string;
-    secondaryBtnHref?: string;
-}
-
-const SLIDES: SlideData[] = [
-    {
-        id: 0,
-        title: (
-            <>
-                <span className="text-[#2E7D32]">Học cách ghi nhớ,</span>
-                <br />
-                bắt đầu từ một trò chơi.
-            </>
-        ),
-        description:
-            "Cùng Memio biến những điều cần nhớ thành câu chuyện, hình ảnh và những chuyến khám phá. Tìm hiểu từng cách, rồi tự mình thử sức.",
-        primaryBtnText: "Bắt đầu khám phá",
-        primaryBtnLink: "/games",
-        secondaryBtnText: "Xem 3 cách ghi nhớ",
-        secondaryBtnHref: "#methods",
-    },
-    {
-        id: 1,
-        title: (
-            <>
-                <span className="text-[#2E7D32]">Một chú mèo, một</span>
-                <br />
-                <span className="text-[#2E7D32]">chiếc ô...</span>
-                <br />
-                thành cả câu chuyện!
-            </>
-        ),
-        description:
-            "Những hình ảnh rời rạc có thể nối thành một chuyến phiêu lưu do bạn nghĩ ra. Cùng thử kể chuyện để nhớ lại từng hình nhé.",
-        primaryBtnText: "Thử nối câu chuyện",
-        primaryBtnHref: "#methods",
-    },
-    {
-        id: 2,
-        title: (
-            <>
-                <span className="text-[#2E7D32]">Bạn có thể nhớ</span>
-                <br />
-                những lá bài
-                <br />
-                theo cách nào?
-            </>
-        ),
-        description:
-            "Quan sát, tạo liên kết rồi thử xếp lại. Bắt đầu với một dãy ngắn và khám phá cách ghi nhớ phù hợp với mình.",
-        primaryBtnText: "Khám phá trò chơi",
-        primaryBtnLink: "/games",
-    },
+// Vùng bấm của từng đảo, tính theo khung 580×456 của SVG
+const ISLANDS = [
+    { word: "câu chuyện", label: "Câu chuyện", target: "/methods#method-story", box: { left: "1.8%", top: "24.5%" } },
+    { word: "con số", label: "Con số", target: "/methods#method-numbers", box: { left: "57.5%", top: "11.4%" } },
+    { word: "không gian", label: "Không gian", target: "/methods#method-loci", box: { left: "43.7%", top: "58.6%" } },
 ];
 
+const CYCLE_MS = 3200;
+
+// Linh vật vốn nằm trong nhóm của đảo Câu chuyện (8 path bắt đầu bằng đôi chân).
+// Tách nó ra thành nhóm riêng ở cuối SVG, ngoài vùng clip-path, để nó đi được sang đảo khác
+// mà không bị cắt khi qua đỉnh vòng cung; file SVG gốc giữ nguyên.
+const ISLANDS_ART = (() => {
+    const lines = islandsSvg.split(/\r?\n/);
+    const start = lines.findIndex((line) => line.includes("M44.0178 199.769L37.1821 207.971L44.0178"));
+    if (start < 0) return islandsSvg;
+    const mascot = lines.splice(start, 8);
+    const close = lines.findLastIndex((line) => line.trim() === "</svg>");
+    lines.splice(close, 0, `<g class="mascot-walk"><g class="mascot-body">${mascot.join("")}</g></g>`);
+    return lines.join("\n");
+})();
+
 export const HeroSection = () => {
-    const [activeSlide, setActiveSlide] = useState(0);
+    const [active, setActive] = useState(0);
+    const paused = useRef(false);
+    const art = useRef<HTMLDivElement>(null);
+    const walker = useRef<MascotWalker | null>(null);
 
-    const prevSlide = () => {
-        setActiveSlide((prev) => (prev === 0 ? SLIDES.length - 1 : prev - 1));
-    };
+    // Tự giới thiệu đủ ba đảo đúng một vòng rồi dừng ở đảo đầu (nội dung tự chạy không kéo dài mãi);
+    // tạm ngưng khi người dùng đang rê/chọn hoặc tab bị ẩn, bỏ hẳn khi tắt chuyển động
+    useEffect(() => {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        let steps = 0;
+        const timer = setInterval(() => {
+            if (paused.current || document.visibilityState !== "visible") return;
+            steps += 1;
+            setActive(steps % ISLANDS.length);
+            if (steps >= ISLANDS.length) clearInterval(timer);
+        }, CYCLE_MS);
+        return () => clearInterval(timer);
+    }, []);
 
-    const nextSlide = () => {
-        setActiveSlide((prev) => (prev === SLIDES.length - 1 ? 0 : prev + 1));
+    // Linh vật đi bộ dọc đường nét đứt sang đảo đang chọn (mascotWalk.ts).
+    // Việc lấy mẫu đường đi tốn vài chục ms nên để lúc trình duyệt rảnh, sau khi trang đã hiện.
+    const activeNow = useRef(active);
+    useEffect(() => {
+        const route = art.current?.querySelector<SVGPathElement>("svg > g > path");
+        const mascot = art.current?.querySelector<SVGGElement>(".mascot-walk");
+        if (!route || !mascot) return;
+
+        const create = () => {
+            walker.current = createMascotWalker(route, mascot);
+            // Người dùng đã chọn đảo khác trước khi linh vật sẵn sàng: đi tới đó luôn
+            if (activeNow.current !== 0) walker.current.walkTo(activeNow.current);
+        };
+        // Safari cũ chưa có requestIdleCallback: dùng setTimeout thay
+        const hasIdle = typeof window.requestIdleCallback === "function";
+        const handle = hasIdle ? window.requestIdleCallback(create, { timeout: 600 }) : window.setTimeout(create, 200);
+
+        return () => {
+            if (hasIdle) window.cancelIdleCallback(handle);
+            else window.clearTimeout(handle);
+            walker.current?.stop();
+            walker.current = null;
+        };
+    }, []);
+
+    useEffect(() => {
+        activeNow.current = active;
+        walker.current?.walkTo(active);
+    }, [active]);
+
+    const select = (index: number) => {
+        paused.current = true;
+        setActive(index);
     };
 
     return (
-        <section className="relative overflow-hidden bg-[#F8FBF8] pt-6 pb-14 md:pt-10 md:pb-20">
-            <div className="mx-auto max-w-[1200px] px-5 md:px-0">
-                {/* 
-                  Unified Hero Grid:
-                  - On desktop: Column 1 has text on top and nav below; Column 2 has media spanning rows.
-                  - On mobile: Stacked in 3 rows: text, media, nav.
-                  - All 3 slides stack inside text and media cells (col-start-1 row-start-1) so their
-                    reserved bounding boxes are fixed to the tallest slide, completely locking nav coordinates.
-                */}
-                <div className="hero-grid w-full items-center">
-                    {/* Vùng nội dung slide: Text (Title, Description, CTA) */}
-                    <div className="hero-area-text z-10 w-full max-w-[560px] grid grid-cols-1">
-                        {SLIDES.map((slide, idx) => {
-                            const isActive = activeSlide === idx;
-
-                            return (
-                                <div
-                                    key={slide.id}
-                                    className={cn(
-                                        "col-start-1 row-start-1 flex flex-col items-start text-left w-full",
-                                        isActive
-                                            ? "opacity-100 z-10 pointer-events-auto transition-opacity duration-300 ease-out"
-                                            : "opacity-0 z-0 pointer-events-none transition-opacity duration-150 ease-in"
-                                    )}
-                                    aria-hidden={!isActive}
-                                    inert={!isActive ? true : undefined}
-                                >
-                                    <h1 className="text-[32px] sm:text-[38px] md:text-[54px] font-bold leading-[1.15] tracking-tight text-[#1F2937]">
-                                        {slide.title}
-                                    </h1>
-
-                                    <p className="mt-4 md:mt-5 text-[15px] leading-[1.65] text-[#5F6B7A] md:text-[16px]">
-                                        {slide.description}
-                                    </p>
-
-                                    <div className="mt-7 flex w-full flex-col gap-3.5 sm:w-auto sm:flex-row sm:items-center">
-                                        {slide.primaryBtnLink ? (
-                                            <Link
-                                                to={slide.primaryBtnLink}
-                                                tabIndex={isActive ? 0 : -1}
-                                                className="flex h-[52px] items-center justify-center rounded-[14px] bg-[#2E7D32] px-8 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-[#236527]"
-                                            >
-                                                {slide.primaryBtnText}
-                                            </Link>
-                                        ) : (
-                                            <a
-                                                href={slide.primaryBtnHref ?? "#methods"}
-                                                tabIndex={isActive ? 0 : -1}
-                                                className="flex h-[52px] items-center justify-center rounded-[14px] bg-[#2E7D32] px-8 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-[#236527]"
-                                            >
-                                                {slide.primaryBtnText}
-                                            </a>
-                                        )}
-
-                                        {slide.secondaryBtnText && (
-                                            <a
-                                                href={slide.secondaryBtnHref ?? "#methods"}
-                                                tabIndex={isActive ? 0 : -1}
-                                                className="flex h-[52px] items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white px-8 text-[15px] font-semibold text-[#1F2937] transition-colors duration-200 hover:bg-[#F0FAF3]"
-                                            >
-                                                {slide.secondaryBtnText}
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
+        <section className="hero">
+            <div className="hero__inner page-col">
+                <div className="hero__copy">
+                    <h1 className="hero__title">
+                        <span className="hero__line">
+                            <span>Nhớ bằng</span>
+                        </span>
+                        <span className="hero__line hero__line--word">
+                            <span key={active} className="hero__word">{ISLANDS[active].word}</span>
+                        </span>
+                    </h1>
+                    <p className="hero__lead">
+                        Memio giúp rèn luyện trí nhớ qua trò chơi: nối hình thành câu chuyện, biến số thành hình
+                        và đặt đồ vật vào một căn phòng quen thuộc.
+                    </p>
+                    <div className="hero__actions">
+                        <Link to="/games" viewTransition className="btn btn--brand">
+                            Bắt đầu chơi
+                            <ArrowRight size={18} aria-hidden="true" />
+                        </Link>
+                        <Link to="/methods" viewTransition className="btn btn--quiet">
+                            Xem ba cách nhớ
+                        </Link>
                     </div>
+                    <ul className="hero__facts">
+                        <li>Miễn phí</li>
+                        <li>Chơi ngay, không cần tài khoản</li>
+                        <li>Vài phút mỗi ván</li>
+                    </ul>
+                </div>
 
-                    {/* Vùng nội dung slide: Media (Illustrations) */}
-                    <div className="hero-area-media relative flex w-full flex-1 flex-col items-center md:items-end justify-center self-center min-h-[300px] md:min-h-[440px] mt-8 md:mt-0 grid grid-cols-1">
-                        {SLIDES.map((slide, idx) => {
-                            const isActive = activeSlide === idx;
-
-                            return (
-                                <div
-                                    key={slide.id}
-                                    className={cn(
-                                        "col-start-1 row-start-1 flex w-full items-center justify-center md:justify-end",
-                                        isActive
-                                            ? "opacity-100 z-10 pointer-events-auto transition-opacity duration-300 ease-out"
-                                            : "opacity-0 z-0 pointer-events-none transition-opacity duration-150 ease-in"
-                                    )}
-                                    aria-hidden={!isActive}
-                                    inert={!isActive ? true : undefined}
-                                >
-                                    {/* Slide 0: Ba đảo ghi nhớ */}
-                                    {slide.id === 0 && (
-                                        <div className="flex w-full max-w-[580px] items-center justify-center md:justify-end">
-                                            <img
-                                                src="/src/assets/memio/B · Hero/Ba đảo ghi nhớ.svg"
-                                                alt="Ba đảo ghi nhớ"
-                                                width="580"
-                                                height="377"
-                                                className="h-auto w-full max-w-[580px] object-contain"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Slide 1: 4 thẻ + mascot */}
-                                    {slide.id === 1 && (
-                                        <div className="w-full max-w-[580px] rounded-[32px] bg-[#EAF8EF] p-6 sm:p-8 md:p-10">
-                                            <div className="grid grid-cols-4 gap-3">
-                                                {[
-                                                    { name: "Mèo", src: "/src/assets/memio/game/card-cat.svg" },
-                                                    { name: "Ô", src: "/src/assets/memio/game/card-umbrella.svg" },
-                                                    { name: "Bánh", src: "/src/assets/memio/game/card-cake.svg" },
-                                                    { name: "Xe đạp", src: "/src/assets/memio/game/card-bicycle.svg" },
-                                                ].map((card, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="flex flex-col items-center justify-center rounded-[20px] border border-[#E3EBE6] bg-white p-3 aspect-square shadow-sm"
-                                                    >
-                                                        <div className="flex h-12 w-12 items-center justify-center">
-                                                            <img
-                                                                src={card.src}
-                                                                alt={card.name}
-                                                                width="40"
-                                                                height="40"
-                                                                className="h-10 w-10 object-contain"
-                                                            />
-                                                        </div>
-                                                        <span className="mt-1 text-[13px] font-semibold text-[#1F2937]">
-                                                            {card.name}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="mt-6 md:mt-8 flex justify-start pl-2">
-                                                <img
-                                                    src="/src/assets/memio/mascot.svg"
-                                                    alt="Memio mascot"
-                                                    width="64"
-                                                    height="64"
-                                                    className="h-16 w-auto object-contain"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Slide 2: 4 thẻ + 4 slot + mascot */}
-                                    {slide.id === 2 && (
-                                        <div className="w-full max-w-[580px] rounded-[32px] bg-[#EAF8EF] p-6 sm:p-8 md:p-10">
-                                            <div className="grid grid-cols-4 gap-3">
-                                                {[
-                                                    { name: "Mèo", src: "/src/assets/memio/game/card-cat.svg" },
-                                                    { name: "Ô", src: "/src/assets/memio/game/card-umbrella.svg" },
-                                                    { name: "Bánh", src: "/src/assets/memio/game/card-cake.svg" },
-                                                    { name: "Xe đạp", src: "/src/assets/memio/game/card-bicycle.svg" },
-                                                ].map((card, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="flex flex-col items-center justify-center rounded-[20px] border border-[#E3EBE6] bg-white p-3 aspect-square shadow-sm"
-                                                    >
-                                                        <div className="flex h-12 w-12 items-center justify-center">
-                                                            <img
-                                                                src={card.src}
-                                                                alt={card.name}
-                                                                width="40"
-                                                                height="40"
-                                                                className="h-10 w-10 object-contain"
-                                                            />
-                                                        </div>
-                                                        <span className="mt-1 text-[13px] font-semibold text-[#1F2937]">
-                                                            {card.name}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="mt-4 grid grid-cols-4 gap-3">
-                                                {[1, 2, 3, 4].map((num) => (
-                                                    <div
-                                                        key={num}
-                                                        className="flex h-16 items-center justify-center rounded-[16px] border border-dashed border-[#8EBEA3] bg-white/70 text-[16px] font-bold text-[#5F6B7A]"
-                                                    >
-                                                        {num}
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="mt-6 md:mt-8 flex justify-start pl-2">
-                                                <img
-                                                    src="/src/assets/memio/mascot.svg"
-                                                    alt="Memio mascot"
-                                                    width="64"
-                                                    height="64"
-                                                    className="h-16 w-auto object-contain"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* 
-                      Vùng điều hướng riêng: DUY NHẤT 1 hàng dùng chung toàn bộ carousel.
-                      Hoàn toàn nằm ngoài các slide và ngoài wrapper đang animate.
-                      Được đặt ở [grid-area:nav], căn đều mép trái container nội dung.
-                    */}
+                <div
+                    className="islands"
+                    data-active={active}
+                    onPointerLeave={() => (paused.current = false)}
+                >
                     <div
-                        id="hero-nav-controls"
-                        data-testid="hero-nav-controls"
-                        className="hero-area-nav mt-8 md:mt-10 flex items-center justify-start gap-3 w-full"
-                    >
-                        <button
-                            id="hero-nav-prev"
-                            type="button"
-                            onClick={prevSlide}
-                            aria-label="Slide trước"
-                            className="flex h-[40px] w-[40px] md:h-[42px] md:w-[42px] items-center justify-center rounded-[12px] border border-[#E3EBE6] bg-white text-[#5F6B7A] transition-colors duration-200 hover:border-[#2E7D32] hover:text-[#2E7D32] active:bg-gray-50 cursor-pointer"
-                        >
-                            <ArrowLeft size={16} />
-                        </button>
-                        {SLIDES.map((s, dotIdx) => (
-                            <button
-                                id={`hero-nav-dot-${dotIdx}`}
-                                key={s.id}
-                                type="button"
-                                onClick={() => setActiveSlide(dotIdx)}
-                                aria-label={`Slide ${dotIdx + 1}`}
-                                className={cn(
-                                    "flex h-[40px] w-[40px] md:h-[42px] md:w-[42px] items-center justify-center rounded-[12px] border transition-colors duration-200 bg-white cursor-pointer",
-                                    activeSlide === dotIdx
-                                        ? "border-[#2E7D32]"
-                                        : "border-[#E3EBE6] hover:border-[#2E7D32]"
-                                )}
-                            >
-                                <span
-                                    className={cn(
-                                        "size-2 rounded-full transition-colors duration-200",
-                                        activeSlide === dotIdx
-                                            ? "bg-[#2E7D32]"
-                                            : "border border-[#2E7D32] bg-white"
-                                    )}
-                                />
-                            </button>
-                        ))}
-                        <button
-                            id="hero-nav-next"
-                            type="button"
-                            onClick={nextSlide}
-                            aria-label="Slide tiếp theo"
-                            className="flex h-[40px] w-[40px] md:h-[42px] md:w-[42px] items-center justify-center rounded-[12px] border border-[#E3EBE6] bg-white text-[#5F6B7A] transition-colors duration-200 hover:border-[#2E7D32] hover:text-[#2E7D32] active:bg-gray-50 cursor-pointer"
-                        >
-                            <ArrowRight size={16} />
-                        </button>
-                    </div>
+                        ref={art}
+                        className="islands__art"
+                        aria-hidden="true"
+                        dangerouslySetInnerHTML={{ __html: ISLANDS_ART }}
+                    />
+                    {ISLANDS.map((island, index) => (
+                        <Link
+                            key={island.word}
+                            to={island.target}
+                            viewTransition
+                            className="islands__hit"
+                            style={island.box}
+                            aria-label={`${island.label}: xem cách nhớ bằng ${island.word}`}
+                            aria-current={active === index ? "true" : undefined}
+                            onPointerEnter={() => select(index)}
+                            onFocus={() => select(index)}
+                            onBlur={() => (paused.current = false)}
+                        />
+                    ))}
                 </div>
             </div>
         </section>
     );
 };
-

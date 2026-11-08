@@ -1,7 +1,6 @@
-import { useRecordGameSession } from "@/features/shared-game/hooks/useRecordGameSession";
 import { useWordsGameStore } from "../store/wordsGameStore";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
-import { GameResultCard } from "@/features/shared-game/components/GameResultCard";
+import { GameResultCard } from "./GameResultCard";
 
 const MAX_LEVEL = 10;
 
@@ -12,7 +11,6 @@ export const WordsResultPhase = () => {
         resetGame,
         level,
         setLevel,
-        lastPlayTime,
     } = useWordsGameStore();
 
     // So khớp kết quả chính xác (không phân biệt chữ hoa/thường và khoảng trắng thừa)
@@ -28,14 +26,6 @@ export const WordsResultPhase = () => {
     });
 
     const score = results.filter((r) => r.isCorrect).length;
-    const isPerfect = score === wordsToMemorize.length;
-
-    // Tự động lưu kết quả ván đấu ngầm xuống Backend
-    useRecordGameSession({
-        gameName: "word",
-        score,
-        time: lastPlayTime,
-    });
 
     const REQUIRED_SCORES: Record<number, number> = {
         1: 4,
@@ -65,7 +55,7 @@ export const WordsResultPhase = () => {
             <GameHeader
                 gameName="Từ"
                 level={level}
-                subtitle="Kết quả lượt chơi"
+                status="Kết quả lượt chơi"
                 onReset={resetGame}
             />
 

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useWordsGameStore } from "../store/wordsGameStore";
 import { usePhaseTimer } from "@/features/cards-game/hooks/usePhaseTimer";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
-import { GameFooterNav } from "@/features/shared-game/components/GameFooterNav";
+import { GameFooterNav } from "./GameFooterNav";
 
 export const WordsMemorizePhase = () => {
     const {
@@ -13,12 +13,13 @@ export const WordsMemorizePhase = () => {
         setMemorizeIndex,
         finishMemorize,
         phaseDeadline,
+        memorizeTime,
         level,
         resetGame,
         preferences,
     } = useWordsGameStore();
 
-    const { formattedTime } = usePhaseTimer(phaseDeadline, finishMemorize);
+    const { timeLeft } = usePhaseTimer(phaseDeadline, finishMemorize);
     const lastRightArrowTimeRef = useRef<number>(0);
 
     const groupSize = Math.max(1, preferences.groups || 1);
@@ -81,9 +82,11 @@ export const WordsMemorizePhase = () => {
             <GameHeader
                 gameName="Từ"
                 level={level}
-                subtitle={`Mục tiêu: Ghi nhớ chuẩn xác thứ tự ${wordsToMemorize.length} từ vựng (${LANGUAGE_LABELS[preferences.language] || "Tiếng Việt"})`}
-                formattedTime={preferences.hideTimer ? "••:••" : formattedTime}
-                actionButtonText="✓ Tôi đã nhớ xong"
+                status={`Mục tiêu: Ghi nhớ chuẩn xác thứ tự ${wordsToMemorize.length} từ vựng (${LANGUAGE_LABELS[preferences.language] || "Tiếng Việt"})`}
+                progress={(currentMemorizeIndex + 1) / wordsToMemorize.length}
+                timeLeft={preferences.hideTimer ? undefined : timeLeft}
+                timeLimit={memorizeTime}
+                actionLabel="✓ Tôi đã nhớ xong"
                 onAction={finishMemorize}
                 onReset={resetGame}
             />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useWordsGameStore } from "../store/wordsGameStore";
 import { getWordCountForLevel } from "../utils/wordUtils";
-import { GameSettingsLayout } from "@/components/layout/GameSettingsLayout";
+import { GameSettingsLayout } from "./GameSettingsLayout";
 import { WordsGuideModal } from "./WordsGuideModal";
 import { WordsPreferencesModal } from "./WordsPreferencesModal";
 import { WordsLevelExplanationModal } from "./WordsLevelExplanationModal";

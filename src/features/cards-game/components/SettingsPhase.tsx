@@ -1,32 +1,48 @@
 import { useState } from "react";
+import { RoundSettings, RoundSettingsStatus } from "@/features/shared-game/components/RoundSettings";
+import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { useGameStore } from "../store/gameStore";
-import { getCardCountForLevel } from "../utils/cardUtils";
-import { GameSettingsLayout } from "@/components/layout/GameSettingsLayout";
+import { clamp } from "../utils/cardUtils";
 import { CardPreferencesModal } from "./CardPreferencesModal";
+import { CardBack } from "./PlayingCard";
 
 export const SettingsPhase = () => {
-  const { level, memorizeTime, setMemorizeTime, startGame, preferences } =
+  const { game, status, error: catalogError, reload } = useGameCatalog("card");
+  const { memorizeTime, setMemorizeTime, selectedLevel, setSelectedLevel, startGame, preferences, pending, error } =
     useGameStore();
   const [showPreferences, setShowPreferences] = useState(false);
-  const cardCount = preferences.cardCount ?? getCardCountForLevel(level);
+
+  if (!game) {
+    return <RoundSettingsStatus title="Thẻ bài" status={status} error={catalogError} onRetry={() => void reload()} />;
+  }
+
+  // Giá trị đã lưu có thể không còn hợp lệ khi luật ở backend thay đổi
+  const memorizeSec = game.memorizeSecOptions.includes(memorizeTime) ? memorizeTime : game.defaultMemorizeSec;
+  const customCardCount =
+    game.customItems && preferences.cardCount !== null
+      ? clamp(preferences.cardCount, game.customItems.min, game.customItems.max)
+      : null;
 
   return (
     <>
-      <GameSettingsLayout
+      <RoundSettings
         title="Thẻ bài"
-        level={level}
-        itemCount={cardCount}
         itemUnit="thẻ bài"
-        memorizeTime={memorizeTime}
-        setMemorizeTime={setMemorizeTime}
-        onStart={startGame}
+        shortUnit="lá"
+        renderBack={() => <CardBack size="sm" />}
+        game={game}
+        customItemCount={customCardCount}
+        selectedLevel={selectedLevel}
+        onSelectLevel={setSelectedLevel}
+        memorizeSec={memorizeSec}
+        onMemorizeSecChange={setMemorizeTime}
+        onStart={(gameLevel) => void startGame({ memorizeSec, customCardCount, gameLevel })}
+        isStarting={pending === "start"}
+        error={error}
         onOpenPreferences={() => setShowPreferences(true)}
       />
       {showPreferences && (
-        <CardPreferencesModal
-          isOpen={showPreferences}
-          onClose={() => setShowPreferences(false)}
-        />
+        <CardPreferencesModal isOpen={showPreferences} onClose={() => setShowPreferences(false)} game={game} />
       )}
     </>
   );

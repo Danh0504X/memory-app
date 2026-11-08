@@ -15,11 +15,10 @@ export const WordsRecallPhase = () => {
         level,
     } = useWordsGameStore();
 
-    const { formattedTime } = usePhaseTimer(phaseDeadline, finishGame);
+    const { timeLeft } = usePhaseTimer(phaseDeadline, finishGame);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const filledCount = userRecallWords.filter((w) => w.trim() !== "").length;
-    const isComplete = filledCount === wordsToMemorize.length;
 
     // Tự động focus vào ô input đầu tiên khi vừa vào màn hình làm bài
     useEffect(() => {
@@ -80,12 +79,12 @@ export const WordsRecallPhase = () => {
             <GameHeader
                 gameName="Từ ngẫu nhiên"
                 level={level}
-                subtitle={`Đã điền ${filledCount}/${wordsToMemorize.length} từ`}
-                formattedTime={formattedTime}
-                actionButtonText="Nộp bài ➔"
+                status={`Đã điền ${filledCount}/${wordsToMemorize.length} từ`}
+                progress={filledCount / wordsToMemorize.length}
+                timeLeft={timeLeft}
+                actionLabel="Nộp bài ➔"
                 onAction={finishGame}
                 onReset={resetGame}
-                actionButtonColor={isComplete ? "#2e7d32" : "#1a7a4a"}
             />
 
             {/* Khung nhập từ theo danh sách 1..N (Memory League style) */}

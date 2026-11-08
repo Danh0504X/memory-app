@@ -17,8 +17,14 @@ import StoryGuidePage from "@/features/methods/pages/StoryGuidePage";
 import NumberShapeGuidePage from "@/features/methods/pages/NumberShapeGuidePage";
 import MemoryPalaceGuidePage from "@/features/methods/pages/MemoryPalaceGuidePage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
+import MethodsPage from "@/features/methods/pages/MethodsPage";
+import { RootLayout } from "./RootLayout";
 
+// Mọi trang nằm dưới RootLayout (đưa về đầu trang khi chuyển trang)
 export const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
   {
     path: "/",
     element: <HomePage />,
@@ -55,6 +61,10 @@ export const router = createBrowserRouter([
         element: <DashboardPage />,
       },
     ],
+  },
+  {
+    path: "/methods",
+    element: <MethodsPage />,
   },
   {
     path: "/methods/story-linking",
@@ -109,5 +119,7 @@ export const router = createBrowserRouter([
   {
     path: "*",
     element: <Navigate to="/" replace />,
+  },
+    ],
   },
 ]);
