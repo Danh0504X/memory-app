@@ -13,15 +13,13 @@ export const describePeriod = (period: Period, count: number) => {
 const pad = (value: number) => String(value).padStart(2, '0');
 
 // Đọc ngày/tháng/năm theo múi giờ backend dùng để chia kỳ, để nhãn đúng dù trình duyệt ở múi giờ khác
+// Tách từ dạng en-US "M/D/YYYY" thay vì formatToParts, cho chắc chắn chạy được trên Hermes (iOS/Android)
 const datePartsIn = (date: Date, timeZone: string) => {
-    const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone,
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-    }).formatToParts(date);
-    const valueOf = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
-    return { day: valueOf('day'), month: valueOf('month'), year: valueOf('year') };
+    const [month, day, year] = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: 'numeric', day: 'numeric' })
+        .format(date)
+        .split('/')
+        .map(Number);
+    return { day, month, year };
 };
 
 const formatDayMonth = (date: Date, timeZone: string) => {
@@ -78,9 +76,15 @@ export const formatDateTime = (date: Date) => dateTimeFormatter.format(date);
 export const PROGRESS_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Khoá ngày dạng YYYY-MM-DD theo múi giờ cho trước
-export const dayKey = (date: Date, timeZone: string) =>
-    new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+// Khoá ngày dạng YYYY-MM-DD theo múi giờ cho trước.
+// Ghép từ dạng en-US (MM/DD/YYYY) thay vì dựa vào en-CA in sẵn YYYY-MM-DD: định dạng en-CA từng đổi giữa
+// các bản ICU, và Hermes trên iOS/Android định dạng ngày bằng thư viện của hệ điều hành.
+export const dayKey = (date: Date, timeZone: string) => {
+    const [month, day, year] = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
+        .format(date)
+        .split('/');
+    return `${year}-${month}-${day}`;
+};
 
 // count ngày liên tiếp, kết thúc ở hôm nay
 export const lastDays = (count: number, timeZone: string, now = new Date()) =>

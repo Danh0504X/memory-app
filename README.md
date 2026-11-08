@@ -48,8 +48,14 @@ test/             Test logic, chạy bằng Node (thay module native bằng bả
 - **Đồng hồ ván chơi:** `visibilitychange` → `AppState` (tính lại theo deadline khi app trở lại).
 - **Tải trước ảnh:** `new Image()` → `Image.prefetch` của expo-image.
 
+## Đã có
+
+- 5 trò chơi: Thẻ bài, Hình ảnh, Gương mặt & Tên, Ghi nhớ từ, Ghi nhớ số (`src/app/games/`).
+- Hôm nay, Thử thách ngày (`/daily`), Hồ sơ, Mục tiêu luyện tập (`/goals`), Đổi mật khẩu, Tiến độ (`/progress`).
+
 ## Việc còn lại
 
-- Giao diện từng trò chơi (thẻ bài, hình ảnh, số, gương mặt & tên, từ): store và API đã sẵn, cần làm các phase ghi nhớ / nhớ lại / kết quả.
-- Màn Hôm nay (gợi ý theo mục tiêu), Hồ sơ (EXP, huy hiệu), Dashboard, Thử thách ngày, Hướng dẫn phương pháp.
+- Trang Hướng dẫn phương pháp và các bài luyện thử (dữ liệu đã có ở `features/methods`).
+- Quên mật khẩu (link trong email cần mở được app: deep link `memio://`).
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build), Sign in with Apple, xoá tài khoản.
+- Thông báo nhắc giữ chuỗi ngày (push notification).

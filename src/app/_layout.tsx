@@ -54,7 +54,6 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="login" options={{ title: 'Đăng nhập', presentation: 'modal' }} />
                 <Stack.Screen name="register" options={{ title: 'Tạo tài khoản', presentation: 'modal' }} />
-                <Stack.Screen name="games/[game]" options={{ title: '' }} />
             </Stack>
         </>
     );

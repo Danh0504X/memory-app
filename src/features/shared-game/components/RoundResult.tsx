@@ -20,12 +20,15 @@ interface RoundResultProps {
     onPlayAgain: () => void;
     onNextLevel: (level: number) => void;
     onReset: () => void;
+    // Ván thử thách ngày: mặc định về trang Hôm nay; game số có thử thách riêng nên quay về màn thiết lập
+    dailyAction?: { label: string; onPress: () => void };
+    note?: string;
     // Phần đối chiếu riêng của từng trò (ReviewGrid cho thẻ bài/hình ảnh, danh sách tên cho gương mặt)
     children?: ReactNode;
 }
 
 // Kết quả, phần thưởng và cấp đã mở đều do backend quyết định; ở đây chỉ trình bày
-export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, onReset, children }: RoundResultProps) {
+export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, onReset, dailyAction, note, children }: RoundResultProps) {
     const { result, rewards, rules } = round;
     const summary = describeCompletedRound(round, maxLevel);
     const isDaily = rules.mode === 'daily';
@@ -36,11 +39,14 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
         router.dismissTo(path);
     };
     const primary = () => {
-        if (isDaily) leave('/');
+        if (isDaily) {
+            if (dailyAction) dailyAction.onPress();
+            else leave('/');
+        }
         else if (summary.nextLevel !== null) onNextLevel(summary.nextLevel);
         else onPlayAgain();
     };
-    const primaryLabel = isDaily ? 'Về trang Hôm nay' : summary.nextLevel !== null ? `Chơi cấp ${summary.nextLevel}` : 'Chơi lại';
+    const primaryLabel = isDaily ? (dailyAction?.label ?? 'Về trang Hôm nay') : summary.nextLevel !== null ? `Chơi cấp ${summary.nextLevel}` : 'Chơi lại';
 
     return (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -58,6 +64,7 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
                 <AppText variant="body">
                     Đúng {result.correctItems}/{result.totalItems} · Chính xác {percentage}%. {summary.message}
                 </AppText>
+                {note ? <AppText variant="small">{note}</AppText> : null}
 
                 {rewards ? (
                     <View style={styles.rewards}>
