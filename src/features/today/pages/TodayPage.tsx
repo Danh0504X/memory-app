@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import mascot from '@/assets/memio/mascot.svg';
 import { BlockState } from '@/features/dashboard/components/BlockState';
 import { PeriodStats } from '@/features/dashboard/components/PeriodStats';
-import { RecentGames } from '@/features/dashboard/components/RecentGames';
+import { DailyMini } from '@/features/daily/components/DailyMini';
 import { AccountLevel, StreakPanel } from '@/features/dashboard/components/StreakPanel';
 import { useCatalog, useProfile, useRecentSessions } from '@/features/dashboard/hooks/useOverview';
 import { PROGRESS_TIME_ZONE, formatWeekday } from '@/features/dashboard/utils/format';
@@ -14,6 +14,7 @@ import { dailyGoals, greet, lastWeekSummary, recommendGame, sessionsOfDay } from
 import '@/styles/app-screen.css';
 import '@/features/shared-game/game.css';
 import '../today.css';
+import '@/features/daily/daily.css';
 
 const timeZone = PROGRESS_TIME_ZONE;
 
@@ -96,13 +97,11 @@ export const TodayPage = () => {
                         <MethodOfDay />
                     </section>
 
-                    <section className="panel span-4" aria-labelledby="recent-title">
+                    <section className="panel span-4" aria-labelledby="daily-title">
                         <div className="panel__head">
-                            <h2 id="recent-title">Ván gần đây</h2>
+                            <h2 id="daily-title">Thử thách hôm nay</h2>
                         </div>
-                        <BlockState request={recent.state} onRetry={recent.reload}>
-                            {(data) => <RecentGames sessions={data.slice(0, 4)} timeZone={timeZone} />}
-                        </BlockState>
+                        <DailyMini />
                     </section>
 
                     <section className="panel span-12" aria-labelledby="week-title">

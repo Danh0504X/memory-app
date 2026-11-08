@@ -50,6 +50,7 @@ export const ImagesRecallPhase = () => {
             <GameHeader
                 gameName="Hình ảnh"
                 level={level}
+                daily={rules?.mode === "daily"}
                 status={`Nhớ lại · đã xếp ${filled} trên ${total} hình`}
                 progress={filled / total}
                 timeLeft={timeLeft}

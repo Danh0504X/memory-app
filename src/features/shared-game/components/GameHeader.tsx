@@ -3,7 +3,8 @@ import { LoaderCircle, X } from "lucide-react";
 
 interface GameHeaderProps {
     gameName: string;
-    level: number | null;   // null với ván tự chọn số lượng
+    level: number | null;   // null với ván tự chọn số lượng và ván thử thách ngày
+    daily?: boolean;        // Ván thử thách ngày
     status: string;         // việc đang làm, ví dụ "Ghi nhớ · lá 2 trên 9"
     progress?: number;      // 0..1, thanh tiến độ dưới dòng trạng thái
     timeLeft?: number;      // giây còn lại; bỏ trống để ẩn đồng hồ
@@ -23,6 +24,7 @@ const formatClock = (seconds: number) =>
 export const GameHeader = ({
     gameName,
     level,
+    daily = false,
     status,
     progress,
     timeLeft,
@@ -38,7 +40,7 @@ export const GameHeader = ({
         <header className="play__bar">
             <div className="play__who">
                 <strong>{gameName}</strong>
-                <span className="play__level">{level === null ? "Tự chọn" : `Cấp ${level}`}</span>
+                <span className="play__level">{daily ? "Thử thách ngày" : level === null ? "Tự chọn" : `Cấp ${level}`}</span>
             </div>
 
             <div className="play__progress">

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { gamesApi, type CompletedRound, type RoundRules } from "@/features/shared-game/api/games.api";
+import { gamesApi, type CompletedRound, type RoundRules, type StartedRound } from "@/features/shared-game/api/games.api";
 import { notifyGameSessionRecorded } from "@/features/shared-game/events";
 import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { describeRoundError, isRoundClosed } from "@/features/shared-game/utils/roundErrors";
@@ -49,6 +49,8 @@ interface GameState {
   setMemorizeTime: (time: number) => void;
   setSelectedLevel: (level: number | null) => void;
   startGame: (options: StartOptions) => Promise<void>;
+  // Nạp một ván backend đã tạo (ván thường hoặc thử thách ngày) và chuyển sang phase ghi nhớ
+  loadRound: (session: StartedRound) => void;
   nextMemorizeCard: () => void;
   prevMemorizeCard: () => void;
   finishMemorize: () => Promise<void>;
@@ -107,21 +109,25 @@ export const useGameStore = create<GameState>()(
             memorizeSec,
             ...(customCardCount !== null ? { mode: "custom", itemCount: customCardCount } : { gameLevel }),
           });
-          const { session } = data;
-          const cards = session.items.map((item) => cardFromCode(item.code));
-          set({
-            ...EMPTY_ROUND,
-            phase: "memorize",
-            sessionId: session.sessionId,
-            rules: session.rules,
-            level: session.rules.gameLevel,
-            cardsToMemorize: cards,
-            userRecall: Array(cards.length).fill(null),
-            phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
-          });
+          get().loadRound(data.session);
         } catch (error) {
           set({ pending: null, error: describeRoundError(error, "start") });
         }
+      },
+
+      loadRound: (session) => {
+        const cards = session.items.map((item) => cardFromCode(item.code));
+        set({
+          ...EMPTY_ROUND,
+          error: null,
+          phase: "memorize",
+          sessionId: session.sessionId,
+          rules: session.rules,
+          level: session.rules.gameLevel,
+          cardsToMemorize: cards,
+          userRecall: Array(cards.length).fill(null),
+          phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
+        });
       },
 
       nextMemorizeCard: () => {

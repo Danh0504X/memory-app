@@ -57,6 +57,7 @@ export const RecallPhase = () => {
             <GameHeader
                 gameName="Thẻ bài"
                 level={level}
+                daily={rules?.mode === "daily"}
                 status={`Nhớ lại · đã xếp ${filled} trên ${total} lá`}
                 progress={filled / total}
                 timeLeft={timeLeft}

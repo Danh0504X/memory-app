@@ -3,6 +3,7 @@ import {
   gamesApi,
   type CompletedRound,
   type RoundRules,
+  type StartedRound,
 } from "@/features/shared-game/api/games.api";
 import { notifyGameSessionRecorded } from "@/features/shared-game/events";
 import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
@@ -52,6 +53,8 @@ interface ImagesGameState {
     gameLevel: number,
     customImageCount: number | null,
   ) => Promise<void>;
+  // Nạp một ván backend đã tạo (ván thường hoặc thử thách ngày), tải trước ảnh rồi chuyển sang phase ghi nhớ
+  loadRound: (session: StartedRound) => Promise<void>;
   nextMemorizeCard: () => void;
   prevMemorizeCard: () => void;
   finishMemorize: () => Promise<void>;
@@ -107,23 +110,27 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
           ? { mode: "custom", itemCount: customImageCount }
           : { gameLevel }),
       });
-      const { session } = data;
-      const images = session.items.map(imageFromView);
-      // Nút Bắt đầu vẫn ở trạng thái chờ trong lúc tải ảnh; phần lệch giờ do tải ảnh nằm trong thời gian bù trễ của backend
-      await preloadImages(images.map((image) => image.imageUrl));
-      set({
-        ...EMPTY_ROUND,
-        phase: "memorize",
-        sessionId: session.sessionId,
-        rules: session.rules,
-        level: session.rules.gameLevel,
-        imagesToMemorize: images,
-        userRecall: Array(images.length).fill(null),
-        phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
-      });
+      await get().loadRound(data.session);
     } catch (error) {
       set({ pending: null, error: describeRoundError(error, "start") });
     }
+  },
+
+  loadRound: async (session) => {
+    const images = session.items.map(imageFromView);
+    // Nút bắt đầu vẫn ở trạng thái chờ trong lúc tải ảnh; phần lệch giờ do tải ảnh nằm trong thời gian bù trễ của backend
+    await preloadImages(images.map((image) => image.imageUrl));
+    set({
+      ...EMPTY_ROUND,
+      error: null,
+      phase: "memorize",
+      sessionId: session.sessionId,
+      rules: session.rules,
+      level: session.rules.gameLevel,
+      imagesToMemorize: images,
+      userRecall: Array(images.length).fill(null),
+      phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
+    });
   },
 
   nextMemorizeCard: () => {

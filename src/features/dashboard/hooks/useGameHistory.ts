@@ -9,6 +9,7 @@ export const toGameSession = (item: ApiHistoryItem): GameSession => ({
     game: item.gameName,
     playedAt: new Date(item.completedAt),
     level: item.mode === 'level' ? item.gameLevel : null,
+    daily: item.mode === 'daily',
     totalItems: item.totalItems,
     correctItems: item.correctItems,
     accuracy: item.accuracy,

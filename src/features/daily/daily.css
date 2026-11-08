@@ -1,0 +1,760 @@
+/* Thử thách ngày. Hình chủ đạo là tờ lịch: mỗi ngày xé một tờ, mỗi tờ một đề mới.
+   Bàn xanh như trong game cho phần đầu trang; bảng xếp hạng có bục cho ba người đầu. */
+
+/* ── Tờ lịch ── */
+
+.calpage {
+  --w: 200px;
+  position: relative;
+  flex: none;
+  width: var(--w);
+}
+
+.calpage[data-size='sm'] { --w: 104px; }
+.calpage[data-size='lg'] { --w: clamp(190px, 18vw, 250px); }
+
+/* Hai tờ phía sau làm thành xấp lịch */
+.calpage::before,
+.calpage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--w) * 0.08);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 48, 24, 0.18);
+}
+
+.calpage::before {
+  transform: rotate(-6deg) translate(-3%, 2%);
+  opacity: 0.55;
+}
+
+.calpage::after {
+  transform: rotate(4deg) translate(3%, 1%);
+  opacity: 0.8;
+}
+
+.calpage__sheet {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: calc(var(--w) * 0.08);
+  background: #ffffff;
+  color: var(--color-ink);
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(16, 48, 24, 0.22);
+}
+
+.calpage__sheet p {
+  margin: 0;
+}
+
+.calpage__top {
+  padding: calc(var(--w) * 0.05) 8px;
+  background: var(--color-sun);
+  font-size: calc(var(--w) * 0.075);
+  font-weight: 800;
+}
+
+.calpage__day {
+  padding-top: calc(var(--w) * 0.04);
+  font-size: calc(var(--w) * 0.44);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.calpage__month {
+  font-size: calc(var(--w) * 0.075);
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.calpage__sheet .calpage__game {
+  margin: calc(var(--w) * 0.06) calc(var(--w) * 0.08) 0;
+  padding: calc(var(--w) * 0.05) 0 calc(var(--w) * 0.07);
+  border-top: 2px dashed #d3dfd6;
+  font-size: calc(var(--w) * 0.07);
+  font-weight: 700;
+  color: var(--color-brand-deep);
+}
+
+.calpage[data-size='sm'] .calpage__game {
+  display: none;
+}
+
+.calpage[data-size='sm'] .calpage__month {
+  padding-bottom: calc(var(--w) * 0.1);
+}
+
+/* ── Chữ cái đầu của người chơi ── */
+
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: hsl(var(--hue) 62% 86%);
+  color: hsl(var(--hue) 45% 26%);
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Phần đầu trang ── */
+
+.dhero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px clamp(24px, 4vw, 64px);
+  margin-bottom: 16px;
+  padding: clamp(22px, 3vw, 40px) clamp(22px, 4vw, 56px);
+  border-radius: 20px;
+  background: var(--color-brand);
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.dhero__copy {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
+.dhero h1 {
+  margin: 0;
+  font-size: clamp(30px, 3.2vw, 44px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.dhero__lead {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.dhero__facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dhero__facts li {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dhero__facts li:first-child {
+  background: #ffffff;
+  color: var(--color-brand-deep);
+}
+
+.dhero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  margin-top: 4px;
+}
+
+.dhero__actions .btn {
+  height: 52px;
+  padding-inline: 26px;
+  font-size: 16px;
+}
+
+.dhero__actions .btn:disabled {
+  opacity: 0.8;
+  cursor: progress;
+}
+
+.dhero__how {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
+  text-underline-offset: 0.25em;
+}
+
+.dhero__note {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.dhero__error {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ffe4df;
+  color: #8f1d14;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dhero__clock {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.dhero__time {
+  display: inline-block;
+  min-width: 8ch;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.dhero .btn:focus-visible,
+.dhero__how:focus-visible {
+  outline-color: #ffffff;
+}
+
+.dhero .calpage {
+  margin-right: clamp(0px, 2vw, 24px);
+}
+
+/* ── Bảng xếp hạng và cột bên ── */
+
+.daily__board { grid-column: span 8; }
+.daily__side { grid-column: span 4; }
+
+.podium {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+}
+
+.podium__place {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  min-width: 0;
+}
+
+.podium__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.podium__place[data-me='true'] .podium__name {
+  color: var(--color-brand-deep);
+}
+
+.podium__score {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.podium__empty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Bậc của bục: cao thấp theo hạng, màu huy chương vàng, bạc, đồng */
+.podium__step {
+  width: 100%;
+  margin-top: 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px 10px 4px 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: rgba(31, 41, 55, 0.75);
+}
+
+.podium__place[data-place='1'] .podium__step { height: 96px; background: var(--color-sun); }
+.podium__place[data-place='2'] .podium__step { height: 70px; background: #dfe4ea; }
+.podium__place[data-place='3'] .podium__step { height: 52px; background: #efd2b2; }
+
+.board {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.board th,
+.board td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+}
+
+.board thead th {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.board tbody th {
+  font-weight: 700;
+}
+
+.board .num {
+  text-align: right;
+}
+
+/* Số và tiêu đề cột luôn trên một dòng; chỉ tên người chơi được xuống dòng */
+.board .num,
+.board thead th {
+  white-space: nowrap;
+}
+
+.board__rank {
+  width: 48px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.board__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.board__you {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-brand);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.board tr[data-me='true'] {
+  background: #ffffff;
+}
+
+.board__gap td {
+  padding-block: 2px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.board__empty {
+  padding: 28px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.board__empty p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.board__empty p + p {
+  margin-top: 4px;
+  font-weight: 800;
+  color: var(--color-brand-deep);
+}
+
+/* Thành tích của bạn, hoặc lời khuyên khi chưa chơi */
+.myrank {
+  display: grid;
+  gap: 10px;
+}
+
+.myrank h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.myrank__rank {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.myrank__rank strong {
+  font-size: 64px;
+  line-height: 0.9;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--color-brand-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.myrank__line {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.myrank__stats {
+  margin: 4px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.myrank__stats div {
+  padding: 10px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.myrank__stats dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.myrank__stats dd {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.myrank--tip p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ── Cách chơi ── */
+
+.how {
+  margin-top: 40px;
+  scroll-margin-top: 100px;
+}
+
+.how h2 {
+  margin: 0 0 14px;
+  font-size: clamp(22px, 1.9vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.how__steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.how__steps li {
+  padding: 18px 20px 20px;
+  border-radius: 14px;
+  border-top: 6px solid var(--tone);
+  background: #edf3ef;
+}
+
+.how__steps li[data-tone='mint'] { --tone: var(--color-brand); }
+.how__steps li[data-tone='sun'] { --tone: var(--color-sun); }
+.how__steps li[data-tone='sky'] { --tone: #6fb3d8; }
+
+.how__steps h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.how__steps p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.how__note {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+
+#board {
+  scroll-margin-top: 100px;
+}
+
+/* ── Khối trên trang chủ của người đã đăng nhập ── */
+
+.dmini {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 6px 4px 4px 8px;
+}
+
+.dmini__info {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.dmini__info p {
+  margin: 0;
+}
+
+.dmini__game {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.dmini__rank,
+.dmini__meta {
+  font-size: 14px;
+}
+
+.dmini__meta {
+  color: var(--muted);
+}
+
+.dmini__rank strong {
+  color: var(--color-brand-deep);
+}
+
+.dmini__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dmini__faces {
+  display: inline-flex;
+}
+
+.dmini__faces .avatar + .avatar {
+  margin-left: -8px;
+  box-shadow: 0 0 0 2px var(--panel);
+}
+
+.dmini__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.dmini__join {
+  gap: 6px;
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.dmini__join:hover {
+  background: var(--color-brand-deep);
+}
+
+.dmini__join:disabled {
+  opacity: 0.8;
+  cursor: progress;
+}
+
+.dmini__error {
+  margin: 10px 0 0;
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b42318;
+}
+
+/* ── Trang giới thiệu (khách) ── */
+
+.dteaser {
+  padding-block: clamp(48px, 7vw, 96px);
+}
+
+.dteaser__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 80px);
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: 24px;
+  background: var(--color-mint);
+}
+
+.dteaser__inner[data-visual='false'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dteaser__copy > p {
+  margin: 20px 0 0;
+}
+
+.dteaser__today {
+  font-size: var(--text-body);
+}
+
+.dteaser__actions {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.dteaser__visual {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+}
+
+.dteaser__top {
+  width: min(100%, 320px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.dteaser__top li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.dteaser__rank {
+  width: 18px;
+  font-weight: 800;
+  color: var(--color-ink-soft);
+}
+
+.dteaser__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.dteaser__score {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Màn hình hẹp ── */
+
+@media (max-width: 1023px) {
+  .daily__board,
+  .daily__side {
+    grid-column: span 12;
+  }
+
+  .dteaser__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .dhero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dhero .calpage {
+    order: -1;
+    justify-self: center;
+    --w: 150px;
+    margin-right: 0;
+  }
+
+  .how__steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .podium__place[data-place='1'] .podium__step { height: 72px; }
+  .podium__place[data-place='2'] .podium__step { height: 52px; }
+  .podium__place[data-place='3'] .podium__step { height: 40px; }
+}
+
+/* ── Chuyển động ── */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Tờ lịch rơi xuống xấp như vừa được lật sang ngày mới */
+  .calpage__sheet {
+    /* backwards: xong hiệu ứng thì trả transform lại cho hiệu ứng rê chuột bên dưới */
+    animation: daily-flip 700ms var(--ease-expo) 120ms backwards;
+  }
+
+  .podium__step {
+    transform-origin: bottom;
+    animation: daily-rise 700ms var(--ease-expo) both;
+  }
+
+  .podium__place[data-place='2'] .podium__step { animation-delay: 120ms; }
+  .podium__place[data-place='1'] .podium__step { animation-delay: 240ms; }
+  .podium__place[data-place='3'] .podium__step { animation-delay: 360ms; }
+
+  .podium__place .avatar {
+    animation: daily-pop 500ms var(--ease-expo) 500ms both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .calpage__sheet {
+      transition: transform 260ms var(--ease-out);
+    }
+
+    .calpage:hover .calpage__sheet {
+      transform: translateY(-4px) rotate(-1.5deg);
+    }
+  }
+}
+
+@keyframes daily-flip {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) rotate(-8deg);
+  }
+}
+
+@keyframes daily-rise {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes daily-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}

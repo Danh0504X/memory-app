@@ -28,7 +28,7 @@ export const RecentGames = ({ sessions, timeZone }: { sessions: GameSession[]; t
                         <span className="recent__dot" style={{ backgroundColor: meta.color }} aria-hidden="true" />
                         <span className="recent__main">
                             <span className="recent__title">
-                                {meta.label} · {session.level ? `Cấp ${session.level}` : 'Tự chọn'}
+                                {meta.label} · {session.daily ? 'Thử thách ngày' : session.level ? `Cấp ${session.level}` : 'Tự chọn'}
                             </span>
                             <span className="recent__sub">
                                 {session.correctItems}/{session.totalItems} {meta.unit} · {formatClock(session.durationSec)}

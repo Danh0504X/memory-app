@@ -24,6 +24,7 @@ export const ResultPhase = () => {
             <GameHeader
                 gameName="Thẻ bài"
                 level={level}
+                daily={result.rules.mode === "daily"}
                 status={`Kết quả · đúng ${result.result.correctItems} trên ${result.result.totalItems} lá`}
                 progress={result.result.accuracy}
                 onReset={resetGame}

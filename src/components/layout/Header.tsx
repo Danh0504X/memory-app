@@ -18,6 +18,7 @@ const NAV_LINKS = [
   { label: "Trang chủ", href: "/" },
   { label: "Phương pháp", href: "/methods" },
   { label: "Trò chơi", href: "/games" },
+  { label: "Thử thách", href: "/daily" },
 ];
 
 export const Header = () => {

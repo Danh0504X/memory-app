@@ -71,9 +71,6 @@ export interface DailyGoal {
 
 // Ba mục tiêu nhỏ mỗi ngày, tính từ các ván đã chơi hôm nay (chưa có phần thưởng riêng ở backend)
 export const dailyGoals = (today: GameSession[], recommended: GameId): DailyGoal[] => {
-    const played = new Set(today.map((session) => session.game));
-    const missing: GameId = played.has('card') ? 'image' : 'card';
-
     return [
         {
             id: 'play',
@@ -90,11 +87,11 @@ export const dailyGoals = (today: GameSession[], recommended: GameId): DailyGoal
             action: 'Chơi',
         },
         {
-            id: 'both',
-            label: 'Chơi cả Thẻ bài và Hình ảnh',
-            done: played.has('card') && played.has('image'),
-            to: GAME_META[missing].route,
-            action: GAME_META[missing].label,
+            id: 'daily',
+            label: 'Chơi thử thách hôm nay',
+            done: today.some((session) => session.daily),
+            to: '/daily',
+            action: 'Chơi',
         },
     ];
 };

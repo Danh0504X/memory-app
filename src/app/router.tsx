@@ -18,6 +18,7 @@ import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import MethodsPage from "@/features/methods/pages/MethodsPage";
 import { RootLayout } from "./RootLayout";
 import { HomeRoute } from "./HomeRoute";
+import DailyPage from "@/features/daily/pages/DailyPage";
 
 // Mọi trang nằm dưới RootLayout (đưa về đầu trang khi chuyển trang)
 export const router = createBrowserRouter([
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
   {
     path: "/games",
     element: <GameSelectionPage />,
+  },
+  {
+    path: "/daily",
+    element: <DailyPage />,
   },
   {
     path: "/games/cards",

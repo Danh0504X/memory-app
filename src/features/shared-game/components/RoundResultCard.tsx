@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Flame, Medal, RotateCcw, Star } from "lucide-react";
 import type { CompletedRound, RecordKey, RoundResult } from "../api/games.api";
@@ -92,14 +92,24 @@ export const RoundResultCard = ({
     rules.mode === "level" &&
     rules.gameLevel === maxLevel;
   const celebrate = result.result !== "fail";
+  // Ván thử thách ngày: không mở cấp, kết quả vào bảng xếp hạng; nút chính dẫn tới bảng xếp hạng
+  const isDaily = rules.mode === "daily";
+  const primaryAction = useCallback(() => {
+    if (!isDaily) {
+      onPlayAgain();
+      return;
+    }
+    onReset();
+    navigate("/daily");
+  }, [isDaily, onPlayAgain, onReset, navigate]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") onPlayAgain();
+      if (e.key === "Enter") primaryAction();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onPlayAgain]);
+  }, [primaryAction]);
 
   let line =
     "Nhớ đúng tất cả để mở khoá cấp độ mới. Thử nối chúng thành một câu chuyện rồi chơi lại nhé.";
@@ -109,6 +119,7 @@ export const RoundResultCard = ({
     line = "Đúng hết. Thử ghi nhớ nhanh hơn ở lần sau nhé.";
   else if (result.result === "pass")
     line = "Đúng hết tất cả mới mở được cấp độ mới. Còn chút nữa thôi!";
+  if (isDaily) line = "Kết quả của bạn đã vào bảng xếp hạng hôm nay.";
 
   return (
     <section
@@ -177,9 +188,13 @@ export const RoundResultCard = ({
       )}
 
       <div className="score__actions" style={rise(5)}>
-        <button type="button" onClick={onPlayAgain} className="btn btn--sun">
-          {unlocked ? `Chơi cấp độ ${unlockedLevel.after}` : "Chơi ván mới"}
-          {unlocked ? (
+        <button type="button" onClick={primaryAction} className="btn btn--sun">
+          {isDaily
+            ? "Xem bảng xếp hạng"
+            : unlocked
+              ? `Chơi cấp độ ${unlockedLevel.after}`
+              : "Chơi ván mới"}
+          {isDaily || unlocked ? (
             <ArrowRight size={18} aria-hidden="true" />
           ) : (
             <RotateCcw size={18} aria-hidden="true" />

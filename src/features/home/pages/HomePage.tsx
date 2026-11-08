@@ -7,6 +7,7 @@ import { useReveal } from "@/lib/useReveal";
 import { HeroSection } from "../components/HeroSection";
 import { MethodsTeaser } from "../components/MethodsTeaser";
 import { GameIntroSection } from "../components/GameIntroSection";
+import { DailyTeaser } from "../components/DailyTeaser";
 import { RollingFigure } from "../components/RollingFigure";
 import "@/features/methods/methods.css";
 import "../home.css";
@@ -115,6 +116,7 @@ export const HomePage = () => {
         <HeroSection />
         <MethodsTeaser />
         <GameIntroSection />
+        <DailyTeaser />
 
         {/* Dành cho phụ huynh */}
         <section className="parents page-col" aria-labelledby="parents-title">

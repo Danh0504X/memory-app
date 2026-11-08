@@ -53,6 +53,7 @@ export const MemorizePhase = () => {
       <GameHeader
         gameName="Thẻ bài"
         level={level}
+        daily={rules?.mode === "daily"}
         status={`Ghi nhớ thứ tự · đang xem lá ${shownTo} trên ${total}`}
         progress={shownTo / total}
         timeLeft={preferences.hideTimer ? undefined : timeLeft}

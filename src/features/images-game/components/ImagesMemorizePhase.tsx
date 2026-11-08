@@ -53,6 +53,7 @@ export const ImagesMemorizePhase = () => {
             <GameHeader
                 gameName="Hình ảnh"
                 level={level}
+                daily={rules?.mode === "daily"}
                 status={`Ghi nhớ thứ tự · đang xem hình ${shownTo} trên ${total}`}
                 progress={shownTo / total}
                 timeLeft={preferences.hideTimer ? undefined : timeLeft}

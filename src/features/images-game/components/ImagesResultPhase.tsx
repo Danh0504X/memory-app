@@ -24,6 +24,7 @@ export const ImagesResultPhase = () => {
             <GameHeader
                 gameName="Hình ảnh"
                 level={level}
+                daily={result.rules.mode === "daily"}
                 status={`Kết quả · đúng ${result.result.correctItems} trên ${result.result.totalItems} hình`}
                 progress={result.result.accuracy}
                 onReset={resetGame}

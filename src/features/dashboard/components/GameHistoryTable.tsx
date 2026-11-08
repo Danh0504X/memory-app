@@ -49,7 +49,7 @@ export const GameHistoryTable = ({ range, game, total }: GameHistoryTableProps) 
                                         {GAME_META[session.game].label}
                                     </span>
                                 </td>
-                                <td className="num">{session.level ?? <span className="muted">Tự chọn</span>}</td>
+                                <td className="num">{session.level ?? <span className="muted">{session.daily ? 'Thử thách' : 'Tự chọn'}</span>}</td>
                                 <td className="num">{session.correctItems}/{session.totalItems}</td>
                                 <td className="num">{formatPercent(session.accuracy)}</td>
                                 <td className="num">{formatClock(session.durationSec)}</td>

@@ -4,7 +4,8 @@ import type { ApiSuccessResponse } from "@/types/auth.types";
 // Kiểu dữ liệu khớp với backend: GET /api/games và luồng /api/game-sessions.
 // Ngày giờ trong JSON là chuỗi ISO.
 export type GameName = "card" | "image";
-export type RoundMode = "level" | "custom";
+// daily: ván thử thách ngày, chỉ tạo qua /api/daily-challenge/start
+export type RoundMode = "level" | "custom" | "daily";
 export type RoundResult = "perfect" | "pass" | "fail";
 export type RecordKey = "bestLevel" | "fastestMemorize";
 

@@ -43,7 +43,7 @@ export interface ApiTimeline {
 export interface ApiHistoryItem {
     sessionId: string;
     gameName: ApiGameName;
-    mode: 'level' | 'custom';
+    mode: 'level' | 'custom' | 'daily';
     gameLevel: number | null;
     totalItems: number;
     correctItems: number;
