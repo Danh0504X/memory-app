@@ -5,14 +5,16 @@ import { PROFILE_KEY, useCatalog, useProfile } from '@/features/dashboard/hooks/
 import { setQuery } from '@/lib/queryCache';
 import { GAME_SESSION_RECORDED_EVENT } from '@/features/shared-game/events';
 import type { UserProfile } from '../api/profile.api';
+import { AccountSettings } from '../components/AccountSettings';
 import { Achievements } from '../components/Achievements';
-import { IdentityPanel } from '../components/IdentityPanel';
-import { GamesSummary, LevelPanel, StreakSummary } from '../components/ProgressPanels';
+import { ProfileHeader } from '../components/ProfileHeader';
+import { Records } from '../components/Records';
+import { buildBadges, isEarned } from '../utils/badges';
 import '@/styles/app-screen.css';
 import '../profile.css';
 
-// Hồ sơ: bạn là ai (tên, email), cấp độ và cách lên cấp, chuỗi ngày, thành tích.
-// Số liệu theo ngày/tuần nằm ở trang Tiến độ; trang này không lặp lại chúng.
+// Hồ sơ trả lời một câu: "Tôi đã đạt được gì, và tài khoản của tôi".
+// Chuỗi ngày theo ngày, số liệu theo kỳ và cấp từng trò nằm ở trang chủ và trang Tiến độ; trang này không lặp lại.
 export const ProfilePage = ({ startEditing = false }: { startEditing?: boolean }) => {
     const profile = useProfile();
     const catalog = useCatalog();
@@ -33,6 +35,13 @@ export const ProfilePage = ({ startEditing = false }: { startEditing?: boolean }
     }, [reloadProfile, reloadCatalog]);
 
     const profileState = saved ? { status: 'ready' as const, data: saved } : profile.state;
+    const games = catalog.state.status === 'ready' ? catalog.state.data : null;
+    const badges = profileState.status === 'ready' && games ? buildBadges(profileState.data, games) : null;
+
+    const onSaved = (updated: UserProfile) => {
+        setSaved(updated);
+        setQuery(PROFILE_KEY, updated);
+    };
 
     return (
         <div className="min-h-svh">
@@ -42,63 +51,53 @@ export const ProfilePage = ({ startEditing = false }: { startEditing?: boolean }
                 {profileState.status !== 'ready' && <h1 className="sr-only">Hồ sơ của bạn</h1>}
 
                 <div className="dash__grid">
-                    <section className="panel span-12" aria-label="Thông tin của bạn">
+                    <section className="panel span-12 profile__head" aria-label="Thông tin của bạn">
                         <BlockState request={profileState} onRetry={profile.reload}>
                             {(data) => (
-                                <IdentityPanel
+                                <ProfileHeader
                                     profile={data}
-                                    startEditing={startEditing}
-                                    onSaved={(updated) => {
-                                        setSaved(updated);
-                                        setQuery(PROFILE_KEY, updated);
-                                    }}
+                                    games={games}
+                                    badges={badges && { earned: badges.filter(isEarned).length, total: badges.length }}
                                 />
                             )}
                         </BlockState>
                     </section>
 
-                    <section className="panel span-6" aria-labelledby="level-title">
+                    <section className="panel profile__badges" aria-labelledby="badges-title">
                         <div className="panel__head">
-                            <h2 id="level-title">Cấp độ</h2>
+                            <h2 id="badges-title">Huy hiệu</h2>
                         </div>
-                        <BlockState request={profileState} onRetry={profile.reload}>
-                            {(data) => <LevelPanel profile={data} />}
-                        </BlockState>
+                        {badges ? (
+                            <Achievements badges={badges} />
+                        ) : (
+                            <BlockState request={profileState.status === 'ready' ? catalog.state : profileState} onRetry={() => { profile.reload(); catalog.reload(); }}>
+                                {() => null}
+                            </BlockState>
+                        )}
                     </section>
 
-                    {/* Chuỗi ngày và các trò chung một khối, ngăn bằng đường mảnh, để cao bằng khối Cấp độ */}
-                    <div className="panel span-6 dash__aside">
-                        <section aria-labelledby="streak-title">
-                            <div className="panel__head">
-                                <h2 id="streak-title">Chuỗi ngày</h2>
-                            </div>
-                            <BlockState request={profileState} onRetry={profile.reload}>
-                                {(data) => <StreakSummary profile={data} />}
-                            </BlockState>
-                        </section>
-                        <section aria-labelledby="games-title">
-                            <div className="panel__head">
-                                <h2 id="games-title">Trò chơi của bạn</h2>
-                            </div>
-                            <BlockState request={catalog.state} onRetry={catalog.reload}>
-                                {(games) => <GamesSummary games={games} />}
-                            </BlockState>
-                        </section>
-                    </div>
-
-                    <section className="panel span-12" aria-labelledby="badges-title">
+                    <section className="panel profile__records" aria-labelledby="records-title">
                         <div className="panel__head">
-                            <h2 id="badges-title">Thành tích</h2>
+                            <h2 id="records-title">Kỷ lục cá nhân</h2>
                         </div>
                         {profileState.status === 'ready' ? (
                             <BlockState request={catalog.state} onRetry={catalog.reload}>
-                                {(games) => <Achievements profile={profileState.data} games={games} />}
+                                {(data) => <Records profile={profileState.data} games={data} />}
                             </BlockState>
                         ) : (
                             <BlockState request={profileState} onRetry={profile.reload}>
                                 {() => null}
                             </BlockState>
                         )}
+                    </section>
+
+                    <section className="panel span-12" aria-labelledby="account-title">
+                        <div className="panel__head">
+                            <h2 id="account-title">Tài khoản</h2>
+                        </div>
+                        <BlockState request={profileState} onRetry={profile.reload}>
+                            {(data) => <AccountSettings profile={data} startEditing={startEditing} onSaved={onSaved} />}
+                        </BlockState>
                     </section>
                 </div>
             </main>
