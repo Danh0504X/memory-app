@@ -64,7 +64,10 @@ const errorText = (error: unknown) => {
     const value = error as ApiErrorResponse;
     if (value.status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
     if (value.status === 404) return 'Không tìm thấy lượt chơi. Bạn có thể bắt đầu lượt mới.';
-    if (value.status === 403) return (value as { data?: { message?: string } })?.data?.message || (value as { message?: string })?.message || 'Bạn chưa mở khóa cấp độ này hoặc đã tham gia thử thách hôm nay.';
+    // Backend gắn mã lỗi cho 403 (numberSession.service.ts): hiện câu tiếng Việt theo mã thay vì câu tiếng Anh của server
+    if (value.status === 403 && value.code === 'CHALLENGE_PLAYED') return 'Bạn đã chơi thử thách hôm nay. Quay lại vào ngày mai nhé.';
+    if (value.status === 403 && value.code === 'LEVEL_LOCKED') return 'Cấp này chưa mở khoá. Hãy nhớ đúng hết ở cấp trước để mở.';
+    if (value.status === 403) return 'Bạn chưa mở khoá cấp độ này hoặc đã tham gia thử thách hôm nay.';
     if (value.status === 409) return 'Trạng thái lượt chơi đã thay đổi. Hãy thử lại để đồng bộ.';
     return 'Không thể kết nối hoặc lưu lượt chơi. Đáp án đang nhập vẫn được giữ; hãy thử lại.';
 };

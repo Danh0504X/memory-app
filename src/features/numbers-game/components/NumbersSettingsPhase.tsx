@@ -327,7 +327,15 @@ export const NumbersSettingsPhase = () => {
                                     Ai cũng nhớ {CHALLENGE.digits} chữ số trong {formatSeconds(CHALLENGE.memorizeSec)}, mỗi người một lượt
                                     mỗi ngày.
                                 </p>
-                                {today?.played ? (
+                                {today?.played && today.phase !== 'completed' ? (
+                                    // Đã bắt đầu nhưng chưa nộp (ví dụ tải lại trang giữa ván): chưa có điểm để hiện
+                                    <div className="nchallenge">
+                                        <p className="nchallenge__label">Bạn đã bắt đầu thử thách hôm nay</p>
+                                        <p className="nchallenge__meta">
+                                            Ván sẽ tự được chấm khi hết giờ, với những số bạn đã gõ. Kết quả hiện ở đây khi chấm xong.
+                                        </p>
+                                    </div>
+                                ) : today?.played ? (
                                     <div className="nchallenge">
                                         <p className="nchallenge__label">Kết quả hôm nay của bạn</p>
                                         <p className="nchallenge__score">
