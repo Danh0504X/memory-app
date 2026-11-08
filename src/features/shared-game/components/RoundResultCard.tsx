@@ -49,8 +49,22 @@ export const RoundResultCard = ({ round, maxLevel, onPlayAgain, onReset, onNextL
 
     return <section className="play__table score" data-result={result.result} aria-labelledby="score-verdict">
         {result.result !== "fail" && <Confetti />}
-        <h1 id="score-verdict" className="score__verdict">{VERDICTS[result.result]}</h1>
-        <p className="score__count">{summary.value}<small> / {summary.total} {summary.unit}</small></p>
+        <div className="score__hero">
+            <div className="score__side score__side--left">
+                {(percentage === 100 || result.result === "perfect") && (
+                    <img
+                        src="/profile-mascot-celebrating.svg"
+                        alt="Chúc mừng hoàn hảo"
+                        className="score__celebrating-mascot"
+                    />
+                )}
+            </div>
+            <div className="score__headline">
+                <h1 id="score-verdict" className="score__verdict">{VERDICTS[result.result]}</h1>
+                <p className="score__count">{summary.value}<small> / {summary.total} {summary.unit}</small></p>
+            </div>
+            <div className="score__side score__side--right" aria-hidden="true" />
+        </div>
         <div className="score__meter" aria-hidden="true"><span style={{ width: `${percentage}%` }} /></div>
         <p className="score__line">Đúng <strong>{result.correctItems}/{result.totalItems}</strong> · Chính xác <strong>{percentage}%</strong>. {summary.message}</p>
         {note && <p className="score__note">{note}</p>}

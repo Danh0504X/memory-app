@@ -163,7 +163,7 @@ export const GameSelectionPage = () => {
                         progress={fromCatalog(cardGame)}
                         fan={FAN_CARDS.map((card, i) => (
                             <span key={`${card.rank}${card.suit}`} style={spread(i, FAN_CARDS.length)}>
-                                <PlayingCard card={card} size="md" />
+                                <PlayingCard card={card} size="sm" />
                             </span>
                         ))}
                     />
@@ -175,7 +175,7 @@ export const GameSelectionPage = () => {
                         unit="hình"
                         progress={fromCatalog(imageGame)}
                         fan={FAN_PICTURES.map((src, i) => (
-                            <span key={src} className="ptile" data-size="md" style={spread(i, FAN_PICTURES.length)}>
+                            <span key={src} className="ptile" data-size="sm" style={spread(i, FAN_PICTURES.length)}>
                                 <img src={src} alt="" />
                             </span>
                         ))}

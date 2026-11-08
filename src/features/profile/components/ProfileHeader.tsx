@@ -1,4 +1,3 @@
-import { Mascot } from '@/components/ui/Mascot';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import type { GameCatalogItem } from '@/features/shared-game/api/games.api';
 import type { UserProfile } from '../api/profile.api';
@@ -24,9 +23,11 @@ export const ProfileHeader = ({ profile, games, badges }: ProfileHeaderProps) =>
         badges && `${badges.earned}/${badges.total} huy hiệu`,
     ].filter(Boolean);
 
+    const initial = profile.username?.charAt(0)?.toUpperCase() || "U";
+
     return (
         <div className="phead">
-            <Mascot className="phead__avatar" />
+            <span className="phead__avatar" aria-hidden="true">{initial}</span>
 
             <div className="phead__who">
                 <h1>{profile.username}</h1>

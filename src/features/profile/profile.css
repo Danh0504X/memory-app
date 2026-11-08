@@ -14,11 +14,17 @@
 }
 
 .phead__avatar {
-  display: block;
+  flex: none;
   width: 76px;
-  padding: 10px 12px 8px;
+  height: 76px;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--color-brand);
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 800;
+  user-select: none;
 }
 
 .phead__who h1 {

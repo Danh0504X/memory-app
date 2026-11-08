@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PreferencesDialog } from '@/features/profile/components/PreferencesDialog';
 import { Header } from '@/components/layout/Header';
-import mascot from '@/assets/memio/mascot.svg';
 import { BlockState } from '@/features/dashboard/components/BlockState';
 import { PeriodStats } from '@/features/dashboard/components/PeriodStats';
 import { DailyMini } from '@/features/daily/components/DailyMini';
@@ -23,12 +22,38 @@ import '@/features/daily/daily.css';
 
 const timeZone = PROGRESS_TIME_ZONE;
 
+const CURTAIN_STORAGE_KEY = 'memio_opened_curtains';
+
+const getInitialOpenedCurtains = (): Record<string, boolean> => {
+    try {
+        const saved = sessionStorage.getItem(CURTAIN_STORAGE_KEY);
+        return saved ? JSON.parse(saved) : {};
+    } catch {
+        return {};
+    }
+};
+
 // Trang chủ của người đã đăng nhập: việc nên làm hôm nay đứng trước, số liệu tóm tắt đứng sau.
 // Trang Tiến độ (/dashboard) vẫn là nơi xem lại chi tiết.
 export const TodayPage = () => {
     const profile = useProfile();
     const catalog = useCatalog();
     const recent = useRecentSessions();
+
+    const [openedCurtains, setOpenedCurtains] = useState<Record<string, boolean>>(getInitialOpenedCurtains);
+
+    const openCurtain = useCallback((key: string) => {
+        setOpenedCurtains((prev) => {
+            if (prev[key]) return prev;
+            const next = { ...prev, [key]: true };
+            try {
+                sessionStorage.setItem(CURTAIN_STORAGE_KEY, JSON.stringify(next));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    }, []);
 
     const sessions = recent.state.status === 'ready' ? recent.state.data : null;
     const hello = profile.state.status === 'ready' ? greet(profile.state.data, sessions, timeZone) : null;
@@ -47,7 +72,7 @@ export const TodayPage = () => {
 
             <main className="dash today page-col">
                 <header className="today-hello" data-urgent={hello?.urgent ?? false}>
-                    <img src={mascot} alt="" className="today-hello__mascot" />
+                    <img src="/profile-mascot.svg" alt="" className="today-hello__mascot" />
                     <div>
                         <h1>{hello?.title ?? 'Chào bạn'}</h1>
                         <p>{hello?.line ?? 'Đang tải việc hôm nay…'}</p>
@@ -87,7 +112,16 @@ export const TodayPage = () => {
                     </section>
 
                     {/* Chuỗi ngày và cấp tài khoản chung một khối, như cột bên của trang Tiến độ */}
-                    <div className="panel span-4 dash__aside">
+                    <div
+                        className="panel span-4 dash__aside curtain-card"
+                        data-opened={openedCurtains.streak ? 'true' : undefined}
+                        onMouseEnter={() => openCurtain('streak')}
+                        onTouchStart={() => openCurtain('streak')}
+                        onFocus={() => openCurtain('streak')}
+                    >
+                        <div className="card-curtain card-curtain--pink" aria-hidden="true">
+                            <span className="card-curtain__title">Chuỗi ngày</span>
+                        </div>
                         <section aria-labelledby="streak-title">
                             <div className="panel__head">
                                 <h2 id="streak-title">Chuỗi ngày</h2>
@@ -106,14 +140,34 @@ export const TodayPage = () => {
                         </section>
                     </div>
 
-                    <section className="panel span-4" aria-labelledby="method-title">
+                    <section
+                        className="panel span-4 curtain-card"
+                        aria-labelledby="method-title"
+                        data-opened={openedCurtains.method ? 'true' : undefined}
+                        onMouseEnter={() => openCurtain('method')}
+                        onTouchStart={() => openCurtain('method')}
+                        onFocus={() => openCurtain('method')}
+                    >
+                        <div className="card-curtain card-curtain--blue" aria-hidden="true">
+                            <span className="card-curtain__title">Phương pháp hôm nay</span>
+                        </div>
                         <div className="panel__head">
                             <h2 id="method-title">Phương pháp hôm nay</h2>
                         </div>
                         <MethodOfDay />
                     </section>
 
-                    <section className="panel span-4" aria-labelledby="daily-title">
+                    <section
+                        className="panel span-4 curtain-card"
+                        aria-labelledby="daily-title"
+                        data-opened={openedCurtains.daily ? 'true' : undefined}
+                        onMouseEnter={() => openCurtain('daily')}
+                        onTouchStart={() => openCurtain('daily')}
+                        onFocus={() => openCurtain('daily')}
+                    >
+                        <div className="card-curtain card-curtain--yellow" aria-hidden="true">
+                            <span className="card-curtain__title">Thử thách hôm nay</span>
+                        </div>
                         <div className="panel__head">
                             <h2 id="daily-title">Thử thách hôm nay</h2>
                         </div>
