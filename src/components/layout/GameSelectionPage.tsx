@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
@@ -25,6 +25,8 @@ const FAN_CARDS: Card[] = [
 const FAN_PICTURES = [cat, umbrella, cake, bicycle];
 
 const FAN_DIGITS = ["2", "0", "8", "5", "1"];
+
+const FAN_FACES = ["John", "Mary", "David", "Linh", "Mai"];
 
 const spread = (i: number, count: number) => ({ "--o": i - (count - 1) / 2 }) as CSSProperties;
 
@@ -129,9 +131,9 @@ export const GameSelectionPage = () => {
                         unit="người"
                         progress={fromCatalog(faceGame)}
                         note={isAuthenticated ? undefined : "Đăng nhập để lưu lịch sử và nhận EXP."}
-                        fan={["Anna", "Claire", "Bryan"].map((name, i) => (
-                            <span key={name} className="ptile" data-size="md" style={spread(i, 3)}>
-                                <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`} alt="" />
+                        fan={FAN_FACES.map((name, i) => (
+                            <span key={name} className="pfacetile" style={spread(i, FAN_FACES.length)}>
+                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} alt="" />
                             </span>
                         ))}
                     />
