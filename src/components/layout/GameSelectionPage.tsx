@@ -24,11 +24,11 @@ const FAN_CARDS: Card[] = [
 const FAN_PICTURES = [cat, umbrella, cake, bicycle];
 
 const FAN_FACES = [
-  "https://i.pravatar.cc/150?img=1",
-  "https://i.pravatar.cc/150?img=5",
-  "https://i.pravatar.cc/150?img=7",
-  "https://i.pravatar.cc/150?img=11",
-  "https://i.pravatar.cc/150?img=15",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Mary",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Linh",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Mai",
 ];
 
 const FACE_LEVEL_COUNTS = [6, 8, 10, 12, 14, 16, 18, 22, 26, 30];

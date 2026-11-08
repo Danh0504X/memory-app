@@ -1431,6 +1431,7 @@
   aspect-ratio: 1;
   border-radius: 8px;
   object-fit: cover;
+  background: #f1f5f9;
 }
 
 .play__table--facename-recall {
