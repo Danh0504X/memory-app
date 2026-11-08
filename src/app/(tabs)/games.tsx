@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
@@ -37,30 +37,27 @@ export default function GamesScreen() {
                 const meta = GAME_META[id];
                 const game = games?.find((item) => item.gameName === id);
                 return (
-                    <Link key={id} href={meta.route} asChild>
-                        <PressableScale style={styles.row}>
-                            <View style={[styles.swatch, { backgroundColor: meta.color }]} />
-                            <View style={styles.rowText}>
-                                <AppText variant="heading">{meta.label}</AppText>
-                                <AppText variant="small">
-                                    {game ? `Cấp ${game.player?.unlockedLevel ?? 1}/${game.maxLevel}` : ' '}
-                                </AppText>
-                            </View>
-                            <ChevronRight color={colors.inkSoft} />
-                        </PressableScale>
-                    </Link>
+                    <PressableScale key={id} onPress={() => router.push(meta.route)} accessibilityRole="button" style={styles.row}>
+                        <View style={[styles.swatch, { backgroundColor: meta.color }]} />
+                        <View style={styles.rowText}>
+                            <AppText variant="heading">{meta.label}</AppText>
+                            <AppText variant="small">
+                                {game ? `Cấp ${game.player?.unlockedLevel ?? 1}/${game.maxLevel}` : ' '}
+                            </AppText>
+                        </View>
+                        <ChevronRight color={colors.inkSoft} />
+                    </PressableScale>
                 );
             })}
 
-            <Link href="/methods" asChild>
-                <PressableScale style={[styles.row, styles.methods]}>
-                    <View style={styles.rowText}>
-                        <AppText variant="heading">Phương pháp ghi nhớ</AppText>
-                        <AppText variant="small">Nối thành câu chuyện, biến số thành hình, căn phòng trí nhớ. Có trò chơi thử.</AppText>
-                    </View>
-                    <ChevronRight color={colors.inkSoft} />
-                </PressableScale>
-            </Link>
+            {/* Không bọc trong <Link asChild>: Slot của expo-router báo lỗi khi style là mảng */}
+            <PressableScale onPress={() => router.navigate('/methods')} accessibilityRole="button" style={[styles.row, styles.methods]}>
+                <View style={styles.rowText}>
+                    <AppText variant="heading">Phương pháp ghi nhớ</AppText>
+                    <AppText variant="small">Nối thành câu chuyện, biến số thành hình, căn phòng trí nhớ. Có trò chơi thử.</AppText>
+                </View>
+                <ChevronRight color={colors.inkSoft} />
+            </PressableScale>
         </Screen>
     );
 }
