@@ -44,3 +44,7 @@ yarn-error.*
 # tooling
 .taste-skill/
 .claude/settings.local.json
+
+# Agent skills: cài lại từ skills-lock.json bằng `npx skills experimental_install`
+.agents/
+.claude/skills/
