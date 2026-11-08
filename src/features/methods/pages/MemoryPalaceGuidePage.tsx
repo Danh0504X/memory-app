@@ -1,199 +1,161 @@
-import { useState } from "react";
-import { MethodGuideLayout } from "../components/MethodGuideLayout";
-import { cn } from "@/lib/utils";
+import { GuidePage } from "../guide/GuidePage";
+import { RouteTrial } from "../guide/RouteTrial";
+import { DIGIT_SHAPES, PLACE_PICTURES, pictureOf, type Picture } from "../guide/pictures";
+import { WOODCUTS } from "../guide/woodcuts";
+import { GAME_META } from "@/features/shared-game/registry";
+import type { GuideContent } from "../guide/types";
+import roomAll from "@/assets/memio/practice/room-all.svg";
 
-export const MemoryPalaceGuidePage = () => {
-    // Interactive state for section 02 (inspecting locations)
-    const [selectedSpot, setSelectedSpot] = useState<number | null>(null);
-    // Interactive state for section 03 (quiz step)
-    const [revealedQuiz, setRevealedQuiz] = useState<boolean>(false);
+const DOOR: Picture = { name: "Cửa phòng", src: PLACE_PICTURES.door, motion: "rock" };
 
-    const spotsInfo = [
-        {
-            id: 1,
-            name: "Cửa phòng",
-            item: "Quả táo",
-            detail: "Quả táo khổng lồ đỏ mọng chắn ngay trước lối vào cửa.",
-        },
-        {
-            id: 2,
-            name: "Bàn học",
-            item: "Mèo",
-            detail: "Chú mèo lông vàng ngồi nghịch giữa quyển vở trên bàn.",
-        },
-        {
-            id: 3,
-            name: "Giường ngủ",
-            item: "Quả bóng",
-            detail: "Quả bóng xanh liên tục nảy tung tăng trên chiếc gối êm.",
-        },
-    ];
+// Chỗ trong phòng to, đồ vật đặt vào nhỏ hơn đè lên một góc
+const Place = ({ place, item, label }: { place: string; item: string; label: string }) => (
+    <span className="guide-place" role="img" aria-label={label}>
+        <img src={place} alt="" />
+        <img src={pictureOf(item).src} alt="" className="shape is-live" data-motion={pictureOf(item).motion} />
+    </span>
+);
 
-    return (
-        <MethodGuideLayout
-            breadcrumbCurrent="Đặt điều cần nhớ vào một nơi quen thuộc"
-            title="Đặt điều cần nhớ vào một nơi quen thuộc"
-            description="Hãy chọn một con đường mà bạn có thể đi qua trong trí tưởng tượng. Mỗi điểm trên đường sẽ giữ một hình cần nhớ. Khi muốn nhớ lại, bạn đi đúng con đường ấy lần nữa."
-            practiceLabel="Khám phá căn phòng"
-            practiceLink="/practice/loci"
-            backMethodParam="loci"
-            nextMethodLink="/methods/story-linking"
-            nextMethodLabel="Xem kỹ thuật khác"
-        >
-            {/* 01 · Chọn tuyến đường */}
-            <section className="rounded-[24px] border border-[#E3EBE6] bg-white p-6 md:p-10 shadow-sm">
-                <h2 className="text-[20px] font-bold text-[#1F2937] md:text-[24px]">
-                    01 · Chọn tuyến đường
-                </h2>
-                <p className="mt-3 text-[15px] leading-[1.65] text-[#5F6B7A]">
-                    Chọn ba nơi bạn gặp hằng ngày và hình dung một tuyến đi cố định: 1. Cửa phòng → 2. Bàn học → 3. Giường. Hãy thử đi qua ba điểm ấy trong đầu trước khi đặt hình vào. Nếu mỗi lần bạn đi một hướng khác, thứ tự đồ vật sẽ dễ bị đảo.
-                </p>
-
-                {/* Empty Room Diagram */}
-                <div className="mt-6 overflow-hidden rounded-[20px] border border-[#DCEBF2] bg-[#EAF6FC] p-2 md:p-4">
-                    <img
-                        src="/src/assets/memio/guides/loci-room-empty.svg"
-                        alt="Tuyến đường căn phòng: Cửa phòng → Bàn học → Giường"
-                        width="944"
-                        height="300"
-                        className="w-full h-auto object-contain max-h-[320px]"
-                    />
-                </div>
-            </section>
-
-            {/* 02 · Đặt hình vào vị trí */}
-            <section className="rounded-[24px] border border-[#E3EBE6] bg-white p-6 md:p-10 shadow-sm">
-                <h2 className="text-[20px] font-bold text-[#1F2937] md:text-[24px]">
-                    02 · Đặt hình vào vị trí
-                </h2>
-                <p className="mt-3 text-[15px] leading-[1.65] text-[#5F6B7A]">
-                    Danh sách cần nhớ là Táo → Mèo → Bóng. Đặt mỗi hình vào một điểm của tuyến đường: quả táo khổng lồ chắn cửa; chú mèo ngồi giữa vở trên bàn; quả bóng nảy trên gối ở giường. Kích thước hoặc chuyển động khác thường giúp bạn nhận ra hình ở đúng vị trí.
-                </p>
-
-                {/* Room with Items Diagram */}
-                <div className="mt-6 overflow-hidden rounded-[20px] border border-[#CDE8D5] bg-[#EAF8EF] p-2 md:p-4">
-                    <img
-                        src="/src/assets/memio/guides/loci-room-items.svg"
-                        alt="Đặt Táo, Mèo và Bóng vào các vị trí trong phòng"
-                        width="944"
-                        height="300"
-                        className="w-full h-auto object-contain max-h-[320px]"
-                    />
-                </div>
-
-                {/* Interactive Location Buttons */}
-                <div className="mt-6">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[14px] font-medium text-[#2E7D32]">
-                            Nhấn vào cửa, bàn học hoặc giường để xem từng vị trí.
-                        </span>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {spotsInfo.map((spot) => (
-                            <button
-                                key={spot.id}
-                                type="button"
-                                onClick={() => setSelectedSpot(selectedSpot === spot.id ? null : spot.id)}
-                                className={cn(
-                                    "flex flex-col text-left p-4 rounded-[16px] border transition-all duration-200",
-                                    selectedSpot === spot.id
-                                        ? "bg-[#EAF8EF] border-[#2E7D32] shadow-xs"
-                                        : "bg-white border-[#E3EBE6] hover:bg-[#F8FBF8]"
-                                )}
-                            >
-                                <span className="text-[13px] font-bold text-[#2E7D32]">
-                                    {spot.id} · {spot.name}
-                                </span>
-                                <span className="mt-1 text-[15px] font-bold text-[#1F2937]">
-                                    {spot.item}
-                                </span>
-                                <p className="mt-2 text-[13px] leading-relaxed text-[#5F6B7A]">
-                                    {spot.detail}
-                                </p>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* 03 · Đi lại để nhớ */}
-            <section className="rounded-[24px] border border-[#E3EBE6] bg-white p-6 md:p-10 shadow-sm">
-                <h2 className="text-[20px] font-bold text-[#1F2937] md:text-[24px]">
-                    03 · Đi lại để nhớ
-                </h2>
-                <p className="mt-3 text-[15px] leading-[1.65] text-[#5F6B7A]">
-                    Che danh sách ban đầu và đi lại tuyến đường trong đầu. Tại cửa, tự hỏi mình thấy gì; trả lời xong mới bước đến bàn, rồi đến giường. Hãy gọi tên hình theo từng vị trí trước khi chạm để kiểm tra, thay vì mở cả ba đáp án cùng lúc.
-                </p>
-
-                {/* Quiz Diagram with interactive reveal */}
-                <div className="mt-6 overflow-hidden rounded-[20px] border border-[#F2E5C2] bg-[#FFF7DF] p-2 md:p-4">
-                    <img
-                        src={revealedQuiz ? "/src/assets/memio/guides/loci-room-items.svg" : "/src/assets/memio/guides/loci-room-quiz.svg"}
-                        alt="Đi lại tuyến đường để nhớ"
-                        width="944"
-                        height="300"
-                        className="w-full h-auto object-contain max-h-[320px] transition-all duration-300"
-                    />
-                </div>
-
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-[14px] text-[#5F6B7A]">
-                        {revealedQuiz ? "Đã hiện cả ba đồ vật theo lộ trình." : "Tự gọi tên hình ở từng vị trí trước khi mở đáp án."}
-                    </p>
-                    <button
-                        type="button"
-                        onClick={() => setRevealedQuiz(!revealedQuiz)}
-                        className="h-[42px] px-6 rounded-[12px] bg-white border border-[#DCEBF2] text-[14px] font-semibold text-[#2E7D32] transition-colors duration-200 hover:bg-[#F0FAF3]"
-                    >
-                        {revealedQuiz ? "Che lại để thử lại" : "Hiện đáp án cả 3 vị trí"}
-                    </button>
-                </div>
-            </section>
-
-            {/* Nếu bạn bị quên */}
-            <section className="rounded-[24px] border border-[#E3EBE6] bg-white p-6 md:p-10 shadow-sm">
-                <h2 className="text-[20px] font-bold text-[#1F2937] md:text-[24px]">
-                    Nếu bạn bị quên
-                </h2>
-                <p className="mt-3 text-[15px] leading-[1.65] text-[#5F6B7A]">
-                    Nếu quên một hình, trước tiên nhớ điểm đặt nó: cửa, bàn hay giường. Sau đó làm hình ở đó lớn hơn hoặc chuyển động rõ hơn, chẳng hạn quả bóng liên tục nảy trên gối. Nếu nhớ đủ hình nhưng sai thứ tự, hãy đi lại đúng tuyến cửa → bàn → giường vài lần.
-                </p>
-            </section>
-
-            {/* Liên hệ bộ bài Memio */}
-            <section className="rounded-[24px] border border-[#E3EBE6] bg-white p-6 md:p-10 shadow-sm">
-                <h2 className="text-[20px] font-bold text-[#1F2937] md:text-[24px]">
-                    Liên hệ bộ bài Memio
-                </h2>
-                <p className="mt-3 text-[15px] leading-[1.65] text-[#5F6B7A]">
-                    Với lá Memio, mỗi điểm phải giữ đủ con vật và mùa. Hãy đặt “Mèo · Đông” đội mũ lông ở cửa, “Rùa · Hạ” phơi nắng trên bàn. Khi nhớ lại tuyến đường, nói cả hai phần của từng lá. Nếu chỉ thấy con mèo hoặc con rùa, bạn chưa đủ thông tin để chọn đúng lá trong 52 lá.
-                </p>
-
-                {/* 2 Memio Cards */}
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-                    <div className="w-[180px] shrink-0 transition-transform duration-200 hover:scale-[1.02]">
-                        <img
-                            src="/src/assets/memio/guides/card-cat-dong.svg"
-                            alt="Mèo Đông · 04/13"
-                            width="180"
-                            height="190"
-                            className="w-full h-auto object-contain drop-shadow-sm"
-                        />
-                    </div>
-                    <div className="w-[180px] shrink-0 transition-transform duration-200 hover:scale-[1.02]">
-                        <img
-                            src="/src/assets/memio/guides/card-turtle-ha.svg"
-                            alt="Rùa Hạ · 13/13"
-                            width="180"
-                            height="190"
-                            className="w-full h-auto object-contain drop-shadow-sm"
-                        />
-                    </div>
-                </div>
-            </section>
-        </MethodGuideLayout>
-    );
+const CONTENT: GuideContent = {
+    id: "loci",
+    tone: "sky",
+    crumb: "Căn phòng trí nhớ",
+    title: "Căn phòng trí nhớ",
+    lead: "Đường đi trong nhà mình thì bạn đã thuộc. Đặt mỗi điều cần nhớ vào một chỗ trên đường ấy, rồi đi lại trong đầu để nhặt chúng lên theo đúng thứ tự.",
+    hero: { picture: DOOR, woodcut: WOODCUTS.tower },
+    how: {
+        title: "Từ danh sách đến lộ trình",
+        intro: "Danh sách dài thì khó nhớ, nhưng con đường trong nhà thì bạn không quên. Ba bước dưới đây gắn từng mục của danh sách vào một chỗ trên con đường quen.",
+        loose: ["Quả táo", "Ô", "Mèo", "Quả trứng", "Quả bóng", "Bánh"].map(pictureOf),
+        ordered: [
+            { picture: pictureOf("Quả táo"), label: "Cửa" },
+            { picture: pictureOf("Mèo"), label: "Bàn học" },
+            { picture: pictureOf("Quả bóng"), label: "Giường" },
+        ],
+        steps: [
+            {
+                name: "Chọn lộ trình",
+                text: "Chọn vài chỗ quen theo một chiều cố định: cửa, bàn học, giường. Đi thử trong đầu vài lần trước khi đặt đồ vào.",
+            },
+            {
+                name: "Đặt đồ vào chỗ",
+                text: "Mỗi chỗ giữ một đồ vật, và đồ phải chạm vào chỗ ấy: quả táo khổng lồ chắn cửa, chú mèo nằm giữa vở trên bàn.",
+            },
+            {
+                name: "Đi lại để nhặt",
+                text: "Đi đúng lộ trình, dừng ở từng chỗ và hỏi: ở đây có gì? Chỗ gọi ra đồ vật, còn chiều đi giữ thứ tự của danh sách.",
+            },
+        ],
+    },
+    index: {
+        title: "Ba chỗ trong phòng",
+        hint: "Chọn một chỗ để xem đồ vật được đặt ở đó.",
+        items: [
+            {
+                name: "Cửa phòng",
+                art: <Place place={PLACE_PICTURES.door} item="Quả táo" label="Quả táo chắn cửa phòng" />,
+                fact: "Quả táo khổng lồ chắn lối, phải đẩy mới vào được. Đồ chạm vào chỗ, nên nhìn cửa là thấy táo.",
+            },
+            {
+                name: "Bàn học",
+                art: <Place place={PLACE_PICTURES.desk} item="Mèo" label="Chú mèo nằm trên bàn học" />,
+                fact: "Chú mèo nằm giữa quyển vở đang mở: một điểm cụ thể trên bàn, không phải đâu đó gần bàn.",
+            },
+            {
+                name: "Giường",
+                art: <Place place={PLACE_PICTURES.bed} item="Quả bóng" label="Quả bóng nảy trên giường" />,
+                fact: "Quả bóng nảy liên tục trên gối: chuyển động giữ cho hình không mờ đi.",
+            },
+            {
+                name: "Cả lộ trình",
+                art: <img src={roomAll} alt="Căn phòng với quả táo ở cửa, mèo trên bàn học và quả bóng trên giường" className="guide-scene" />,
+                fact: "Đi một chiều cửa, bàn, giường là đọc lại danh sách táo, mèo, bóng đúng thứ tự.",
+            },
+        ],
+    },
+    trial: {
+        title: "Chơi thử",
+        intro: "Một lộ trình trong nhà với 3 chỗ. Xem đồ vật được đặt ở từng chỗ, rồi đi lại và chọn đúng đồ. Đúng hết thì lộ trình dài thêm.",
+        game: <RouteTrial />,
+    },
+    history: {
+        title: "Ba phòng, ba mươi chỗ",
+        text: "Romberch (1520) chia đại sảnh, thư viện và nhà nguyện thành các ô đánh số, mỗi ô giữ sẵn một đồ vật. Người học thuộc các ô theo thứ tự, rồi đặt điều cần nhớ vào đó. Căn nhà của bạn làm được việc tương tự.",
+        woodcuts: [WOODCUTS.aula, WOODCUTS.biblioteca, WOODCUTS.capella, WOODCUTS.tower],
+    },
+    apply: {
+        title: "Áp dụng ngay",
+        groups: [
+            {
+                name: "Trong Memio",
+                items: [
+                    {
+                        name: GAME_META.card.label,
+                        fact: "Hợp nhất",
+                        text: "Một lộ trình dài, mỗi chỗ giữ một hoặc hai lá. Đổi lá thành hình (số trên lá dùng hình của Biến số thành hình) rồi đặt vào chỗ.",
+                        note: "26 chỗ, mỗi chỗ 2 lá là đủ cả bộ 52 lá.",
+                        to: GAME_META.card.route,
+                        art: { src: PLACE_PICTURES.desk, color: GAME_META.card.color },
+                    },
+                    {
+                        name: GAME_META.word.label,
+                        fact: "Hợp nhất",
+                        text: "Danh sách dài: mỗi từ thành một hình và đặt vào một chỗ. Đi lại lộ trình là đọc lại danh sách đúng thứ tự.",
+                        to: GAME_META.word.route,
+                        art: { src: PLACE_PICTURES.door, color: GAME_META.word.color },
+                    },
+                    {
+                        name: GAME_META.number.label,
+                        fact: "Kết hợp",
+                        text: "Dãy số dài: chia thành nhóm 2 đến 3 chữ số, mỗi nhóm thành một cảnh bằng Biến số thành hình, mỗi cảnh đặt ở một chỗ.",
+                        to: GAME_META.number.route,
+                        art: { src: DIGIT_SHAPES[8].src, color: GAME_META.number.color },
+                    },
+                    {
+                        name: GAME_META.image.label,
+                        fact: "Kết hợp",
+                        text: "Mỗi bức ảnh đặt vào một chỗ trên lộ trình. Khi xếp lại, đi lộ trình để biết ảnh nào đứng trước.",
+                        to: GAME_META.image.route,
+                        art: { src: PLACE_PICTURES.bed, color: GAME_META.image.color },
+                    },
+                ],
+            },
+            {
+                name: "Ngoài đời",
+                items: [
+                    {
+                        name: "Đồ cần mang theo",
+                        fact: "trước khi ra khỏi nhà",
+                        text: "Chìa khoá treo ở cửa, ví nằm trong chiếc giày ở kệ, điện thoại ngồi trên sofa. Ra đến cửa là đi lại lộ trình một lượt.",
+                        art: { src: pictureOf("Quả táo").src, color: "#2e7d32" },
+                    },
+                    {
+                        name: "Dàn ý bài nói",
+                        fact: "mỗi phần một chỗ",
+                        text: "Đặt từng phần của bài nói vào một chỗ trong lớp học hay phòng họp quen. Nói đến đâu, đi lộ trình đến đó.",
+                        art: { src: pictureOf("Cây nến").src, color: "#2e7d32" },
+                    },
+                    {
+                        name: "Từ vựng theo chủ đề",
+                        fact: "mỗi phòng một chủ đề",
+                        text: "Bếp giữ từ về đồ ăn, phòng tắm giữ từ về sức khoẻ; mỗi chỗ trong phòng giữ một từ.",
+                        art: { src: pictureOf("Bánh").src, color: "#2e7d32" },
+                    },
+                ],
+            },
+        ],
+    },
+    close: {
+        line: "Giờ thử với cả bộ bài",
+        text: "Thẻ bài là nơi lộ trình phát huy nhất: bắt đầu với vài lá, rồi tăng dần khi lộ trình của bạn dài thêm.",
+        fact: "Một lộ trình, dùng lại cho mọi danh sách.",
+        action: { to: GAME_META.card.route, label: "Chơi Thẻ bài" },
+        next: { to: "/methods/story-linking", label: "Mới bắt đầu? Xem Nối thành câu chuyện" },
+        motion: "hop",
+        picture: pictureOf("Quả bóng"),
+    },
 };
+
+export const MemoryPalaceGuidePage = () => <GuidePage content={CONTENT} />;
 
 export default MemoryPalaceGuidePage;
