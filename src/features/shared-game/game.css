@@ -1408,6 +1408,129 @@
   background: var(--color-sky);
 }
 
+.pick--facename .pick__table {
+  background: #fae8b6;
+}
+
+.pfacetile {
+  --w: 74px;
+  flex: none;
+  display: block;
+  width: var(--w);
+  aspect-ratio: 4 / 5;
+  padding: 4px 4px 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(40, 30, 10, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pfacetile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f1f5f9;
+}
+
+.play__table--facename-recall {
+  width: min(100% - 2 * clamp(8px, 1.2vw, 14px), 1080px);
+  min-height: clamp(360px, 62vh, 720px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(14px, 2.4vh, 24px);
+  margin: auto clamp(8px, 1.2vw, 14px);
+  padding: clamp(16px, 3vh, 32px) clamp(12px, 2.4vw, 32px);
+  border-radius: 16px;
+  background: var(--color-brand);
+  color: #ffffff;
+  overflow-y: auto;
+}
+
+.facename-recall-container {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.facename-recall-list {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(12px, 1.8vw, 20px);
+}
+
+.facename-recall-card {
+  flex: 0 0 auto;
+  width: clamp(120px, 14vw, 150px);
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.facename-recall-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border-color: #f4c95d;
+}
+
+.facename-recall-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.facename-recall-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.facename-recall-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.facename-recall-input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.facename-recall-input:focus {
+  border-color: #2e7d32;
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.25);
+}
+
 .pick__fan > * {
   position: absolute;
   left: 50%;

@@ -12,6 +12,7 @@ import cake from "@/assets/memio/game/card-cake.svg";
 import bicycle from "@/assets/memio/game/card-bicycle.svg";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useNumbersProgress } from "@/features/numbers-game/hooks/useNumbersProgress";
+import { useFaceNameStore } from "@/features/facename-game/store/faceNameStore";
 import "@/features/shared-game/game.css";
 
 const FAN_CARDS: Card[] = [
@@ -44,7 +45,7 @@ const fromCatalog = (game: GameCatalogItem | null): PickProgress | null => {
 
 interface GamePickProps {
     to: string;
-    variant: "cards" | "images" | "numbers";
+    variant: "cards" | "images" | "numbers" | "facename";
     title: string;
     description: string;
     unit: string;
@@ -108,6 +109,7 @@ export const GameSelectionPage = () => {
     const { game: cardGame } = useGameCatalog("card");
     const { game: imageGame } = useGameCatalog("image");
     const numbers = useNumbersProgress();
+    const faceStats = useFaceNameStore((state) => state.stats);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     return (
@@ -116,10 +118,24 @@ export const GameSelectionPage = () => {
             <main className="arcade page-col">
                 <div className="arcade__head">
                     <h1>Chọn trò chơi</h1>
-                    <p>Ba trò, mỗi trò mười cấp. Nhớ thứ tự, rồi xếp lại cho đúng.</p>
+                    <p>Bốn trò, mỗi trò mười cấp. Luyện nhớ thứ tự, chữ số và tên gọi.</p>
                 </div>
 
                 <div className="arcade__games">
+                    <GamePick
+                        to="/games/facename"
+                        variant="facename"
+                        title="Gương mặt & Tên"
+                        description="Gắn một tên gọi với một gương mặt, rồi nhớ lại khi vị trí được xáo trộn."
+                        unit="người"
+                        progress={{ unlocked: faceStats.unlockedLevel, maxLevel: 10, played: faceStats.totalRounds }}
+                        note="Tiến độ được lưu trên trình duyệt này."
+                        fan={["Anna", "Claire", "Bryan"].map((name, i) => (
+                            <span key={name} className="ptile" data-size="md" style={spread(i, 3)}>
+                                <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`} alt="" />
+                            </span>
+                        ))}
+                    />
                     <GamePick
                         to="/games/cards"
                         variant="cards"
