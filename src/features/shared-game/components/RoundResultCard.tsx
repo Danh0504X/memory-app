@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Flame, Medal, RotateCcw, Star } from "lucide-react";
 import type { CompletedRound, RecordKey, RoundResult } from "../api/games.api";
 import { formatSeconds } from "../utils/formatTime";
+import { Confetti } from "./Confetti";
 
 const VERDICTS: Record<RoundResult, string> = {
   perfect: "Hoàn hảo!",
@@ -14,17 +15,6 @@ const RECORD_LABELS: Record<RecordKey, string> = {
   bestLevel: "Cấp cao nhất mới",
   fastestMemorize: "Ghi nhớ nhanh nhất ở cấp này",
 };
-
-const CONFETTI_COLORS = ["#f4c95d", "#ffffff", "#cdebd6", "#cfe7f3", "#f7dc8e"];
-
-// Vị trí và nhịp rơi tính từ thứ tự mảnh, không ngẫu nhiên, để render luôn giống nhau
-const CONFETTI = Array.from({ length: 36 }, (_, i) => ({
-  "--x": `${(i * 37) % 100}%`,
-  "--c": CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-  "--d": `${(i % 9) * 90}ms`,
-  "--t": `${1600 + ((i * 53) % 900)}ms`,
-  "--r": `${((i * 71) % 540) - 270}deg`,
-})) as CSSProperties[];
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -127,13 +117,7 @@ export const RoundResultCard = ({
       data-result={result.result}
       aria-labelledby="score-verdict"
     >
-      {celebrate && (
-        <div className="confetti" aria-hidden="true">
-          {CONFETTI.map((style, i) => (
-            <i key={i} style={style} />
-          ))}
-        </div>
-      )}
+      {celebrate && <Confetti />}
 
       <h1 id="score-verdict" className="score__verdict" style={rise(0)}>
         {VERDICTS[result.result]}

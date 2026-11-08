@@ -4,6 +4,7 @@ import RegisterPage from "@/features/auth/pages/RegisterPage";
 import GameSelectionPage from "@/components/layout/GameSelectionPage";
 import { CardsGame } from "@/features/cards-game/components/CardsGame";
 import { ImagesGame } from "@/features/images-game/components/ImagesGame";
+import { NumbersGame } from "@/features/numbers-game/components/NumbersGame";
 import { PublicOnlyRoute } from "./PublicOnlyRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 import ProfilePage from "@/features/profile/pages/ProfilePage";
@@ -48,6 +49,11 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      // Ghi nhớ số lưu lượt chơi theo tài khoản nên cần đăng nhập
+      {
+        path: "/games/numbers",
+        element: <NumbersGame />,
+      },
       {
         path: "/profile",
         element: <ProfilePage />,

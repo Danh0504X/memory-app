@@ -10,6 +10,8 @@ import cat from "@/assets/memio/game/card-cat.svg";
 import umbrella from "@/assets/memio/game/card-umbrella.svg";
 import cake from "@/assets/memio/game/card-cake.svg";
 import bicycle from "@/assets/memio/game/card-bicycle.svg";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useNumbersProgress } from "@/features/numbers-game/hooks/useNumbersProgress";
 import "@/features/shared-game/game.css";
 
 const FAN_CARDS: Card[] = [
@@ -22,23 +24,40 @@ const FAN_CARDS: Card[] = [
 
 const FAN_PICTURES = [cat, umbrella, cake, bicycle];
 
+const FAN_DIGITS = ["2", "0", "8", "5", "1"];
+
 const spread = (i: number, count: number) => ({ "--o": i - (count - 1) / 2 }) as CSSProperties;
+
+// Tiến độ hiện trên thẻ; null khi chưa có (khách, hoặc chưa tải được)
+interface PickProgress {
+    unlocked: number;
+    maxLevel: number;
+    nextCount?: number;
+    played?: number;
+}
+
+const fromCatalog = (game: GameCatalogItem | null): PickProgress | null => {
+    if (!game) return null;
+    const unlocked = game.player?.unlockedLevel ?? 1;
+    return { unlocked, maxLevel: game.maxLevel, nextCount: game.levels[unlocked - 1]?.itemCount, played: game.player?.played };
+};
 
 interface GamePickProps {
     to: string;
-    variant: "cards" | "images";
+    variant: "cards" | "images" | "numbers";
     title: string;
     description: string;
     unit: string;
-    game: GameCatalogItem | null;
+    progress: PickProgress | null;
+    note?: string;  // Dòng thay cho số liệu, ví dụ trò cần đăng nhập
     fan: ReactNode;
 }
 
 // Một trò chơi: bàn có bài xoè (xoè rộng hơn khi rê chuột), mô tả, tiến độ và nút chơi tiếp
-const GamePick = ({ to, variant, title, description, unit, game, fan }: GamePickProps) => {
-    const unlocked = game?.player?.unlockedLevel ?? 1;
-    const maxLevel = game?.maxLevel ?? 10;
-    const nextCount = game?.levels[unlocked - 1]?.itemCount;
+const GamePick = ({ to, variant, title, description, unit, progress, note, fan }: GamePickProps) => {
+    const unlocked = progress?.unlocked ?? 1;
+    const maxLevel = progress?.maxLevel ?? 10;
+    const nextCount = progress?.nextCount;
 
     return (
         <Link to={to} viewTransition className={`pick pick--${variant}`} aria-label={`${title}: chơi cấp ${unlocked}`}>
@@ -63,13 +82,14 @@ const GamePick = ({ to, variant, title, description, unit, game, fan }: GamePick
                             </dd>
                         </div>
                     )}
-                    {game?.player && (
+                    {progress?.played !== undefined && (
                         <div>
                             <dt>Đã chơi</dt>
-                            <dd>{game.player.played} ván</dd>
+                            <dd>{progress.played} ván</dd>
                         </div>
                     )}
                 </dl>
+                {note && <p className="pick__note">{note}</p>}
                 <ol className="pick__ladder" aria-hidden="true">
                     {Array.from({ length: maxLevel }, (_, i) => (
                         <li key={i} data-on={i < unlocked} />
@@ -87,6 +107,8 @@ const GamePick = ({ to, variant, title, description, unit, game, fan }: GamePick
 export const GameSelectionPage = () => {
     const { game: cardGame } = useGameCatalog("card");
     const { game: imageGame } = useGameCatalog("image");
+    const numbers = useNumbersProgress();
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     return (
         <>
@@ -94,7 +116,7 @@ export const GameSelectionPage = () => {
             <main className="arcade page-col">
                 <div className="arcade__head">
                     <h1>Chọn trò chơi</h1>
-                    <p>Hai trò, mỗi trò mười cấp. Nhớ thứ tự, rồi xếp lại cho đúng.</p>
+                    <p>Ba trò, mỗi trò mười cấp. Nhớ thứ tự, rồi xếp lại cho đúng.</p>
                 </div>
 
                 <div className="arcade__games">
@@ -104,7 +126,7 @@ export const GameSelectionPage = () => {
                         title="Thẻ bài"
                         description="Nhớ thứ tự các lá bài, rồi tìm lại chúng trong bộ 52 lá."
                         unit="lá"
-                        game={cardGame}
+                        progress={fromCatalog(cardGame)}
                         fan={FAN_CARDS.map((card, i) => (
                             <span key={`${card.rank}${card.suit}`} style={spread(i, FAN_CARDS.length)}>
                                 <PlayingCard card={card} size="md" />
@@ -117,10 +139,32 @@ export const GameSelectionPage = () => {
                         title="Hình ảnh"
                         description="Nhớ thứ tự các bức ảnh, rồi xếp chúng lại từ một bộ đã xáo trộn."
                         unit="hình"
-                        game={imageGame}
+                        progress={fromCatalog(imageGame)}
                         fan={FAN_PICTURES.map((src, i) => (
                             <span key={src} className="ptile" data-size="md" style={spread(i, FAN_PICTURES.length)}>
                                 <img src={src} alt="" />
+                            </span>
+                        ))}
+                    />
+                    <GamePick
+                        to="/games/numbers"
+                        variant="numbers"
+                        title="Ghi nhớ số"
+                        description="Nhớ một dãy chữ số dài theo đúng thứ tự, rồi gõ lại từng số."
+                        unit="chữ số"
+                        progress={
+                            numbers
+                                ? {
+                                      unlocked: numbers.unlockedLevel,
+                                      maxLevel: numbers.digitCounts.length,
+                                      nextCount: numbers.digitCounts[numbers.unlockedLevel - 1],
+                                  }
+                                : null
+                        }
+                        note={isAuthenticated ? undefined : "Cần đăng nhập để chơi và lưu tiến độ."}
+                        fan={FAN_DIGITS.map((digit, i) => (
+                            <span key={i} className="pick__digit" style={spread(i, FAN_DIGITS.length)}>
+                                {digit}
                             </span>
                         ))}
                     />

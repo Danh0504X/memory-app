@@ -2029,3 +2029,58 @@
 .round__back:hover svg {
   transform: translateX(-3px);
 }
+
+/* ── Trang chọn trò chơi: ba trò ── */
+
+.arcade__games {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .arcade__games {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .arcade__games {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pick--numbers .pick__table {
+  background: var(--color-sun-field);
+}
+
+/* Ô chữ số trên bàn của trò Ghi nhớ số, xoè như lá bài */
+.pick__digit {
+  width: 60px;
+  aspect-ratio: 5 / 7;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font-size: 34px;
+  font-weight: 800;
+  box-shadow: 0 1px 2px rgba(16, 48, 24, 0.2);
+}
+
+.pick__note {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+/* Ô chữ số giãn rộng hơn lá bài để từng số đều đọc được */
+.pick--numbers .pick__fan > * {
+  transform: translate(-50%, -50%) translateX(calc(var(--o) * 50px * var(--spread, 1)))
+    rotate(calc(var(--o) * 6deg * var(--spread, 1)));
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pick--numbers:hover .pick__fan {
+    --spread: 1.25;
+  }
+}

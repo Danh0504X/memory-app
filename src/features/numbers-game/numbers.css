@@ -1,0 +1,481 @@
+/* Ghi nhớ số: phần riêng; bàn chơi, thanh trên, màn thiết lập và bảng điểm dùng chung ở shared-game/game.css.
+   Chữ số là "lá bài" của trò này: ô trắng chữ to, nhóm chưa xem thì úp vàng như mặt sau lá bài. */
+
+/* ── Màn thiết lập ── */
+
+.nmodes {
+  margin: -4px 0 16px;
+}
+
+.nfields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nfields label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.nfields label span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}
+
+.ninput {
+  width: 100%;
+  height: 42px;
+  padding-inline: 12px;
+  border: 1px solid #c4d2c8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ninput:focus-visible {
+  border-color: var(--color-brand);
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+.ninput[aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.gdlg .ninput {
+  width: 160px;
+}
+
+.nchallenge {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.nchallenge p {
+  margin: 0;
+}
+
+.nchallenge__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-brand-deep);
+}
+
+.nchallenge__score {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nchallenge__score strong {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-brand-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.nchallenge__meta {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+}
+
+/* ── Dải báo lỗi (dưới thanh trên, hoặc trên màn thiết lập) ── */
+
+.nerror {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  width: min(100% - 2 * clamp(8px, 1.2vw, 14px), 1080px);
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #ffe4df;
+  color: #8f1d14;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nerror p {
+  flex: 1;
+  margin: 0;
+}
+
+.nerror button {
+  height: 36px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #8f1d14;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nerror button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Màn chờ ── */
+
+.nwait {
+  text-align: center;
+}
+
+.nwait h1 {
+  margin: 0;
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 800;
+}
+
+.nwait__lead {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.nwait__clock {
+  margin: 0;
+  padding: 10px 28px;
+  border-radius: 20px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font-size: clamp(48px, 6vw, 72px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.nwait .btn {
+  height: 52px;
+  padding-inline: 26px;
+}
+
+.nwait .btn:focus-visible {
+  outline-color: #ffffff;
+}
+
+/* ── Ghi nhớ: nhóm số đang xem ── */
+
+.ngroup {
+  display: flex;
+  gap: clamp(6px, 1vw, 10px);
+  padding: clamp(14px, 2vw, 20px);
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.ngroup__digit {
+  width: clamp(64px, 7vw, 92px);
+  aspect-ratio: 5 / 7;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font-size: clamp(48px, 5.6vw, 72px);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgba(16, 48, 24, 0.2);
+}
+
+/* Dải mọi nhóm: nhóm đã xem hiện số, nhóm chưa xem úp vàng.
+   Viết kèm .reel để thắng quy tắc chung .reel button (nền trong suốt) của game.css */
+.reel .nchip {
+  min-width: 52px;
+  height: 40px;
+  padding-inline: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.reel .nchip[data-back='true'] {
+  background: var(--color-sun);
+}
+
+/* ── Gõ lại: các ô trên bàn ── */
+
+.nsave {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.nsave[data-state='dirty'] {
+  color: var(--color-sun);
+}
+
+.nrows {
+  width: 100%;
+  max-width: 1000px;
+  display: grid;
+  justify-content: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.nrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nrow__no {
+  width: 28px;
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.nrow__cells {
+  display: flex;
+  gap: 6px;
+}
+
+.ncell {
+  display: block;
+  width: clamp(34px, 4vw, 46px);
+  height: clamp(44px, 5vw, 56px);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  transition: background-color 140ms ease, transform 140ms var(--ease-out);
+  cursor: text;
+}
+
+.ncell[data-filled='true'] {
+  background: #ffffff;
+}
+
+.ncell[data-current='true'] {
+  background: #fff8db;
+  box-shadow: 0 0 0 3px var(--color-sun);
+  transform: translateY(-2px);
+}
+
+/* Năm ô một nhịp: khoảng hở lớn hơn sau ô thứ 5 của mỗi hàng để dễ đếm vị trí */
+.nrow__cells .ncell:nth-child(5) {
+  margin-right: 8px;
+}
+
+.ncell input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  caret-color: transparent;
+  outline: none;
+}
+
+.ncell input:disabled {
+  color: #6b7686;
+}
+
+/* ── Bàn phím số dưới bàn ── */
+
+.nkeys__digits {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nkeys__digits button {
+  height: 56px;
+  border: 0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 1px 2px rgba(16, 48, 24, 0.18);
+  cursor: pointer;
+  transition: transform 120ms var(--ease-out), background-color 140ms ease;
+}
+
+.nkeys__digits button:hover:not(:disabled) {
+  background: #e3f1e6;
+}
+
+.nkeys__digits button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.nkeys__tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nkeys__tools button {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-step);
+  color: var(--color-brand-deep);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nkeys__tools button:hover:not(:disabled) {
+  background: #d6e6da;
+}
+
+.nkeys button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Kết quả: đối chiếu từng chữ số ── */
+
+.ncompare {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 6px;
+}
+
+.ncompare li {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 6px 2px 8px;
+  border-radius: 10px;
+  background: #e3f1e6;
+  font-variant-numeric: tabular-nums;
+}
+
+.ncompare li[data-status='wrong'] {
+  background: #ffe4df;
+}
+
+.ncompare li[data-status='blank'] {
+  background: #eef1f4;
+}
+
+.ncompare__no {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.ncompare__expected {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.ncompare__actual {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--color-brand);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.ncompare li[data-status='wrong'] .ncompare__actual {
+  background: #c62f2f;
+}
+
+.ncompare li[data-status='blank'] .ncompare__actual {
+  background: transparent;
+  color: var(--color-ink-soft);
+}
+
+/* ── Màn hình hẹp ── */
+
+@media (max-width: 760px) {
+  .nfields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nkeys__digits {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .nrows {
+    justify-content: start;
+  }
+
+  .ngroup__digit {
+    width: clamp(44px, 14vw, 64px);
+    font-size: clamp(32px, 10vw, 48px);
+  }
+}
+
+/* Điện thoại: hàng ô tự xuống dòng thay vì tràn ngang, ô nhỏ lại một chút */
+@media (max-width: 640px) {
+  .nrows {
+    justify-content: stretch;
+    overflow-x: visible;
+  }
+
+  .nrow {
+    align-items: flex-start;
+  }
+
+  .nrow__no {
+    width: 20px;
+    padding-top: 12px;
+  }
+
+  .nrow__cells {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .nrow__cells .ncell:nth-child(5) {
+    margin-right: 0;
+  }
+
+  .ncell {
+    width: 34px;
+    height: 44px;
+  }
+}
