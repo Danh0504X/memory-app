@@ -124,6 +124,14 @@ export const GameSelectionPage = () => {
               </div>
             </div>
 
+            <button type="button" onClick={() => navigate("/games/numbers")}
+              className="group flex flex-col justify-between gap-6 rounded-[28px] border-2 border-[#e3ebe6] bg-white p-7 text-left transition hover:-translate-y-1 hover:border-[#9bc9a8] hover:shadow-lg">
+              <div aria-hidden="true" className="flex h-[220px] items-center justify-center gap-3 rounded-[20px] bg-[#eaf8ef]">
+                {["0", "2", "9"].map((digit) => <span key={digit} className="flex h-20 w-14 items-center justify-center rounded-2xl border border-[#d7e5dd] bg-white font-mono text-4xl font-bold text-[#2e7d32] shadow-sm">{digit}</span>)}
+              </div>
+              <div><h2 className="text-2xl font-extrabold group-hover:text-[#2e7d32]">Ghi nhớ số</h2>
+                <p className="mt-2 text-[15px] font-medium text-[#667085]">Ghi nhớ từng nhóm chữ số và nhập lại theo đúng thứ tự.</p></div>
+            </button>
             {/* Card 3: Game Từ ngẫu nhiên (Words Game) */}
             <div
               role="button"

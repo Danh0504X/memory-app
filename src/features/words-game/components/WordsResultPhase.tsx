@@ -28,7 +28,6 @@ export const WordsResultPhase = () => {
     });
 
     const score = results.filter((r) => r.isCorrect).length;
-    const isPerfect = score === wordsToMemorize.length;
 
     // Tự động lưu kết quả ván đấu ngầm xuống Backend
     useRecordGameSession({

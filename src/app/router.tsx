@@ -5,6 +5,7 @@ import HomePage from "@/features/home/pages/HomePage";
 import GameSelectionPage from "@/components/layout/GameSelectionPage";
 import { CardsGame } from "@/features/cards-game/components/CardsGame";
 import { ImagesGame } from "@/features/images-game/components/ImagesGame";
+import { NumbersGame } from "@/features/numbers-game/components/NumbersGame";
 import { WordsGame } from "@/features/words-game/components/WordsGame";
 import { PublicOnlyRoute } from "./PublicOnlyRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      { path: "/games/numbers", element: <NumbersGame /> },
       {
         path: "/profile",
         element: <ProfilePage />,

@@ -4,13 +4,15 @@ import { useNavigate } from "react-router-dom";
 interface GameResultCardProps {
     correctCount: number;
     totalCount: number;
-    level: number;
+    level?: number;
+    accuracy?: number;
     maxLevel?: number;
     onPlayAgain: () => void;
     onReset: () => void;
 }
 
 export const GameResultCard = ({
+    accuracy,
     correctCount,
     totalCount,
     level,
@@ -20,11 +22,14 @@ export const GameResultCard = ({
 }: GameResultCardProps) => {
     const navigate = useNavigate();
     const isPerfect = correctCount === totalCount;
-    const percentage = Math.round((correctCount / totalCount) * 100);
+    const percentage = accuracy ?? Math.round((correctCount / totalCount) * 100);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Enter") onPlayAgain();
+            if (e.key === "Enter" && !(e.target instanceof HTMLElement && e.target.closest("button, a, input, select, textarea"))) {
+                e.preventDefault();
+                onPlayAgain();
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -77,12 +82,12 @@ export const GameResultCard = ({
             </div>
 
             {/* Thông báo kết quả */}
-            {isPerfect && level < maxLevel && (
+            {isPerfect && level !== undefined && level < maxLevel && (
                 <p className="mb-4 text-sm font-semibold text-[#1a7a4a]">
                     🎉 Tuyệt vời! Bạn đã mở khoá <strong>Cấp độ {level + 1}</strong>
                 </p>
             )}
-            {isPerfect && level === maxLevel && (
+            {isPerfect && level !== undefined && level === maxLevel && (
                 <p className="mb-4 text-sm font-semibold text-[#1a7a4a]">
                     🏆 Chúc mừng! Bạn đã chinh phục cấp độ cao nhất!
                 </p>
@@ -101,7 +106,7 @@ export const GameResultCard = ({
                     className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[15px] font-bold text-white shadow-md transition hover:shadow-lg active:scale-95 cursor-pointer"
                     style={{ backgroundColor: "#1a7a4a" }}
                 >
-                    {isPerfect && level < maxLevel ? "Chơi Cấp độ tiếp theo" : "Chơi lại cấp độ này"}
+                    {isPerfect && level !== undefined && level < maxLevel ? "Chơi Cấp độ tiếp theo" : level !== undefined ? "Chơi lại cấp độ này" : "Chơi lại"}
                 </button>
                 <button
                     type="button"

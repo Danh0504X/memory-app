@@ -1,4 +1,5 @@
 interface GameFooterNavProps {
+    itemLabel?: string;
     onFirst: () => void;
     onPrev: () => void;
     onNext: () => void;
@@ -10,6 +11,7 @@ interface GameFooterNavProps {
 }
 
 export const GameFooterNav = ({
+    itemLabel = "để lật thẻ",
     onFirst,
     onPrev,
     onNext,
@@ -51,7 +53,7 @@ export const GameFooterNav = ({
             <p className="flex flex-wrap items-center justify-center gap-1.5 text-xs text-[#77839a]">
                 <kbd className="rounded border border-[#e0eee6] bg-[#f5faf7] px-1.5 py-0.5 font-mono text-[10px]">←</kbd>
                 <kbd className="rounded border border-[#e0eee6] bg-[#f5faf7] px-1.5 py-0.5 font-mono text-[10px]">→</kbd>
-                <span>để lật thẻ</span>
+                <span>{itemLabel}</span>
                 <span className="mx-1 text-[#c8d8d0]">•</span>
                 <kbd className="rounded border border-[#e0eee6] bg-[#f5faf7] px-1.5 py-0.5 font-mono text-[10px]">Space</kbd>
                 <span>về đầu</span>

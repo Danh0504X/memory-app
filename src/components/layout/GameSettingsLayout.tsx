@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { LevelExplanationModal } from "@/features/cards-game/components/LevelExplanationModal";
 import { GameGuideModal } from "@/features/cards-game/components/GameGuideModal";
 import { Header } from "./Header";
@@ -21,6 +21,10 @@ const getLevelLabel = (lvl: number) => {
 
 interface GameSettingsLayoutProps {
     title: string;
+    modeControl?: ReactNode;
+    settingsContent?: ReactNode;
+    startDisabled?: boolean;
+    startLabel?: string;
     level: number;
     itemCount: number;
     itemUnit: string; // ví dụ: "thẻ bài" hoặc "hình ảnh"
@@ -34,6 +38,10 @@ interface GameSettingsLayoutProps {
 
 export const GameSettingsLayout = ({
     title,
+    modeControl,
+    settingsContent,
+    startDisabled = false,
+    startLabel = "Bắt đầu",
     level,
     itemCount,
     itemUnit,
@@ -53,8 +61,8 @@ export const GameSettingsLayout = ({
             <Header />
             <main className="min-h-screen bg-[#f6fcf8] px-4 py-8 font-sans text-[#121c2a]">
                 <div className="mx-auto flex max-w-4xl flex-col items-start gap-6">
-                    <header className="flex w-full items-center justify-between">
-                        <h1 className="text-[40px] font-extrabold tracking-[-1px] text-[#0d631b]">
+                    <header className="flex w-full flex-wrap items-center justify-between gap-4">
+                        <h1 className="text-[32px] sm:text-[40px] font-extrabold tracking-[-1px] text-[#0d631b]">
                             {title}
                         </h1>
 
@@ -95,7 +103,7 @@ export const GameSettingsLayout = ({
                             </button>
                         </nav>
 
-                        <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-[0px_8px_30px_rgba(0,0,0,0.05)]">
+                        {modeControl ?? <div className="flex items-center gap-2 rounded-2xl bg-white p-1.5 shadow-[0px_8px_30px_rgba(0,0,0,0.05)]">
                             {["Tiêu chuẩn", "Thử thách ngày"].map((tab) => {
                                 const isActive = activeTab === tab;
                                 return (
@@ -118,13 +126,14 @@ export const GameSettingsLayout = ({
                                     </button>
                                 );
                             })}
-                        </div>
+                        </div>}
                     </div>
 
                     <section className="relative w-full overflow-hidden rounded-[32px] bg-white p-8 shadow-[0px_2px_6px_rgba(0,0,0,0.05),0px_8px_30px_rgba(0,0,0,0.0a)]">
                         <div className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-[#80f7d833] blur-[32px]" />
 
                         <div className="relative z-10 flex flex-col gap-6">
+                            {settingsContent ?? <>
                             <div className="flex flex-wrap items-center gap-3">
                                 <h2 className="text-[28px] font-extrabold tracking-[-0.3px] text-[#121c2a]">
                                     Cấp độ {level}
@@ -159,13 +168,15 @@ export const GameSettingsLayout = ({
                                 <span>Độ chính xác yêu cầu: 100%</span>
                             </div>
 
+                            </>}
                             <div className="pt-2">
                                 <button
                                     type="button"
                                     onClick={onStart}
-                                    className="flex items-center justify-center gap-2 rounded-full bg-[#2e7d32] px-8 py-4 text-[18px] font-bold text-white shadow-[0px_8px_20px_rgba(46,125,50,0.3),0px_4px_0px_#1b5e20] transition hover:bg-[#236527] active:translate-y-1 active:shadow-none cursor-pointer"
+                                    disabled={startDisabled}
+                                    className="flex items-center justify-center gap-2 rounded-full bg-[#2e7d32] px-8 py-4 text-[18px] font-bold text-white shadow-[0px_8px_20px_rgba(46,125,50,0.3),0px_4px_0px_#1b5e20] transition hover:bg-[#236527] active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                 >
-                                    <span>Bắt đầu</span>
+                                    <span>{startLabel}</span>
                                 </button>
                             </div>
                         </div>
