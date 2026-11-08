@@ -46,6 +46,7 @@ export interface RoundRules {
   passAccuracy: number;
   requiredScore?: number;
   wrongAnswerPenalty?: number;
+  language?: string;
 }
 
 interface RoundBase {
@@ -112,6 +113,7 @@ export interface StartRoundRequest {
   itemCount?: number; // Chỉ dùng khi mode = "custom"
   memorizeSec?: number;
   recallSec?: number;
+  language?: string;
 }
 
 type SessionResponse<T> = ApiSuccessResponse<{ session: T }>;

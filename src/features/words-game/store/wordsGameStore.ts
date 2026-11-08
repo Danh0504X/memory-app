@@ -16,6 +16,7 @@ import {
 import type {
   WordsGamePhase,
   WordsPreferences,
+  SupportedLanguageCode,
 } from "../types/wordsTypes";
 
 type PendingAction = "start" | "recall" | "submit" | null;
@@ -24,6 +25,7 @@ interface StartOptions {
   memorizeSec?: number;
   gameLevel?: number;
   customWordCount?: number | null;
+  language?: SupportedLanguageCode;
 }
 
 interface WordsGameState {
@@ -105,15 +107,17 @@ export const useWordsGameStore = create<WordsGameState>()(
         const requestId = ++generation;
         set({ pending: "start", error: null });
 
-        const { memorizeTime, selectedLevel } = get();
+        const { preferences, memorizeTime, selectedLevel } = get();
         const targetMemorizeSec = options?.memorizeSec ?? memorizeTime ?? 60;
         const targetLevel = options?.gameLevel ?? selectedLevel ?? 1;
         const customCount = options?.customWordCount ?? null;
+        const language = options?.language ?? preferences.language ?? "vi";
 
         try {
           const { data } = await gamesApi.startRound({
             gameName: "word",
             memorizeSec: targetMemorizeSec,
+            language,
             ...(customCount !== null
               ? { mode: "custom", itemCount: customCount }
               : { gameLevel: targetLevel }),

@@ -69,6 +69,7 @@ test('word: starts round through shared gamesApi and loads items and deadline', 
     api.startRound = async (req) => {
         assert.equal(req.gameName, 'word');
         assert.equal(req.gameLevel, 1);
+        assert.equal(req.language, 'vi');
         return { data: { session: round } };
     };
 
@@ -76,6 +77,24 @@ test('word: starts round through shared gamesApi and loads items and deadline', 
     assert.equal(store.getState().phase, 'memorize');
     assert.equal(store.getState().sessionId, 'word-round');
     assert.deepEqual(store.getState().wordsToMemorize, ['Bồ câu', 'Hải đăng', 'Hoa sen']);
+});
+
+test('word: passes selected language preference to startRound', async () => {
+    let capturedLang = null;
+    api.startRound = async (req) => {
+        capturedLang = req.language;
+        return { data: { session: started() } };
+    };
+
+    store.getState().setPreferences({
+        language: 'en',
+        groups: 2,
+        hideTimer: true,
+        prepTime: 0,
+    });
+
+    await store.getState().startGame({ gameLevel: 2, memorizeSec: 120 });
+    assert.equal(capturedLang, 'en');
 });
 
 test('word: transitions to recall via startRecall and submits answers through submitRound', async () => {
