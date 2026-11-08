@@ -1,0 +1,453 @@
+/* Trang chủ của người đã đăng nhập: khối nền nhạt như trang Tiến độ (app-screen.css),
+   cộng bàn xanh của game (game.css) làm khối chính "Chơi tiếp". */
+
+.today .span-4 { grid-column: span 4; }
+.today .span-8 { grid-column: span 8; }
+
+/* ── Lời chào ── */
+
+.today-hello {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  margin-bottom: 20px;
+}
+
+.today-hello__mascot {
+  width: 64px;
+  height: auto;
+  transform-origin: 50% 100%;
+}
+
+.today-hello h1 {
+  margin: 0;
+  font-size: clamp(22px, 1.9vw, 28px);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.today-hello p {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: var(--color-ink-soft);
+}
+
+/* Buổi tối, chuỗi ngày sắp mất: câu nhắc nổi lên thành một dải màu */
+.today-hello[data-urgent='true'] div p {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #fdf3d6;
+  color: #7a4b00;
+  font-weight: 700;
+}
+
+.today-hello__date {
+  align-self: start;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── Bàn xanh: Chơi tiếp ── */
+
+.today-table {
+  height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: clamp(18px, 2vw, 26px);
+  border-radius: 16px;
+  background: var(--color-brand);
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.today-table__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.today-table__top h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.today-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.today-switch button {
+  height: 34px;
+  padding-inline: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.today-switch button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.today-switch button[aria-pressed='true'] {
+  background: #ffffff;
+  color: var(--color-brand-deep);
+}
+
+.today-table__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 24px;
+}
+
+.today-table__info {
+  display: grid;
+  gap: 10px;
+}
+
+.today-table__game {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.today-table__count {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.today-table__count strong {
+  font-size: clamp(48px, 4.6vw, 64px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-table__count span {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.today-table__note {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.today-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin-top: 4px;
+}
+
+.today-table__actions .btn {
+  height: 48px;
+  padding-inline: 24px;
+  font-size: 16px;
+}
+
+.today-table__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.today-table__more:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.today-table .btn:focus-visible,
+.today-table__more:focus-visible,
+.today-switch button:focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Xấp bài úp xoè ra, số lá đúng bằng số cần nhớ (tối đa 7 lá vẽ ra) */
+.today-fan {
+  position: relative;
+  width: 230px;
+  height: 170px;
+}
+
+.today-fan > * {
+  position: absolute;
+  left: calc(50% - 36px);
+  bottom: 6px;
+  transform-origin: 50% 130%;
+  transform: rotate(calc(var(--o) * 9deg)) translateX(calc(var(--o) * 10px));
+}
+
+/* ── Mục tiêu hôm nay ── */
+
+.goals__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.goals__head p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.goals__ring {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+}
+
+.goals__ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.goals__ring circle {
+  fill: none;
+  stroke-width: 5;
+}
+
+.goals__ring circle:first-child {
+  stroke: var(--well);
+}
+
+.goals__ring circle + circle {
+  stroke: var(--color-brand);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 800ms var(--ease-out);
+}
+
+.goals__ring span {
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.goals {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.goals__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.goals__mark {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--rule);
+  color: #ffffff;
+}
+
+.goals__item[data-done='true'] .goals__mark {
+  background: var(--color-brand);
+  box-shadow: none;
+}
+
+.goals__label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.goals__item[data-done='true'] .goals__label {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: rgba(75, 85, 99, 0.45);
+}
+
+.goals__go {
+  flex: none;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 12px;
+  border-radius: 9px;
+  background: var(--color-step);
+  color: var(--color-brand-deep);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+}
+
+.goals__go:hover {
+  background: #d6e6da;
+}
+
+/* ── Phương pháp và mẹo hôm nay ── */
+
+.method-day {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.method-day__art {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  padding: 6px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.method-day h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.method-day p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.method-day__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 12px 0;
+}
+
+.tip {
+  margin: 0;
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fdf3d6;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tip svg {
+  flex: none;
+  margin-top: 1px;
+  color: #a86b00;
+}
+
+/* ── Màn hình hẹp ── */
+
+@media (max-width: 1023px) {
+  .today .span-4,
+  .today .span-8 {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 640px) {
+  .today-hello {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .today-hello__mascot {
+    width: 48px;
+  }
+
+  .today-hello__date {
+    display: none;
+  }
+
+  .today-table__body {
+    grid-template-columns: 1fr;
+  }
+
+  .today-fan {
+    display: none;
+  }
+}
+
+/* ── Chuyển động ── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .today-hello__mascot {
+    animation: today-bob 2600ms ease-in-out infinite;
+  }
+
+  .today__grid > * {
+    animation: today-rise 560ms var(--ease-expo) both;
+  }
+
+  .today__grid > :nth-child(2) { animation-delay: 60ms; }
+  .today__grid > :nth-child(3) { animation-delay: 120ms; }
+  .today__grid > :nth-child(4) { animation-delay: 160ms; }
+  .today__grid > :nth-child(5) { animation-delay: 200ms; }
+  .today__grid > :nth-child(6) { animation-delay: 240ms; }
+
+  .today-fan > * {
+    animation: game-fan 600ms var(--ease-expo) both;
+    animation-delay: calc(200ms + var(--i, 0) * 50ms);
+  }
+
+  .goals__item[data-done='true'] .goals__mark {
+    animation: today-pop 420ms var(--ease-expo) both;
+  }
+}
+
+@keyframes today-bob {
+  50% {
+    transform: translateY(-4px) rotate(-3deg);
+  }
+}
+
+@keyframes today-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes today-pop {
+  from {
+    transform: scale(0.4);
+  }
+}

@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
-import HomePage from "@/features/home/pages/HomePage";
 import GameSelectionPage from "@/components/layout/GameSelectionPage";
 import { CardsGame } from "@/features/cards-game/components/CardsGame";
 import { ImagesGame } from "@/features/images-game/components/ImagesGame";
@@ -18,6 +17,7 @@ import MemoryPalaceGuidePage from "@/features/methods/pages/MemoryPalaceGuidePag
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
 import MethodsPage from "@/features/methods/pages/MethodsPage";
 import { RootLayout } from "./RootLayout";
+import { HomeRoute } from "./HomeRoute";
 
 // Mọi trang nằm dưới RootLayout (đưa về đầu trang khi chuyển trang)
 export const router = createBrowserRouter([
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
     children: [
   {
     path: "/",
-    element: <HomePage />,
+    element: <HomeRoute />,
   },
   {
     path: "/games",
