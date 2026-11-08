@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { BlockState } from '@/features/dashboard/components/BlockState';
@@ -17,12 +18,38 @@ import '@/features/daily/daily.css';
 
 const timeZone = PROGRESS_TIME_ZONE;
 
+const CURTAIN_STORAGE_KEY = 'memio_opened_curtains';
+
+const getInitialOpenedCurtains = (): Record<string, boolean> => {
+    try {
+        const saved = sessionStorage.getItem(CURTAIN_STORAGE_KEY);
+        return saved ? JSON.parse(saved) : {};
+    } catch {
+        return {};
+    }
+};
+
 // Trang chủ của người đã đăng nhập: việc nên làm hôm nay đứng trước, số liệu tóm tắt đứng sau.
 // Trang Tiến độ (/dashboard) vẫn là nơi xem lại chi tiết.
 export const TodayPage = () => {
     const profile = useProfile();
     const catalog = useCatalog();
     const recent = useRecentSessions();
+
+    const [openedCurtains, setOpenedCurtains] = useState<Record<string, boolean>>(getInitialOpenedCurtains);
+
+    const openCurtain = useCallback((key: string) => {
+        setOpenedCurtains((prev) => {
+            if (prev[key]) return prev;
+            const next = { ...prev, [key]: true };
+            try {
+                sessionStorage.setItem(CURTAIN_STORAGE_KEY, JSON.stringify(next));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    }, []);
 
     const sessions = recent.state.status === 'ready' ? recent.state.data : null;
     const hello = profile.state.status === 'ready' ? greet(profile.state.data, sessions, timeZone) : null;
@@ -70,7 +97,13 @@ export const TodayPage = () => {
                     </section>
 
                     {/* Chuỗi ngày và cấp tài khoản chung một khối, như cột bên của trang Tiến độ */}
-                    <div className="panel span-4 dash__aside curtain-card">
+                    <div
+                        className="panel span-4 dash__aside curtain-card"
+                        data-opened={openedCurtains.streak ? 'true' : undefined}
+                        onMouseEnter={() => openCurtain('streak')}
+                        onTouchStart={() => openCurtain('streak')}
+                        onFocus={() => openCurtain('streak')}
+                    >
                         <div className="card-curtain card-curtain--pink" aria-hidden="true">
                             <span className="card-curtain__title">Chuỗi ngày</span>
                         </div>
@@ -92,7 +125,14 @@ export const TodayPage = () => {
                         </section>
                     </div>
 
-                    <section className="panel span-4 curtain-card" aria-labelledby="method-title">
+                    <section
+                        className="panel span-4 curtain-card"
+                        aria-labelledby="method-title"
+                        data-opened={openedCurtains.method ? 'true' : undefined}
+                        onMouseEnter={() => openCurtain('method')}
+                        onTouchStart={() => openCurtain('method')}
+                        onFocus={() => openCurtain('method')}
+                    >
                         <div className="card-curtain card-curtain--blue" aria-hidden="true">
                             <span className="card-curtain__title">Phương pháp hôm nay</span>
                         </div>
@@ -102,7 +142,14 @@ export const TodayPage = () => {
                         <MethodOfDay />
                     </section>
 
-                    <section className="panel span-4 curtain-card" aria-labelledby="daily-title">
+                    <section
+                        className="panel span-4 curtain-card"
+                        aria-labelledby="daily-title"
+                        data-opened={openedCurtains.daily ? 'true' : undefined}
+                        onMouseEnter={() => openCurtain('daily')}
+                        onTouchStart={() => openCurtain('daily')}
+                        onFocus={() => openCurtain('daily')}
+                    >
                         <div className="card-curtain card-curtain--yellow" aria-hidden="true">
                             <span className="card-curtain__title">Thử thách hôm nay</span>
                         </div>

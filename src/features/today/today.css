@@ -501,8 +501,13 @@
 }
 
 .curtain-card:hover .card-curtain,
-.curtain-card:focus-within .card-curtain {
+.curtain-card:focus-within .card-curtain,
+.curtain-card[data-opened='true'] .card-curtain {
   transform: translateY(-101%);
+}
+
+.curtain-card[data-opened='true'] {
+  cursor: default;
 }
 
 .card-curtain__title {
