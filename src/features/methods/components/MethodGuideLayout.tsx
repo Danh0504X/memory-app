@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 
@@ -25,9 +25,6 @@ export const MethodGuideLayout: React.FC<MethodGuideLayoutProps> = ({
     nextMethodLink,
     nextMethodLabel = "Xem kỹ thuật khác",
 }) => {
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, []);
 
     return (
         <div className="min-h-screen bg-[#F8FBF8] font-sans text-[#1F2937]">
@@ -35,9 +32,13 @@ export const MethodGuideLayout: React.FC<MethodGuideLayoutProps> = ({
 
             <main className="mx-auto max-w-[1040px] px-5 py-8 md:py-12">
                 {/* Breadcrumb */}
-                <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[14px] text-[#2E7D32]">
-                    <Link to={`/?method=${backMethodParam}#methods`} className="hover:underline">
-                        Các cách ghi nhớ
+                <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-[14px] text-[#2E7D32]">
+                    <Link to="/" viewTransition className="hover:underline">
+                        Trang chủ
+                    </Link>
+                    <span className="text-[#5F6B7A] select-none">→</span>
+                    <Link to={`/methods#method-${backMethodParam}`} viewTransition className="hover:underline">
+                        Phương pháp
                     </Link>
                     <span className="text-[#5F6B7A] select-none">→</span>
                     <span className="font-medium text-[#1F2937]">{breadcrumbCurrent}</span>
@@ -79,13 +80,15 @@ export const MethodGuideLayout: React.FC<MethodGuideLayoutProps> = ({
                 {/* Footer Navigation Buttons */}
                 <div className="mt-6 flex flex-col gap-3">
                     <Link
-                        to={`/?method=${backMethodParam}#methods`}
+                        to={`/methods#method-${backMethodParam}`}
+                        viewTransition
                         className="flex h-[52px] w-full items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white px-8 text-[15px] font-semibold text-[#1F2937] transition-colors duration-200 hover:bg-[#F0FAF3] hover:text-[#2E7D32]"
                     >
                         ← Trở lại các cách ghi nhớ
                     </Link>
                     <Link
                         to={nextMethodLink}
+                        viewTransition
                         className="flex h-[52px] w-full items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white px-8 text-[15px] font-semibold text-[#1F2937] transition-colors duration-200 hover:bg-[#F0FAF3] hover:text-[#2E7D32]"
                     >
                         {nextMethodLabel}

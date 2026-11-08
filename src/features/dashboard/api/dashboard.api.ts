@@ -61,9 +61,10 @@ export interface ApiHistoryPage {
     nextCursor: string | null;  // null khi đã hết dữ liệu
 }
 
+// Không truyền from/to thì backend trả các ván mới nhất (tối đa 50 mỗi trang)
 export interface HistoryQuery {
-    from: string;
-    to: string;
+    from?: string;
+    to?: string;
     limit: number;
     game?: ApiGameName;
     cursor?: string;

@@ -1,0 +1,700 @@
+/* Trang đăng nhập / đăng ký: tấm thẻ vào phòng nhớ, xung quanh là các hình móc số trôi nhẹ */
+
+.auth {
+  --a-wall: #f8fbf8;
+  --a-ink: #1f2937;
+  --a-green: #2e7d32;
+  --a-green-deep: #236527;
+  --a-field: #1f5c23;
+  --a-field-hover: #1a521e;
+  --a-yellow: #f4c95d;
+  --a-yellow-strong: #edb73a;
+  --a-error: #ffb4a8;
+  --a-radius: 12px;
+  --a-col: min(calc(100% - 2 * clamp(16px, 4vw, 56px)), 1120px);
+
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--a-wall);
+  color: var(--a-ink);
+  overflow-x: clip;
+}
+
+/* Thanh trên: wordmark và đường sang trang còn lại */
+.auth__bar {
+  width: var(--a-col);
+  margin-inline: auto;
+  padding-block: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  view-transition-name: auth-bar;
+}
+
+.auth__start {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Nút quay lại trang chủ: mũi tên lùi nhẹ khi rê chuột */
+.auth-back {
+  height: 40px;
+  padding-inline: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--a-radius);
+  background: #e6efe8;
+  color: var(--a-green-deep);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 180ms ease, transform 140ms var(--ease-out);
+}
+
+.auth-back svg {
+  transition: transform 300ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-back:hover {
+    background: #d6e6da;
+  }
+
+  .auth-back:hover svg {
+    transform: translateX(-3px);
+  }
+}
+
+.auth-back:active {
+  transform: scale(0.96);
+}
+
+.auth__mark {
+  display: block;
+  border-radius: 8px;
+}
+
+.auth__mark img {
+  display: block;
+  width: 147px;
+  height: auto;
+}
+
+.auth__switch {
+  margin: 0;
+  font-size: 16px;
+}
+
+.auth__link {
+  color: var(--a-green);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: color-mix(in oklab, currentColor 30%, transparent);
+  border-radius: 4px;
+  transition: text-decoration-color 180ms ease, color 180ms ease;
+}
+
+.auth-card .auth__link {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth__link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+.auth :focus-visible {
+  outline: 3px solid var(--a-yellow);
+  outline-offset: 3px;
+}
+
+.auth__bar :focus-visible {
+  outline-color: var(--a-green);
+}
+
+/* Tường: tấm thẻ treo ở giữa */
+.auth__wall {
+  display: grid;
+  align-content: center;
+  padding-block: 8px 48px;
+}
+
+.auth-card {
+  position: relative;
+  width: var(--a-col);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 6fr 5fr;
+  background: var(--a-green);
+  color: #ffffff;
+  border-radius: var(--a-radius);
+  view-transition-name: auth-card;
+}
+
+.auth-card__head {
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.auth-card__title {
+  margin: 0;
+  font-size: clamp(40px, 6vw, 88px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.auth-line {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+.auth-line > span {
+  display: block;
+}
+
+.auth-card__lead {
+  margin: 0;
+  max-width: 32ch;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* Đường đục lỗ và hai rãnh khía giữa hai nửa tấm thẻ */
+.auth-card__body {
+  position: relative;
+  padding: 48px;
+  border-left: 6px dotted var(--a-wall);
+}
+
+.auth-card__body::before,
+.auth-card__body::after {
+  content: '';
+  position: absolute;
+  left: -17px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--a-wall);
+}
+
+.auth-card__body::before {
+  top: -14px;
+}
+
+.auth-card__body::after {
+  bottom: -14px;
+}
+
+/* Form */
+.auth-form {
+  display: grid;
+  gap: 20px;
+}
+
+.auth-form--grid {
+  grid-template-columns: 1fr 1fr;
+  column-gap: 16px;
+  align-items: start;
+}
+
+.auth-form--grid .auth-form__actions {
+  grid-column: 1 / -1;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field__control {
+  position: relative;
+}
+
+.field__input {
+  width: 100%;
+  height: 52px;
+  padding-inline: 16px;
+  border: 0;
+  border-radius: var(--a-radius);
+  background: var(--a-field);
+  color: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: background-color 180ms ease, color 180ms ease, outline-color 180ms ease;
+}
+
+.field__control:has(.field__reveal) .field__input {
+  padding-right: 52px;
+}
+
+.field__input::placeholder {
+  color: color-mix(in oklab, #ffffff 72%, transparent);
+  transition: color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .field__input:hover {
+    background: var(--a-field-hover);
+  }
+}
+
+.auth .field__input:focus {
+  background: #ffffff;
+  color: var(--a-ink);
+  outline-color: var(--a-yellow);
+}
+
+.field__input:focus::placeholder {
+  color: #667085;
+}
+
+.field__input:-webkit-autofill {
+  -webkit-text-fill-color: var(--a-ink);
+}
+
+.field[data-invalid='true'] .field__input {
+  outline-color: var(--a-error);
+}
+
+.field__reveal {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  translate: 0 -50%;
+  transition: color 180ms ease, transform 140ms var(--ease-out);
+}
+
+.field__input:focus + .field__reveal {
+  color: var(--a-green);
+}
+
+.field__reveal:active {
+  transform: scale(0.92);
+}
+
+.field__error {
+  margin: 8px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.field__error::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--a-error);
+  translate: 0 -1px;
+}
+
+/* Điều kiện mật khẩu, luôn hiện cạnh ô và sáng lên khi đạt */
+.rules {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 14px;
+}
+
+.rules__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rules__item::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--a-field);
+  transition: background-color 180ms ease, transform 300ms var(--ease-out);
+}
+
+.rules__item[data-met='true']::before {
+  background: var(--a-yellow);
+  transform: scale(1.3);
+}
+
+.auth-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.auth-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.auth-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--a-yellow);
+  cursor: pointer;
+}
+
+.auth-form__actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.auth-button {
+  height: 56px;
+  padding-inline: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--a-radius);
+  background: var(--a-yellow);
+  color: var(--a-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out), background-color 180ms ease;
+}
+
+.auth-button--quiet {
+  background: var(--a-field);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-button:hover {
+    background: var(--a-yellow-strong);
+  }
+
+  .auth-button--quiet:hover {
+    background: var(--a-field-hover);
+  }
+}
+
+.auth-button:active {
+  transform: scale(0.97);
+}
+
+.auth-button:disabled {
+  opacity: 0.75;
+  cursor: progress;
+}
+
+.auth-button:focus-visible {
+  outline-color: #ffffff;
+}
+
+.auth-alert {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border-radius: var(--a-radius);
+  background: #ffffff;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.auth-done {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* Hình móc số-hình trôi quanh thẻ: vị trí theo %, nghiêng theo con trỏ (--px, --py), trôi chậm tại chỗ */
+.auth__wall {
+  position: relative;
+  --px: 0;
+  --py: 0;
+}
+
+.drifters {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.drifter {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  transform: translate(calc(var(--px) * var(--depth) * -22px), calc(var(--py) * var(--depth) * -16px));
+  transition: transform 900ms var(--ease-out);
+}
+
+.drifter img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.auth-card {
+  z-index: 1;
+}
+
+/* màn hẹp: hai bên thẻ không còn chỗ, chỉ giữ các hình phía trên và dưới */
+@media (max-width: 999px) {
+  .drifter[data-side='true'] {
+    display: none;
+  }
+}
+
+@media (max-width: 699px) {
+  .drifters {
+    display: none;
+  }
+}
+
+/* Mở màn: thẻ đặt lên tường, tiêu đề trồi khỏi mặt nạ, nội thất mọc từ sàn (xong trong 1.2s) */
+@media (prefers-reduced-motion: no-preference) {
+  .auth[data-intro='true'] .auth-card {
+    animation: auth-rise 800ms var(--ease-expo) both;
+  }
+
+  .auth[data-intro='true'] .auth-line > span {
+    animation: auth-line 900ms var(--ease-expo) both;
+    animation-delay: calc(120ms + var(--i) * 90ms);
+  }
+
+  .auth[data-intro='true'] .auth-card__lead,
+  .auth[data-intro='true'] .auth-card__body > * {
+    animation: auth-rise 600ms var(--ease-out) both;
+    animation-delay: 380ms;
+  }
+
+  .auth[data-intro='true'] .auth-card__body > * {
+    animation-delay: 440ms;
+  }
+
+  .auth[data-intro='true'] .drifter img {
+    animation:
+      auth-pop 900ms var(--ease-expo) both,
+      auth-float 7s ease-in-out infinite alternate;
+    animation-delay: calc(500ms + var(--i) * 70ms), calc(var(--i) * -1.3s);
+  }
+
+  .auth[data-intro='false'] .drifter img {
+    animation: auth-float 7s ease-in-out infinite alternate;
+    animation-delay: calc(var(--i) * -1.3s);
+  }
+
+  .field__error,
+  .auth-alert {
+    animation: auth-note 280ms var(--ease-out) both;
+  }
+}
+
+@keyframes auth-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes auth-line {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+@keyframes auth-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+/* trôi lên xuống và nghiêng nhẹ, dùng translate/rotate riêng để không đè transform của parallax */
+@keyframes auth-float {
+  from {
+    translate: 0 6px;
+    rotate: 0deg;
+  }
+  to {
+    translate: 0 -10px;
+    rotate: var(--tilt);
+  }
+}
+
+@keyframes auth-note {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Chuyển trang đăng nhập ↔ đăng ký: thẻ co giãn sang kích thước mới, thanh trên đứng yên */
+::view-transition-group(auth-card) {
+  animation-duration: 520ms;
+  animation-timing-function: var(--ease-in-out);
+}
+
+::view-transition-image-pair(auth-card) {
+  overflow: clip;
+  border-radius: 12px;
+}
+
+::view-transition-old(auth-card) {
+  animation: auth-vt-out 200ms cubic-bezier(0.55, 0.055, 0.675, 0.19) both;
+}
+
+::view-transition-new(auth-card) {
+  animation: auth-vt-in 420ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+::view-transition-old(auth-card),
+::view-transition-new(auth-card) {
+  height: 100%;
+  object-fit: none;
+  object-position: top left;
+}
+
+@keyframes auth-vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes auth-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .drifter {
+    transform: none;
+  }
+}
+
+/* Máy tính bảng và điện thoại: thẻ dựng đứng, đường đục lỗ nằm ngang */
+@media (max-width: 860px) {
+  .auth-card {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card__head {
+    padding: 32px 28px;
+    gap: 16px;
+  }
+
+  .auth-card__body {
+    padding: 32px 28px;
+    border-left: 0;
+    border-top: 6px dotted var(--a-wall);
+  }
+
+  .auth-card__body::before,
+  .auth-card__body::after {
+    top: -17px;
+    bottom: auto;
+  }
+
+  .auth-card__body::before {
+    left: -14px;
+  }
+
+  .auth-card__body::after {
+    left: auto;
+    right: -14px;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth__bar {
+    padding-block: 16px;
+  }
+
+  .auth__mark img {
+    width: 118px;
+  }
+
+  .auth__start {
+    gap: 12px;
+  }
+
+  .auth-back {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .auth-back__label,
+  .auth__switch-prompt {
+    display: none;
+  }
+
+  .auth__switch {
+    font-size: 14px;
+  }
+
+  .auth__wall {
+    padding-block: 0 32px;
+  }
+
+  .auth-card__head,
+  .auth-card__body {
+    padding: 28px 20px;
+  }
+
+  .auth-card__lead {
+    font-size: 16px;
+  }
+
+  .auth-form--grid,
+  .auth-form__actions {
+    grid-template-columns: 1fr;
+    grid-auto-flow: row;
+  }
+}

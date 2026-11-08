@@ -1,101 +1,62 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, ChevronDown, User, LogOut, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { BarChart3, Menu, X, User, LogOut, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import memioLogo from "@/assets/memio/Logo/Memio.svg";
+import { UserMenu } from "./UserMenu";
+import { prefetchDashboard } from "@/features/dashboard/hooks/useDashboardData";
 
+// Nút đăng nhập/đăng ký mang cùng view-transition-name với tấm vé xanh ở trang auth, nên khi chuyển trang nó "nở" thành tấm vé
+const morphIntoAuthCard = (event: React.MouseEvent<HTMLElement>) => {
+  event.currentTarget.style.setProperty("view-transition-name", "auth-card");
+};
+
+// "Trang chủ" đứng đầu cho người chưa quen quy ước bấm logo để về trang chủ.
+// Trang Tiến độ nằm trong menu tài khoản (UserMenu) và phần tài khoản của menu điện thoại, không đứng trên thanh này.
 const NAV_LINKS = [
-  { label: "Phương pháp", href: "/#methods" },
+  { label: "Trang chủ", href: "/" },
+  { label: "Phương pháp", href: "/methods" },
   { label: "Trò chơi", href: "/games" },
-  { label: "Tiến độ", href: "/dashboard" },
 ];
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
 
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const userButtonRef = useRef<HTMLButtonElement>(null);
-  const profileItemRef = useRef<HTMLButtonElement>(null);
-  const logoutItemRef = useRef<HTMLButtonElement>(null);
-
   const { user, isAuthenticated, logout } = useAuthStore();
-  const navigate = useNavigate();
 
-  // Đóng dropdown khi click bên ngoài hoặc bấm phím Escape
+  // Mục đang mở: trang hiện tại hoặc trang con của nó (/methods/story-linking thuộc "Phương pháp")
+  const { pathname } = useLocation();
+  const isCurrent = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  // Trang có các chương màu (data-tint: trang chủ, trang Phương pháp): header lấy màu chương đang nằm ngay dưới nó
+  const [tint, setTint] = useState<string | null>(null);
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsUserMenuOpen(false);
-        setLogoutError(null);
-      }
-    };
+    const zones = [...document.querySelectorAll<HTMLElement>("[data-tint]")];
+    if (!zones.length) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isUserMenuOpen) {
-        setIsUserMenuOpen(false);
-        setLogoutError(null);
-        userButtonRef.current?.focus();
-      }
-    };
-
-    if (isUserMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("touchstart", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isUserMenuOpen]);
-
-  // Điều hướng bằng bàn phím trên trigger button
-  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
-      if (!isUserMenuOpen) {
-        e.preventDefault();
-        setIsUserMenuOpen(true);
-        setLogoutError(null);
-        setTimeout(() => {
-          profileItemRef.current?.focus();
-        }, 0);
-      }
-    }
-  };
-
-  // Điều hướng bằng bàn phím giữa các mục trong dropdown
-  const handleItemKeyDown = (
-    e: React.KeyboardEvent<HTMLButtonElement>,
-    index: number,
-  ) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (index === 0) {
-        logoutItemRef.current?.focus();
-      } else {
-        profileItemRef.current?.focus();
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (index === 1) {
-        profileItemRef.current?.focus();
-      } else {
-        logoutItemRef.current?.focus();
-      }
-    } else if (e.key === "Tab") {
-      setIsUserMenuOpen(false);
-      setLogoutError(null);
-    }
-  };
+    const visible = new Set<HTMLElement>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const zone = entry.target as HTMLElement;
+          if (entry.isIntersecting) visible.add(zone);
+          else visible.delete(zone);
+        }
+        // Lúc nhảy tới neo, chương cũ chỉ còn chạm mép dải nên vẫn bị tính là đang hiện: luôn lấy vùng nằm thấp hơn
+        const lowest = [...visible].sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0];
+        setTint(lowest?.dataset.tint ?? null);
+      },
+      // Một dải mỏng ngay dưới header (84px)
+      { rootMargin: "-84px 0px -75% 0px" },
+    );
+    zones.forEach((zone) => observer.observe(zone));
+    return () => observer.disconnect();
+  }, []);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -104,7 +65,6 @@ export const Header = () => {
 
     try {
       await logout();
-      setIsUserMenuOpen(false);
       setIsMenuOpen(false);
       navigate("/login", { replace: true });
     } catch (error) {
@@ -119,25 +79,28 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#F8FBF8]/95 backdrop-blur-md font-sans">
-      <div className="mx-auto flex h-[96px] max-w-[1440px] items-center justify-between px-5 md:px-[120px]">
+    <header className="site-header sticky top-0 z-50 bg-wall" data-tint={tint ?? undefined}>
+      <div className="page-col flex h-[84px] items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 z-50">
+        <Link to="/" viewTransition aria-label="Memio, về trang chủ" className="flex items-center gap-3 z-50">
           <img
             src={memioLogo}
-            alt="Memio Logo"
-            className="h-[44px] w-auto object-contain"
+            alt=""
+            className="h-[40px] w-auto object-contain"
           />
         </Link>
 
         {/* Desktop Nav & Actions */}
-        <div className="hidden items-center gap-10 md:flex">
+        {/* Từ 1024px mới đủ chỗ cho 4 mục cùng nút tài khoản trên một hàng; nhỏ hơn dùng menu thu gọn */}
+        <div className="hidden items-center gap-10 lg:flex">
           <nav className="flex items-center gap-10">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className="text-[16px] font-medium text-[#1F2937] transition hover:text-[#2E7D32]"
+                viewTransition
+                aria-current={isCurrent(link.href) ? "page" : undefined}
+                className="nav-link text-body font-medium text-ink"
               >
                 {link.label}
               </Link>
@@ -149,142 +112,40 @@ export const Header = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-[16px] font-medium text-[#1F2937] transition hover:text-[#2E7D32]"
+                  viewTransition
+                  state={{ morph: true }}
+                  onClick={morphIntoAuthCard}
+                  className="nav-link text-body font-medium text-ink"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex h-[56px] items-center justify-center rounded-[16px] bg-[#2E7D32] px-8 text-[16px] font-semibold text-white transition hover:bg-[#236527]"
+                  viewTransition
+                  state={{ morph: true }}
+                  onClick={morphIntoAuthCard}
+                  className="btn btn--brand h-12"
                 >
                   Đăng ký
                 </Link>
               </>
             ) : (
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  ref={userButtonRef}
-                  type="button"
-                  id="user-menu-button"
-                  aria-haspopup="menu"
-                  aria-expanded={isUserMenuOpen}
-                  aria-controls="user-menu-dropdown"
-                  onClick={() => {
-                    setIsUserMenuOpen((prev) => !prev);
-                    setLogoutError(null);
-                  }}
-                  onKeyDown={handleTriggerKeyDown}
-                  className={cn(
-                    "flex items-center gap-3 rounded-[16px] border border-[#E3EBE6] bg-white px-5 py-3 text-[15px] font-semibold text-[#1F2937] transition-all cursor-pointer select-none",
-                    "hover:border-[#2E7D32]/50 hover:bg-[#FDFEFE] hover:shadow-xs",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2",
-                    isUserMenuOpen && "border-[#2E7D32]/50 bg-[#FDFEFE] shadow-xs"
-                  )}
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EAF8EF] text-sm font-bold text-[#2E7D32]">
-                    {user?.username?.charAt(0)?.toUpperCase() || "U"}
-                  </span>
-                  <span className="max-w-[150px] truncate">
-                    {user?.username || "User"}
-                  </span>
-                  <ChevronDown
-                    size={16}
-                    className={cn(
-                      "text-[#667085] transition-transform duration-200",
-                      isUserMenuOpen && "rotate-180 text-[#2E7D32]"
-                    )}
-                    aria-hidden="true"
-                  />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isUserMenuOpen && (
-                  <div
-                    id="user-menu-dropdown"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="user-menu-button"
-                    className="absolute right-0 top-[calc(100%+8px)] w-[240px] rounded-[18px] border border-[#E3EBE6] bg-white p-2 shadow-[0px_8px_24px_rgba(31,77,51,0.08)] z-50 animate-in fade-in-50 zoom-in-95 duration-100"
-                  >
-                    {/* User Info Header */}
-                    <div className="px-3 py-2">
-                      <p className="text-[14px] font-bold text-[#1F2937] truncate">
-                        {user?.username || "Người dùng"}
-                      </p>
-                      {user?.email && (
-                        <p className="text-[12px] text-[#667085] truncate mt-0.5">
-                          {user.email}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="my-1 h-px bg-[#E3EBE6]" role="separator" />
-
-                    {/* Thông báo lỗi nếu đăng xuất thất bại */}
-                    {logoutError && (
-                      <div
-                        role="alert"
-                        className="mb-1.5 rounded-[10px] bg-[#FEF2F2] border border-[#FCA5A5] p-2 text-[12px] text-[#DC2626] leading-tight"
-                      >
-                        {logoutError}
-                      </div>
-                    )}
-
-                    {/* Mục 1: Hồ sơ của bạn */}
-                    <button
-                      ref={profileItemRef}
-                      role="menuitem"
-                      type="button"
-                      tabIndex={0}
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        setLogoutError(null);
-                        navigate("/profile");
-                      }}
-                      onKeyDown={(e) => handleItemKeyDown(e, 0)}
-                      className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-[14px] font-medium text-[#1F2937] hover:bg-[#EAF8EF] hover:text-[#2E7D32] focus:bg-[#EAF8EF] focus:text-[#2E7D32] focus-visible:outline-none transition-colors cursor-pointer text-left"
-                    >
-                      <User size={16} className="text-[#2E7D32] shrink-0" aria-hidden="true" />
-                      <span>Hồ sơ của bạn</span>
-                    </button>
-
-                    <div className="my-1 h-px bg-[#E3EBE6]" role="separator" />
-
-                    {/* Mục 2: Đăng xuất */}
-                    <button
-                      ref={logoutItemRef}
-                      role="menuitem"
-                      type="button"
-                      tabIndex={0}
-                      onClick={handleLogout}
-                      disabled={isLoggingOut}
-                      onKeyDown={(e) => handleItemKeyDown(e, 1)}
-                      className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-[14px] font-medium text-[#DC2626] hover:bg-[#FEF2F2] focus:bg-[#FEF2F2] focus-visible:outline-none transition-colors cursor-pointer text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoggingOut ? (
-                        <Loader2 size={16} className="animate-spin text-[#DC2626] shrink-0" />
-                      ) : (
-                        <LogOut size={16} className="shrink-0" aria-hidden="true" />
-                      )}
-                      <span>{isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              <UserMenu />
             )}
           </div>
         </div>
 
         {/* Mobile Right Buttons */}
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-3 lg:hidden">
           <Link
             to="/games"
-            className="inline-flex h-[44px] items-center justify-center rounded-[14px] bg-[#2E7D32] px-5 text-[15px] font-semibold text-white"
+            viewTransition
+            className="btn btn--brand h-11 px-5"
           >
             Bắt đầu
           </Link>
           <button
-            className="flex h-[44px] w-[44px] items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white text-[#1F2937]"
+            className="flex h-11 w-11 items-center justify-center rounded-ui bg-step text-ink transition-transform active:scale-95"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-expanded={isMenuOpen}
             aria-label="Toggle menu"
@@ -296,8 +157,8 @@ export const Header = () => {
         {/* Mobile Nav Overlay */}
         <div
           className={cn(
-            "fixed inset-0 top-[96px] z-40 bg-[#F8FBF8] px-6 py-8 transition-transform duration-300 ease-in-out md:hidden",
-            isMenuOpen ? "translate-x-0" : "translate-x-full",
+            "fixed inset-0 top-[84px] z-40 bg-wall px-6 py-8 transition-[transform,visibility] duration-300 ease-in-out lg:hidden",
+            isMenuOpen ? "visible translate-x-0" : "invisible translate-x-full",
           )}
         >
           <nav className="flex flex-col gap-6 text-left">
@@ -305,26 +166,30 @@ export const Header = () => {
               <Link
                 key={link.label}
                 to={link.href}
+                viewTransition
                 onClick={() => setIsMenuOpen(false)}
-                className="text-[18px] font-medium text-[#1F2937]"
+                aria-current={isCurrent(link.href) ? "page" : undefined}
+                className="text-[18px] font-medium text-ink aria-[current=page]:font-bold aria-[current=page]:text-brand-deep"
               >
                 {link.label}
               </Link>
             ))}
-            <hr className="border-[#E3EBE6]" />
+            <div className="h-2" />
             {!isAuthenticated ? (
               <div className="flex flex-col gap-4 mt-2">
                 <Link
                   to="/login"
+                  viewTransition
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex h-[48px] w-full items-center justify-center rounded-[14px] border border-[#E3EBE6] bg-white text-[16px] font-semibold text-[#1F2937]"
+                  className="btn btn--quiet w-full"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
+                  viewTransition
                   onClick={() => setIsMenuOpen(false)}
-                  className="flex h-[48px] w-full items-center justify-center rounded-[14px] bg-[#2E7D32] text-[16px] font-semibold text-white"
+                  className="btn btn--brand w-full"
                 >
                   Đăng ký
                 </Link>
@@ -332,7 +197,7 @@ export const Header = () => {
             ) : (
               <div className="flex flex-col gap-3 mt-2">
                 {/* Mobile User Card */}
-                <div className="flex items-center gap-3 rounded-[16px] border border-[#E3EBE6] bg-white p-3.5">
+                <div className="flex items-center gap-3 rounded-ui bg-step p-3.5">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EAF8EF] text-sm font-bold text-[#2E7D32]">
                     {user?.username?.charAt(0)?.toUpperCase() || "U"}
                   </span>
@@ -352,11 +217,24 @@ export const Header = () => {
                 {logoutError && (
                   <div
                     role="alert"
-                    className="rounded-[12px] bg-[#FEF2F2] border border-[#FCA5A5] p-3 text-[13px] text-[#DC2626]"
+                    className="rounded-ui bg-[#ffe4df] p-3 text-[14px] text-[#8f1d14]"
                   >
                     {logoutError}
                   </div>
                 )}
+
+                {/* Mobile Mục: Tiến độ luyện tập (tải trước khi chạm / focus) */}
+                <Link
+                  to="/dashboard"
+                  viewTransition
+                  onPointerEnter={prefetchDashboard}
+                  onFocus={prefetchDashboard}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="btn btn--quiet w-full"
+                >
+                  <BarChart3 size={18} className="text-[#2E7D32]" aria-hidden="true" />
+                  <span>Tiến độ luyện tập</span>
+                </Link>
 
                 {/* Mobile Mục: Hồ sơ của bạn */}
                 <button
@@ -365,7 +243,7 @@ export const Header = () => {
                     setIsMenuOpen(false);
                     navigate("/profile");
                   }}
-                  className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#E3EBE6] bg-white text-[15px] font-semibold text-[#1F2937] hover:border-[#2E7D32]/40 hover:text-[#2E7D32] transition-colors cursor-pointer"
+                  className="btn btn--quiet w-full"
                 >
                   <User size={18} className="text-[#2E7D32]" aria-hidden="true" />
                   <span>Hồ sơ của bạn</span>
@@ -376,7 +254,7 @@ export const Header = () => {
                   type="button"
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="flex h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#FCA5A5] bg-[#FEF2F2] text-[15px] font-semibold text-[#DC2626] hover:bg-[#FEE2E2] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn--quiet w-full text-[#b42318] disabled:opacity-50"
                 >
                   {isLoggingOut ? (
                     <Loader2 size={18} className="animate-spin text-[#DC2626]" />

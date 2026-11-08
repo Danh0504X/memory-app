@@ -4,7 +4,7 @@ import type { GameFilter, GameSession } from '../types';
 
 const PAGE_SIZE = 10;
 
-const toGameSession = (item: ApiHistoryItem): GameSession => ({
+export const toGameSession = (item: ApiHistoryItem): GameSession => ({
     id: item.sessionId,
     game: item.gameName,
     playedAt: new Date(item.completedAt),
