@@ -94,7 +94,7 @@ export const GameSelectionPage = () => {
       <main className="arcade page-col">
         <div className="arcade__head">
           <h1>Chọn trò chơi</h1>
-          <p>Hai trò, mỗi trò mười cấp. Nhớ thứ tự, rồi xếp lại cho đúng.</p>
+          <p>Các môn rèn luyện trí nhớ đỉnh cao: Thẻ bài, Hình ảnh và Gương mặt & Tên.</p>
         </div>
 
         <div className="arcade__games">
@@ -124,6 +124,52 @@ export const GameSelectionPage = () => {
               </span>
             ))}
           />
+          <Link
+            to="/games/facename"
+            viewTransition
+            className="pick pick--cards"
+            aria-label="Gương mặt & Tên: luyện trí nhớ Memory League"
+          >
+            <div className="pick__table" aria-hidden="true">
+              <div className="pick__fan" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <div style={{ display: "flex", margin: "0 auto" }}>
+                  <img
+                    src="https://i.pravatar.cc/150?img=1"
+                    alt=""
+                    style={{ width: "64px", height: "64px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", objectFit: "cover" }}
+                  />
+                  <img
+                    src="https://i.pravatar.cc/150?img=5"
+                    alt=""
+                    style={{ width: "64px", height: "64px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", objectFit: "cover", marginLeft: "-16px" }}
+                  />
+                  <img
+                    src="https://i.pravatar.cc/150?img=8"
+                    alt=""
+                    style={{ width: "64px", height: "64px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", objectFit: "cover", marginLeft: "-16px" }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="pick__body">
+              <h2>Gương mặt & Tên</h2>
+              <p>Rèn luyện trí nhớ gương mặt & tên gọi theo chuẩn Memory League Names.</p>
+              <dl className="pick__facts">
+                <div>
+                  <dt>Thử thách</dt>
+                  <dd>5 cấp độ</dd>
+                </div>
+                <div>
+                  <dt>Chế độ</dt>
+                  <dd>Cấp độ & Tự do</dd>
+                </div>
+              </dl>
+              <span className="btn btn--brand pick__cta">
+                Chơi ngay
+                <ArrowRight size={18} aria-hidden="true" />
+              </span>
+            </div>
+          </Link>
         </div>
       </main>
     </>
