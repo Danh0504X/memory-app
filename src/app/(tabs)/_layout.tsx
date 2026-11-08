@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router/js-tabs';
-import { Brain, Sun, UserRound } from 'lucide-react-native';
+import { BookOpen, Brain, Sun, Trophy, UserRound } from 'lucide-react-native';
 import { colors, fonts } from '@/constants/theme';
 
 export default function TabsLayout() {
@@ -20,6 +20,14 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="games"
                 options={{ title: 'Luyện tập', tabBarIcon: ({ color, size }) => <Brain color={color} size={size} /> }}
+            />
+            <Tabs.Screen
+                name="daily"
+                options={{ title: 'Thử thách', tabBarIcon: ({ color, size }) => <Trophy color={color} size={size} /> }}
+            />
+            <Tabs.Screen
+                name="methods"
+                options={{ title: 'Phương pháp', tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} /> }}
             />
             <Tabs.Screen
                 name="profile"

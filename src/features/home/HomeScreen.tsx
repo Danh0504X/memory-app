@@ -155,7 +155,7 @@ function Hero() {
                 <Islands width={artWidth} height={(artWidth * 456) / 580} />
             </View>
             <Button title="Bắt đầu chơi" onPress={() => router.navigate('/games')} />
-            <Button title="Xem ba cách nhớ" variant="secondary" onPress={() => router.push('/methods')} />
+            <Button title="Xem ba cách nhớ" variant="secondary" onPress={() => router.navigate('/methods')} />
             <View style={styles.facts}>
                 {HERO_FACTS.map((fact) => (
                     <View key={fact} style={styles.fact}>
@@ -182,7 +182,7 @@ function MethodsTeaser() {
                     <ChevronRight color={colors.inkSoft} size={20} />
                 </PressableScale>
             ))}
-            <Button title="Xem cả ba cách" onPress={() => router.push('/methods')} />
+            <Button title="Xem cả ba cách" onPress={() => router.navigate('/methods')} />
         </View>
     );
 }
@@ -236,7 +236,7 @@ function DailyTeaser() {
                 }}
             </BlockState>
             <Button title="Tham gia thử thách" onPress={() => router.push('/login')} />
-            <Button title="Xem thử thách hôm nay" variant="secondary" onPress={() => router.push('/daily')} />
+            <Button title="Xem thử thách hôm nay" variant="secondary" onPress={() => router.navigate('/daily')} />
         </View>
     );
 }

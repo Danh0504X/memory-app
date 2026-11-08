@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -25,6 +26,7 @@ export function DailyScreen() {
     useEffect(() => onGameSessionRecorded(reload), [reload]);
 
     return (
+        <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView
             style={{ backgroundColor: colors.wall }}
             contentContainerStyle={styles.content}
@@ -43,6 +45,7 @@ export function DailyScreen() {
                 )}
             </BlockState>
         </ScrollView>
+        </SafeAreaView>
     );
 }
 
@@ -213,6 +216,7 @@ function How({ title, children }: { title: string; children: ReactNode }) {
 }
 
 const styles = StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.wall },
     content: { padding: spacing.md, gap: spacing.md },
     hero: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, backgroundColor: colors.mint },
     overline: { fontFamily: fonts.bold, color: colors.brandDeep },

@@ -37,19 +37,19 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
     const isDaily = rules.mode === 'daily';
     const percentage = Math.round(result.accuracy * 1000) / 10;
 
-    const leave = (path: '/' | '/games') => {
+    const leave = (path: '/daily' | '/games') => {
         onReset();
         router.dismissTo(path);
     };
     const primary = () => {
         if (isDaily) {
             if (dailyAction) dailyAction.onPress();
-            else leave('/');
+            else leave('/daily');
         }
         else if (summary.nextLevel !== null) onNextLevel(summary.nextLevel);
         else onPlayAgain();
     };
-    const primaryLabel = isDaily ? (dailyAction?.label ?? 'Về trang Hôm nay') : summary.nextLevel !== null ? `Chơi cấp ${summary.nextLevel}` : 'Chơi lại';
+    const primaryLabel = isDaily ? (dailyAction?.label ?? 'Xem bảng xếp hạng') : summary.nextLevel !== null ? `Chơi cấp ${summary.nextLevel}` : 'Chơi lại';
 
     return (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">

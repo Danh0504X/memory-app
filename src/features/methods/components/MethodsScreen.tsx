@@ -1,5 +1,6 @@
 import { router, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { LiveShape } from '@/components/ui/LiveShape';
 import { AppText } from '@/components/ui/AppText';
@@ -14,6 +15,7 @@ import { METHODS } from '../methodsData';
 // Trang Phương pháp: ba cách nhớ, mỗi cách một thẻ màu dẫn tới hướng dẫn có trò thử, rồi bảng so sánh nhanh
 export function MethodsScreen() {
     return (
+        <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content}>
             <AppText variant="title">Ba cách để nhớ</AppText>
             <AppText variant="lead">Mỗi cách hợp với một kiểu thông tin. Chọn cách hợp với điều bạn hay phải nhớ, đọc hướng dẫn rồi chơi thử ngay.</AppText>
@@ -61,10 +63,12 @@ export function MethodsScreen() {
             <AppText variant="body">Đã chọn được cách? Thử dùng nó trong một ván chơi.</AppText>
             <Button title="Chọn trò chơi" variant="secondary" onPress={() => router.navigate('/games')} />
         </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.wall },
     content: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
     chapter: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5 },
     chapterHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

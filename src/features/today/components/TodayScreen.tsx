@@ -188,7 +188,7 @@ function StreakAndLevel({ profile }: { profile: UserProfile }) {
 
 function DailyMini({ request, onRetry }: { request: ReturnType<typeof useDailyChallenge>['state']; onRetry: () => void }) {
     return (
-        <Panel title="Thử thách hôm nay" action={<Link label="Xem" onPress={() => router.push('/daily')} />}>
+        <Panel title="Thử thách hôm nay" action={<Link label="Xem" onPress={() => router.navigate('/daily')} />}>
             <BlockState request={request} onRetry={onRetry}>
                 {({ challenge, me }) => {
                     const meta = GAME_META[challenge.gameName];
@@ -198,7 +198,7 @@ function DailyMini({ request, onRetry }: { request: ReturnType<typeof useDailyCh
                     else if (me?.status === 'playing') line = 'Bạn đang chơi dở, vào chơi tiếp nhé.';
                     else if (me) line = `Chưa chơi · ${challenge.players} người đã tham gia.`;
                     return (
-                        <Pressable onPress={() => router.push('/daily')} accessibilityRole="button" style={{ gap: 2 }}>
+                        <Pressable onPress={() => router.navigate('/daily')} accessibilityRole="button" style={{ gap: 2 }}>
                             <AppText style={styles.goalLabel}>
                                 {meta.label} · {challenge.totalItems} {meta.unit}
                             </AppText>
@@ -218,7 +218,7 @@ function Tip() {
             <View style={{ flex: 1, gap: 2 }}>
                 <AppText variant="small" style={styles.overline}>Mẹo hôm nay</AppText>
                 <AppText variant="body">{pickOfDay(TIPS)}</AppText>
-                <Link label="Xem các phương pháp" onPress={() => router.push('/methods')} />
+                <Link label="Xem các phương pháp" onPress={() => router.navigate('/methods')} />
             </View>
         </View>
     );
