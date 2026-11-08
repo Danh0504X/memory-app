@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
@@ -26,6 +26,9 @@ const FAN_CARDS: Card[] = [
 const FAN_PICTURES = [cat, umbrella, cake, bicycle];
 
 const FAN_DIGITS = ["2", "0", "8", "5", "1"];
+
+const FAN_FACES = ["John", "Mary", "David", "Linh", "Mai"];
+const FACE_LEVEL_COUNTS = [6, 8, 10, 12, 14, 16, 18, 22, 26, 30];
 
 const spread = (i: number, count: number) => ({ "--o": i - (count - 1) / 2 }) as CSSProperties;
 
@@ -110,7 +113,16 @@ export const GameSelectionPage = () => {
     const { game: imageGame } = useGameCatalog("image");
     const numbers = useNumbersProgress();
     const faceStats = useFaceNameStore((state) => state.stats);
+    const faceLevels = useFaceNameStore((state) => state.levels);
+    const initFace = useFaceNameStore((state) => state.initialize);
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+    useEffect(() => {
+        initFace();
+    }, [initFace]);
+
+    const faceUnlocked = faceStats.unlockedLevel || 1;
+    const faceNextCount = faceLevels?.[faceUnlocked - 1]?.faceCount ?? FACE_LEVEL_COUNTS[faceUnlocked - 1] ?? 6;
 
     return (
         <>
@@ -128,11 +140,15 @@ export const GameSelectionPage = () => {
                         title="Gương mặt & Tên"
                         description="Gắn một tên gọi với một gương mặt, rồi nhớ lại khi vị trí được xáo trộn."
                         unit="người"
-                        progress={{ unlocked: faceStats.unlockedLevel, maxLevel: 10, played: faceStats.totalRounds }}
-                        note="Tiến độ được lưu trên trình duyệt này."
-                        fan={["Anna", "Claire", "Bryan"].map((name, i) => (
-                            <span key={name} className="ptile" data-size="md" style={spread(i, 3)}>
-                                <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`} alt="" />
+                        progress={{
+                            unlocked: faceUnlocked,
+                            maxLevel: 10,
+                            nextCount: faceNextCount,
+                            played: faceStats.totalRounds,
+                        }}
+                        fan={FAN_FACES.map((name, i) => (
+                            <span key={name} className="pfacetile" style={spread(i, FAN_FACES.length)}>
+                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} alt="" />
                             </span>
                         ))}
                     />
