@@ -1,0 +1,225 @@
+/* Trang Tiến độ: phần riêng; khung, khối và lưới dùng chung ở src/styles/app-screen.css.
+   Trung tâm là lịch luyện tập theo tháng: ô đậm nhạt theo số ván, ngày chơi liền nhau nối thành dải. */
+
+.progress .span-4 { grid-column: span 4; }
+.progress .span-8 { grid-column: span 8; }
+
+.progress .dash__head h1 {
+  font-size: clamp(26px, 2.4vw, 34px);
+}
+
+/* Câu phát hiện: điều đáng chú ý nhất của kỳ, đọc ngay dưới tiêu đề */
+.progress .progress__finding {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* ── Lịch luyện tập ── */
+
+.cal__nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal__nav button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--well);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.cal__nav button:hover:not(:disabled) {
+  background: #c9d8cd;
+}
+
+.cal__nav button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cal__month {
+  min-width: 120px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px 0;
+}
+
+.cal__weekday {
+  padding-bottom: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Mỗi ngày một ô; khoảng hở ngang giữa các ô nằm trong ô (margin) để hai ngày liền nhau nối được thành dải */
+.cal__day {
+  height: 44px;
+  margin-inline: 3px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 140ms var(--ease-out);
+}
+
+.cal__day:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 2px var(--rule);
+}
+
+.cal__day:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.cal__day:disabled {
+  background: transparent;
+  color: #a3aeb8;
+  cursor: default;
+}
+
+/* Đậm nhạt theo số ván: 1, 2–3, từ 4; chữ đổi sang trắng khi nền đậm */
+.cal__day[data-level='1'] { background: #cdebd6; }
+.cal__day[data-level='2'] { background: #7fc492; }
+.cal__day[data-level='3'] { background: var(--color-brand); color: #ffffff; }
+
+/* Hai ngày chơi liền nhau: bỏ khoảng hở và bo góc ở chỗ nối, thành một dải chuỗi ngày */
+.cal__day[data-joined='true'] {
+  margin-left: 0;
+  padding-right: 3px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.cal__day[data-level]:not([data-level='0']):has(+ .cal__day[data-joined='true']) {
+  margin-right: 0;
+  padding-left: 3px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.cal__day[data-today='true'] {
+  box-shadow: inset 0 0 0 2px var(--color-ink);
+}
+
+.cal__day[aria-pressed='true'] {
+  outline: 3px solid var(--color-sun);
+  outline-offset: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+.cal__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 14px;
+}
+
+.cal__foot p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.cal__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.cal__legend span {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.cal__legend span[data-level='1'] { background: #cdebd6; }
+.cal__legend span[data-level='2'] { background: #7fc492; }
+.cal__legend span[data-level='3'] { background: var(--color-brand); }
+
+/* ── Ngày đã chọn ── */
+
+.day__summary {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.day__list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.day__empty {
+  padding: 20px 4px;
+  display: grid;
+  gap: 8px;
+}
+
+.day__empty p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-ink-soft);
+}
+
+/* ── Biểu đồ khi chưa đủ dữ liệu ── */
+
+.progress__nochart {
+  min-height: 160px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.progress__nochart p {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* ── Màn hình hẹp ── */
+
+@media (max-width: 1023px) {
+  .progress .span-4,
+  .progress .span-8 {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 640px) {
+  .cal__day {
+    height: 38px;
+    margin-inline: 2px;
+    font-size: 13px;
+  }
+
+  .cal__month {
+    min-width: 96px;
+  }
+}
