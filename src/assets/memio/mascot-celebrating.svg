@@ -1,0 +1,38 @@
+<svg width="512" height="512" viewBox="0 0 74 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="15" y="7" width="2.8" height="1.4" rx="0.7" transform="rotate(22 15 7)" fill="#FF6B6B" fill-opacity="0.6"/>
+  <rect x="26" y="5" width="2.6" height="1.3" rx="0.65" transform="rotate(-28 26 5)" fill="#FFD166" fill-opacity="0.65"/>
+  <circle cx="37" cy="6" r="0.9" fill="#06D6A0" fill-opacity="0.55"/>
+  <rect x="48" y="6" width="2.8" height="1.4" rx="0.7" transform="rotate(32 48 6)" fill="#4CC9F0" fill-opacity="0.6"/>
+  <rect x="58" y="8" width="2.4" height="1.3" rx="0.65" transform="rotate(-18 58 8)" fill="#FF85A1" fill-opacity="0.6"/>
+  <path d="M12 16C13.2 17.5 14.8 17.8 15.5 17" stroke="#FF9E00" stroke-width="0.9" stroke-linecap="round" stroke-opacity="0.6"/>
+  <path d="M60 17C58.8 18.5 57.2 18.8 56.5 18" stroke="#7209B7" stroke-width="0.9" stroke-linecap="round" stroke-opacity="0.5"/>
+  <path d="M8 32C9.5 34 11.5 33.5 12 32" stroke="#FF6B6B" stroke-width="0.9" stroke-linecap="round" stroke-opacity="0.55"/>
+  <path d="M63 34C61.5 36 59.5 35.5 59 34" stroke="#06D6A0" stroke-width="0.9" stroke-linecap="round" stroke-opacity="0.55"/>
+  <circle cx="9" cy="22" r="1.1" fill="#FFD166" fill-opacity="0.6"/>
+  <rect x="6.5" y="42" width="2.6" height="1.4" rx="0.7" transform="rotate(38 6.5 42)" fill="#48CAE4" fill-opacity="0.55"/>
+  <circle cx="11" cy="53" r="0.9" fill="#06D6A0" fill-opacity="0.5"/>
+  <rect x="65" y="24" width="2.6" height="1.4" rx="0.7" transform="rotate(-32 65 24)" fill="#06D6A0" fill-opacity="0.55"/>
+  <circle cx="66" cy="45" r="1" fill="#FF85A1" fill-opacity="0.6"/>
+  <rect x="62.5" y="55" width="2.4" height="1.3" rx="0.65" transform="rotate(22 62.5 55)" fill="#B5179E" fill-opacity="0.45"/>
+  <path d="M14 11L14.6 12.6L16.2 13.2L14.6 13.8L14 15.4L13.4 13.8L11.8 13.2L13.4 12.6Z" fill="#FFD166" fill-opacity="0.75"/>
+  <path d="M58 12L58.6 13.6L60.2 14.2L58.6 14.8L58 16.4L57.4 14.8L55.8 14.2L57.4 13.6Z" fill="#FFD166" fill-opacity="0.75"/>
+  <path d="M37 26.5V19" stroke="#399A7C" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M37 20.5C34 17.2 29.5 16.5 26 18.2C26.8 21.2 29.8 23.5 32.8 23.5C34.8 23.5 36.2 21.8 37 20.5Z" fill="#72D29F" stroke="#2D8569" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M28 18.8C30.5 19.2 33.5 20.2 35.5 21" stroke="#B8F3D3" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="29.8" cy="18.2" r="0.6" fill="#FFF385" opacity="0.9"/>
+  <path d="M37 20.5C40 17.2 44.5 16.5 48 18.2C47.2 21.2 44.2 23.5 41.2 23.5C39.2 23.5 37.8 21.8 37 20.5Z" fill="#8CE0B0" stroke="#2D8569" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M46 18.8C43.5 19.2 40.5 20.2 38.5 21" stroke="#D8F5E5" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="44.2" cy="18.2" r="0.6" fill="#FFF385" opacity="0.9"/>
+  <path d="M28.77 73.19L26.72 80.02M45.18 73.19L47.23 80.02" stroke="#399A7C" stroke-width="4.1" stroke-linecap="round"/>
+  <path d="M42.4444 26.0253H31.5072C23.9567 26.0253 17.8358 32.1462 17.8358 39.6968V60.2039C17.8358 67.7544 23.9567 73.8753 31.5072 73.8753H42.4444C49.9949 73.8753 56.1158 67.7544 56.1158 60.2039V39.6968C56.1158 32.1462 49.9949 26.0253 42.4444 26.0253Z" fill="#A7E4C7" stroke="#399A7C" stroke-width="2.2"/>
+  <path d="M18.5 53C14 47 11.5 39 12 33" stroke="#399A7C" stroke-width="4.1" stroke-linecap="round"/>
+  <path d="M55.5 53C60 47 62.5 39 62 33" stroke="#399A7C" stroke-width="4.1" stroke-linecap="round"/>
+  <path d="M26.72 34.91H41.76" stroke="#D8F5E5" stroke-width="3.41786" stroke-linecap="round"/>
+  <circle cx="29.4565" cy="47.2161" r="2.05" fill="#264A3D"/>
+  <circle cx="30.2" cy="46.3" r="0.7" fill="#FFFFFF"/>
+  <circle cx="44.4951" cy="47.2161" r="2.05" fill="#264A3D"/>
+  <circle cx="45.2" cy="46.3" r="0.7" fill="#FFFFFF"/>
+  <ellipse cx="25.5" cy="51.5" rx="2.5" ry="1.5" fill="#FFB7B2" opacity="0.6"/>
+  <ellipse cx="48.5" cy="51.5" rx="2.5" ry="1.5" fill="#FFB7B2" opacity="0.6"/>
+  <path d="M31.5072 56.1025C35.1529 59.7482 38.7986 59.7482 42.4443 56.1025" stroke="#264A3D" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

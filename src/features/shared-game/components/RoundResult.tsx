@@ -3,6 +3,8 @@ import { Check, Flame, Medal, Star, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import celebrating from '@/assets/memio/mascot-celebrating.svg';
+import { LiveShape } from '@/components/ui/LiveShape';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +13,7 @@ import { colors, fonts, radius, spacing } from '@/constants/theme';
 import type { CompletedRound, RecordKey, RoundResult as RoundVerdict } from '../api/games.api';
 import { describeCompletedRound } from '../utils/completedRound';
 import { formatSeconds } from '../utils/formatTime';
+import { Confetti } from './Confetti';
 
 const VERDICTS: Record<RoundVerdict, string> = { perfect: 'Hoàn hảo!', pass: 'Đạt rồi!', fail: 'Chưa đạt' };
 const VERDICT_COLORS: Record<RoundVerdict, string> = { perfect: colors.brand, pass: colors.brand, fail: colors.danger };
@@ -54,9 +57,14 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
     return (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <Animated.View entering={enterUp(0)} style={styles.card}>
-                <AppText variant="title" style={{ color: VERDICT_COLORS[result.result] }} accessibilityRole="header">
-                    {VERDICTS[result.result]}
-                </AppText>
+                {/* Khoảnh khắc của màn kết quả: pháo giấy khi đạt, linh vật ăn mừng khi đúng hết (như bản web) */}
+                {result.result !== 'fail' ? <Confetti /> : null}
+                <View style={styles.verdictRow}>
+                    <AppText variant="title" style={[styles.verdict, { color: VERDICT_COLORS[result.result] }]} accessibilityRole="header">
+                        {VERDICTS[result.result]}
+                    </AppText>
+                    {result.result === 'perfect' ? <LiveShape art={celebrating} motion="hop" size={64} label="Linh vật Memio ăn mừng" tappable /> : null}
+                </View>
                 <AppText style={styles.count}>
                     {summary.value}
                     <AppText variant="lead"> / {summary.total} {summary.unit}</AppText>
@@ -165,6 +173,8 @@ function Reward({ children, icon, highlight = false }: { children: ReactNode; ic
 
 const styles = StyleSheet.create({
     content: { padding: spacing.md, gap: spacing.md },
+    verdictRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    verdict: { flex: 1 },
     card: { backgroundColor: colors.white, borderRadius: radius * 1.5, borderWidth: 1, borderColor: colors.step, padding: spacing.lg, gap: spacing.sm },
     count: { fontFamily: fonts.extrabold, fontSize: 40, lineHeight: 46 },
     rewards: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
