@@ -6,6 +6,10 @@ export interface User {
     username: string;
     status: string;
     role: string;
+    avatarUrl?: string | null;
+    authProvider?: 'local' | 'google';
+    isEmailVerified?: boolean;
+    hasPassword?: boolean;
 }
 
 // Payload gửi lên API AUTH-01 Đăng ký
@@ -20,6 +24,17 @@ export interface LoginRequest {
     email: string;
     password: string;
     rememberMe: boolean;    // false: đăng xuất khi đóng trình duyệt
+}
+
+// Payload gửi lên API Google OAuth
+export interface GoogleLoginRequest {
+    accessToken: string;
+}
+
+// Payload gửi lên API Đặt / Đổi mật khẩu
+export interface SetPasswordRequest {
+    currentPassword?: string;
+    newPassword: string;
 }
 
 // Khung response thành công chung của backend

@@ -5,6 +5,8 @@ import type {
     LoginRequest,
     AuthSuccessResponse,
     MessageResponse,
+    GoogleLoginRequest,
+    SetPasswordRequest,
 } from '@/types/auth.types';
 
 export const authApi = {
@@ -35,6 +37,26 @@ export const authApi = {
     logout: (): Promise<MessageResponse> => {
         return apiClient.post(
             '/auth/logout'
+        ) as unknown as Promise<MessageResponse>;
+    },
+
+    // AUTH-05: Đăng nhập Google
+    googleLogin: (
+        data: GoogleLoginRequest
+    ): Promise<AuthSuccessResponse> => {
+        return apiClient.post(
+            '/auth/google',
+            data
+        ) as unknown as Promise<AuthSuccessResponse>;
+    },
+
+    // AUTH-06: Thiết lập / đổi mật khẩu
+    setPassword: (
+        data: SetPasswordRequest
+    ): Promise<MessageResponse> => {
+        return apiClient.post(
+            '/auth/set-password',
+            data
         ) as unknown as Promise<MessageResponse>;
     },
 };

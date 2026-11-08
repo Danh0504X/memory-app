@@ -8,6 +8,8 @@ import { Loader2 } from 'lucide-react';
 import { loginSchema, type LoginFormData } from '../schemas/auth.schema';
 import { authApi } from '../api/auth.api';
 import { AuthField, AuthScene } from './AuthScene';
+import { GoogleIcon } from './GoogleIcon';
+import { useGoogleAuth } from '../hooks/useGoogleAuth';
 import type { ApiErrorResponse } from '@/types/auth.types';
 
 export const LoginForm = (): ReactElement => {
@@ -17,6 +19,11 @@ export const LoginForm = (): ReactElement => {
     const redirectTo = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/';
     const { saveSession } = useAuthStore();
     const [serverError, setServerError] = useState<string | null>(null);
+
+    const { loginWithGoogle, isGoogleLoading } = useGoogleAuth({
+        redirectTo,
+        onError: (message) => setServerError(message),
+    });
 
     const {
         register,
@@ -101,7 +108,7 @@ export const LoginForm = (): ReactElement => {
                 </div>
 
                 <div className="auth-form__actions">
-                    <button type="submit" disabled={isSubmitting} className="auth-button">
+                    <button type="submit" disabled={isSubmitting || isGoogleLoading} className="auth-button">
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -111,8 +118,23 @@ export const LoginForm = (): ReactElement => {
                             'Đăng nhập'
                         )}
                     </button>
-                    <button type="button" className="auth-button auth-button--quiet">
-                        Tiếp tục với Google
+                    <button
+                        type="button"
+                        onClick={loginWithGoogle}
+                        disabled={isSubmitting || isGoogleLoading}
+                        className="auth-button auth-button--quiet"
+                    >
+                        {isGoogleLoading ? (
+                            <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Đang chuyển hướng...
+                            </>
+                        ) : (
+                            <>
+                                <GoogleIcon />
+                                Tiếp tục với Google
+                            </>
+                        )}
                     </button>
                 </div>
             </form>
