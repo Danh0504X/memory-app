@@ -3,10 +3,25 @@ import type { DailyMinutes, PreferencesInput, TrainingGoal, TrainingPreferences 
 
 export const GOAL_LABELS: Record<TrainingGoal, string> = {
     language: 'Học ngoại ngữ',
-    names: 'Nhớ tên người mới gặp',
+    names: 'Nhớ tên người',
     exam: 'Ôn thi, học bài',
-    numbers: 'Nhớ số và mã số',
-    brain: 'Giữ đầu óc minh mẫn',
+    numbers: 'Nhớ số, mã số',
+    brain: 'Rèn trí não',
+};
+
+// Lựa chọn này đổi gì trong app, hiện ngay dưới tên mục tiêu; giữ ngắn để vừa một dòng trong ô
+export const GOAL_HINTS: Record<TrainingGoal, string> = {
+    language: 'Ưu tiên trò Ghi nhớ từ',
+    names: 'Ưu tiên Gương mặt & Tên',
+    exam: 'Nhắc ôn theo ngày thi',
+    numbers: 'Ưu tiên trò số, thẻ bài',
+    brain: 'Xen kẽ đủ các trò',
+};
+
+export const MINUTES_HINTS: Record<DailyMinutes, string> = {
+    5: 'Nhẹ nhàng',
+    15: 'Vừa sức',
+    30: 'Chăm chỉ',
 };
 
 export const formatMinutes = (minutes: DailyMinutes) => `${minutes} phút`;

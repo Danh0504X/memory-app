@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import { profileApi, type UserProfile } from '../api/profile.api';
-import { GOAL_LABELS, describeTargetDate, formatMinutes, toDraft, toInput } from '../utils/preferences';
+import { GOAL_LABELS, describeTargetDate, formatMinutes, toDraft, toInput, type PreferencesDraft } from '../utils/preferences';
 import { PreferencesFields } from './PreferencesFields';
 
 interface TrainingGoalsProps {
@@ -16,6 +16,7 @@ export const TrainingGoals = ({ profile, onSaved }: TrainingGoalsProps) => {
     const [draft, setDraft] = useState(() => toDraft(preferences));
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [goalsError, setGoalsError] = useState<string | null>(null);
     const [status, setStatus] = useState<string | null>(null);
     const formRef = useRef<HTMLFormElement>(null);
     const editButton = useRef<HTMLButtonElement>(null);
@@ -23,7 +24,7 @@ export const TrainingGoals = ({ profile, onSaved }: TrainingGoalsProps) => {
     // Mở form thì con trỏ vào ô đầu tiên; đóng thì trở về nút đã mở nó
     const wasEditing = useRef(editing);
     useEffect(() => {
-        if (editing) formRef.current?.querySelector<HTMLElement>('button, input')?.focus();
+        if (editing) formRef.current?.querySelector<HTMLElement>('input')?.focus();
         else if (wasEditing.current) editButton.current?.focus();
         wasEditing.current = editing;
     }, [editing]);
@@ -31,6 +32,7 @@ export const TrainingGoals = ({ profile, onSaved }: TrainingGoalsProps) => {
     const open = () => {
         setDraft(toDraft(preferences));
         setError(null);
+        setGoalsError(null);
         setStatus(null);
         setEditing(true);
     };
@@ -38,10 +40,20 @@ export const TrainingGoals = ({ profile, onSaved }: TrainingGoalsProps) => {
     const close = () => {
         setEditing(false);
         setError(null);
+        setGoalsError(null);
+    };
+
+    const change = (next: PreferencesDraft) => {
+        setDraft(next);
+        if (next.goals.length > 0) setGoalsError(null);
     };
 
     const onSubmit = async (event: FormEvent) => {
         event.preventDefault();
+        if (draft.goals.length === 0) {
+            setGoalsError('Chọn ít nhất một mục tiêu.');
+            return;
+        }
         setIsSaving(true);
         setError(null);
         try {
@@ -65,7 +77,7 @@ export const TrainingGoals = ({ profile, onSaved }: TrainingGoalsProps) => {
                 onKeyDown={(event) => event.key === 'Escape' && close()}
                 noValidate
             >
-                <PreferencesFields value={draft} onChange={setDraft} />
+                <PreferencesFields value={draft} onChange={change} layout="rows" goalsError={goalsError} />
                 <div className="prefs-panel__actions">
                     {error && (
                         <p className="prefs__error" role="alert">
@@ -75,7 +87,7 @@ export const TrainingGoals = ({ profile, onSaved }: TrainingGoalsProps) => {
                     <button type="button" className="btn btn--quiet settings__btn" onClick={close}>
                         Huỷ
                     </button>
-                    <button type="submit" className="btn btn--brand settings__btn" disabled={isSaving || draft.goals.length === 0}>
+                    <button type="submit" className="btn btn--brand settings__btn" disabled={isSaving} aria-busy={isSaving}>
                         {isSaving && <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />}
                         {isSaving ? 'Đang lưu…' : 'Lưu'}
                     </button>

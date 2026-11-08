@@ -15,18 +15,35 @@ interface GameDialogProps {
 export const GameDialog = ({ title, subtitle, onClose, footer, wide = false, narrow = false, children }: GameDialogProps) => {
     const titleId = useId();
     const panelRef = useRef<HTMLDivElement>(null);
+    // onClose thường là hàm tạo mới mỗi lần render; giữ trong ref để effect chỉ chạy một lần khi mở,
+    // nếu không mỗi lần bấm hay gõ trong hộp thoại sẽ kéo focus về khung (ô đang gõ mất con trỏ)
+    const onCloseRef = useRef(onClose);
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    });
+    // Chỉ đóng khi cả nhấn lẫn thả chuột đều ở nền tối: nhấn trong hộp thoại rồi kéo ra ngoài không tính
+    const pressedBackdrop = useRef(false);
 
     useEffect(() => {
         panelRef.current?.focus();
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") onCloseRef.current();
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
+    }, []);
 
     return (
-        <div className="gdlg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div
+            className="gdlg"
+            onPointerDown={(e) => {
+                pressedBackdrop.current = e.target === e.currentTarget;
+            }}
+            onClick={(e) => {
+                if (pressedBackdrop.current && e.target === e.currentTarget) onClose();
+                pressedBackdrop.current = false;
+            }}
+        >
             <div
                 ref={panelRef}
                 role="dialog"
