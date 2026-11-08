@@ -1,13 +1,26 @@
 import { useEffect, useState } from "react";
-import { Check, Clock, X } from "lucide-react";
 import { useFaceNameStore } from "../store/faceNameStore";
-import { FaceAvatar } from "./FaceAvatar";
+import { GameHeader } from "@/features/shared-game/components/GameHeader";
+import { PlayHints } from "@/features/shared-game/components/PlayHints";
+import { MemorizeStage } from "@/features/shared-game/components/MemorizeStage";
+import type { Person } from "../types";
+import memioMark from "@/assets/memio/Logo/Memio.svg";
+
+const HINTS = [
+  { keys: ["←", "→"], label: "chuyển người" },
+  { keys: ["Space"], label: "về người đầu" },
+  { keys: ["Enter"], label: "đã nhớ xong" },
+];
 
 export const FaceNameMemorizePhase = () => {
   const {
     memorizePeople,
     settings,
     memorizeDeadline,
+    currentMemorizeIndex,
+    nextMemorizePerson,
+    prevMemorizePerson,
+    setMemorizeIndex,
     finishMemorize,
     goHome,
     currentMode,
@@ -19,6 +32,7 @@ export const FaceNameMemorizePhase = () => {
     return Math.max(0, Math.ceil((memorizeDeadline - Date.now()) / 1000));
   });
 
+  // Timer effect
   useEffect(() => {
     if (!memorizeDeadline) return;
 
@@ -34,105 +48,90 @@ export const FaceNameMemorizePhase = () => {
     return () => clearInterval(interval);
   }, [memorizeDeadline, finishMemorize]);
 
-  const totalSeconds = settings.memorizeSeconds;
-  const progressRatio = Math.max(0, Math.min(1, timeLeft / (totalSeconds || 1)));
-  const isUrgent = timeLeft <= 10;
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        prevMemorizePerson();
+      } else if (e.key === "ArrowRight") {
+        nextMemorizePerson();
+      } else if (e.key === " ") {
+        e.preventDefault();
+        setMemorizeIndex(0);
+      } else if (e.key === "Enter") {
+        finishMemorize();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [prevMemorizePerson, nextMemorizePerson, setMemorizeIndex, finishMemorize]);
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
+  const total = memorizePeople.length;
+  if (total === 0) return null;
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] flex-col px-4 py-6 text-[#1f2937]">
-      <div className="mx-auto w-full max-w-6xl">
-        {/* Top Control Bar */}
-        <header className="sticky top-0 z-20 mb-6 flex flex-col gap-3 rounded-2xl border border-[#e6efe8] bg-white/95 p-4 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-[#e6efe8] px-3 py-1 text-xs font-bold text-[#2e7d32]">
-                {currentMode === "level" ? `Cấp độ ${currentLevelId}` : "Tự do"}
-              </span>
-              <div className="text-sm font-bold text-[#1f2937]">
-                Pha Ghi nhớ • {memorizePeople.length} người
-              </div>
-            </div>
+    <div className="play">
+      <GameHeader
+        gameName="Gương mặt & Tên"
+        level={currentMode === "level" ? currentLevelId : null}
+        status={`Ghi nhớ thứ tự · đang xem người ${currentMemorizeIndex + 1} trên ${total}`}
+        progress={(currentMemorizeIndex + 1) / total}
+        timeLeft={timeLeft}
+        timeLimit={settings.memorizeSeconds}
+        actionLabel="Đã nhớ xong"
+        onAction={finishMemorize}
+        onReset={goHome}
+      />
 
-            <div className="flex items-center gap-3">
-              {/* Timer badge */}
-              <div
-                className={`flex items-center gap-1.5 rounded-xl px-3 py-1 text-sm font-extrabold transition-colors ${
-                  isUrgent
-                    ? "bg-red-100 text-red-600 animate-pulse"
-                    : "bg-slate-100 text-[#1f2937]"
-                }`}
-              >
-                <Clock className="h-4 w-4" />
-                <span>{formatTime(timeLeft)}</span>
-              </div>
-
-              {/* Done early button */}
-              <button
-                type="button"
-                onClick={finishMemorize}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#2e7d32] px-4 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#1f5c23] active:scale-[0.98]"
-              >
-                <Check className="h-4 w-4" />
-                Đã nhớ xong (Done)
-              </button>
-
-              {/* Exit button */}
-              <button
-                type="button"
-                onClick={goHome}
-                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-                title="Thoát ván"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Progress Timer Bar */}
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      <MemorizeStage<Person>
+        items={memorizePeople}
+        index={currentMemorizeIndex}
+        groupSize={1}
+        unit="Người"
+        onJump={setMemorizeIndex}
+        onPrev={prevMemorizePerson}
+        onNext={nextMemorizePerson}
+        keyOf={(person) => String(person.id)}
+        renderBig={(person) => (
+          <div
+            className="flex flex-col items-center justify-center rounded-3xl bg-white p-4 sm:p-5 shadow-2xl transition-all"
+            style={{
+              width: "clamp(240px, 28vw, 320px)",
+              aspectRatio: "3 / 4",
+              border: "4px solid rgba(255, 255, 255, 0.9)",
+            }}
+          >
             <div
-              className={`h-full transition-all duration-300 ease-linear ${
-                isUrgent ? "bg-red-500" : "bg-[#2e7d32]"
-              }`}
-              style={{ width: `${progressRatio * 100}%` }}
-            />
-          </div>
-        </header>
-
-        {/* Responsive Grid of Faces */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-4 animate-in fade-in duration-300">
-          {memorizePeople.map((person, index) => (
-            <div
-              key={person.id}
-              className="group relative flex flex-col items-center rounded-3xl border border-[#e6efe8] bg-white p-3 shadow-xs transition-all hover:border-[#2e7d32]/40 hover:shadow-md"
+              className="overflow-hidden rounded-2xl border-2 border-slate-100 bg-slate-50 shadow-inner"
+              style={{ width: "84%", aspectRatio: "1" }}
             >
-              {/* Order badge */}
-              <span className="absolute left-3 top-3 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">
-                {index + 1}
-              </span>
-
-              {/* Face Avatar */}
-              <div className="mt-2 mb-3">
-                <FaceAvatar src={person.imageUrl} alt={person.name} size="md" />
-              </div>
-
-              {/* Person's First Name */}
-              <div className="w-full text-center">
-                <span className="inline-block max-w-full truncate text-base font-extrabold text-[#1f2937] tracking-tight">
-                  {person.name}
-                </span>
-              </div>
+              <img
+                src={person.imageUrl}
+                alt={person.name}
+                className="h-full w-full object-cover"
+              />
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="mt-3 sm:mt-4 text-center">
+              <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f2937]">
+                {person.name}
+              </span>
+            </div>
+          </div>
+        )}
+        renderMini={(person, _index, seen) =>
+          seen ? (
+            <span className="ptile" data-size="xs">
+              <img src={person.imageUrl} alt={person.name} />
+            </span>
+          ) : (
+            <span className="ptile ptile--back" data-size="xs" aria-hidden="true">
+              <img src={memioMark} alt="" />
+            </span>
+          )
+        }
+      />
+
+      <PlayHints hints={HINTS} />
     </div>
   );
 };
-

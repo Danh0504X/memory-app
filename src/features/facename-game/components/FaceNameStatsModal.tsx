@@ -61,7 +61,7 @@ export const FaceNameStatsModal = ({ isOpen, onClose }: FaceNameStatsModalProps)
             <CheckCircle2 className="mx-auto mb-1 h-5 w-5 text-amber-600" />
             <div className="text-xs font-semibold text-[#77839a]">Đã vượt</div>
             <div className="text-xl font-bold text-[#1f2937]">
-              {stats.completedLevels.length}/5 cấp
+              {stats.completedLevels.length}/10 cấp
             </div>
           </div>
         </div>

@@ -18,7 +18,7 @@ export const FaceNameLevelSelect = () => {
             Quay lại
           </button>
           <div className="text-sm font-bold text-[#2e7d32]">
-            Tiến độ: {stats.unlockedLevel}/5 cấp đã mở
+            Tiến độ: {stats.unlockedLevel}/10 cấp đã mở
           </div>
         </div>
 
@@ -27,11 +27,11 @@ export const FaceNameLevelSelect = () => {
             Chọn Cấp Độ Thử Thách
           </h1>
           <p className="mt-1 text-sm text-[#77839a]">
-            Vượt qua từng cấp với số điểm tối thiểu 70% để mở khóa cấp độ tiếp theo.
+            Vượt qua từng cấp với số điểm yêu cầu để mở khóa cấp độ tiếp theo.
           </p>
         </div>
 
-        {/* 5 Level Cards Grid */}
+        {/* Level Cards Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {levels.map((lvl) => {
             const isUnlocked = lvl.levelId <= stats.unlockedLevel;

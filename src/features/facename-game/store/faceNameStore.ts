@@ -68,6 +68,9 @@ interface FaceNameState {
   currentRoundId: string | null;
   currentMode: "level" | "free";
   currentLevelId: number | null;
+  selectedLevel: number | null;
+  memorizeTime: number;
+  currentMemorizeIndex: number;
   settings: {
     faceCount: number;
     memorizeSeconds: number;
@@ -90,7 +93,12 @@ interface FaceNameState {
   // Actions
   initialize: () => Promise<void>;
   setPhase: (phase: GamePhase) => void;
-  startLevelGame: (levelId: number) => Promise<void>;
+  setMemorizeTime: (sec: number) => void;
+  setSelectedLevel: (level: number | null) => void;
+  nextMemorizePerson: () => void;
+  prevMemorizePerson: () => void;
+  setMemorizeIndex: (index: number) => void;
+  startLevelGame: (levelId: number, customMemorizeSec?: number) => Promise<void>;
   startFreeGame: (
     faceCount: number,
     memorizeSeconds: number,
@@ -113,8 +121,11 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   currentRoundId: null,
   currentMode: "level",
   currentLevelId: 1,
+  selectedLevel: null,
+  memorizeTime: 60,
+  currentMemorizeIndex: 0,
   settings: {
-    faceCount: 5,
+    faceCount: 6,
     memorizeSeconds: 60,
     recallSeconds: 120,
   },
@@ -131,6 +142,22 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   isLoading: false,
   errorMessage: null,
 
+  setMemorizeTime: (sec) => set({ memorizeTime: sec }),
+  setSelectedLevel: (level) => set({ selectedLevel: level }),
+  setMemorizeIndex: (index) => set({ currentMemorizeIndex: index }),
+  nextMemorizePerson: () => {
+    const { currentMemorizeIndex, memorizePeople } = get();
+    if (currentMemorizeIndex < memorizePeople.length - 1) {
+      set({ currentMemorizeIndex: currentMemorizeIndex + 1 });
+    }
+  },
+  prevMemorizePerson: () => {
+    const { currentMemorizeIndex } = get();
+    if (currentMemorizeIndex > 0) {
+      set({ currentMemorizeIndex: currentMemorizeIndex - 1 });
+    }
+  },
+
   initialize: async () => {
     try {
       const levels = await fetchLevels();
@@ -141,11 +168,11 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         levels: [
           {
             levelId: 1,
-            faceCount: 5,
+            faceCount: 6,
             memorizeSeconds: 60,
             recallSeconds: 120,
             nameType: "Tên phổ biến",
-            unlockThreshold: 0.7,
+            unlockThreshold: 4 / 6,
           },
           {
             levelId: 2,
@@ -153,31 +180,71 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
             memorizeSeconds: 60,
             recallSeconds: 150,
             nameType: "Tên phổ biến",
-            unlockThreshold: 0.7,
+            unlockThreshold: 6 / 8,
           },
           {
             levelId: 3,
-            faceCount: 12,
+            faceCount: 10,
             memorizeSeconds: 60,
             recallSeconds: 180,
-            nameType: "Tên đa dạng",
-            unlockThreshold: 0.7,
+            nameType: "Tên đa dạng (Việt + Quốc tế)",
+            unlockThreshold: 7 / 10,
           },
           {
             levelId: 4,
-            faceCount: 20,
+            faceCount: 12,
             memorizeSeconds: 60,
-            recallSeconds: 240,
-            nameType: "Tên quốc tế",
-            unlockThreshold: 0.7,
+            recallSeconds: 180,
+            nameType: "Tên đa dạng (Việt + Quốc tế)",
+            unlockThreshold: 8 / 12,
           },
           {
             levelId: 5,
-            faceCount: 30,
+            faceCount: 14,
+            memorizeSeconds: 60,
+            recallSeconds: 210,
+            nameType: "Tên quốc tế",
+            unlockThreshold: 10 / 14,
+          },
+          {
+            levelId: 6,
+            faceCount: 16,
+            memorizeSeconds: 60,
+            recallSeconds: 210,
+            nameType: "Tên quốc tế phong phú",
+            unlockThreshold: 11 / 16,
+          },
+          {
+            levelId: 7,
+            faceCount: 18,
             memorizeSeconds: 60,
             recallSeconds: 240,
+            nameType: "Tên quốc tế phong phú",
+            unlockThreshold: 12 / 18,
+          },
+          {
+            levelId: 8,
+            faceCount: 22,
+            memorizeSeconds: 60,
+            recallSeconds: 240,
+            nameType: "Tên quốc tế thử thách",
+            unlockThreshold: 15 / 22,
+          },
+          {
+            levelId: 9,
+            faceCount: 26,
+            memorizeSeconds: 60,
+            recallSeconds: 270,
             nameType: "Tên quốc tế dễ nhầm lẫn",
-            unlockThreshold: 0.7,
+            unlockThreshold: 18 / 26,
+          },
+          {
+            levelId: 10,
+            faceCount: 30,
+            memorizeSeconds: 60,
+            recallSeconds: 300,
+            nameType: "Tên quốc tế dễ nhầm lẫn",
+            unlockThreshold: 20 / 30,
           },
         ],
       });
@@ -188,7 +255,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
 
   clearError: () => set({ errorMessage: null }),
 
-  startLevelGame: async (levelId: number) => {
+  startLevelGame: async (levelId: number, customMemorizeSec?: number) => {
     set({ isLoading: true, phase: "loading-faces", errorMessage: null });
     try {
       const data = await startLevelRound(levelId);
@@ -198,17 +265,22 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
       await preloadImages(imageUrls);
 
       const now = Date.now();
+      const memSec = customMemorizeSec ?? data.settings.memorizeSeconds;
       set({
         isLoading: false,
         currentRoundId: data.roundId,
         currentMode: "level",
         currentLevelId: levelId,
-        settings: data.settings,
+        currentMemorizeIndex: 0,
+        settings: {
+          ...data.settings,
+          memorizeSeconds: memSec,
+        },
         memorizePeople: data.people,
         recallPeople: [],
         userAnswers: {},
         roundStartTime: now,
-        memorizeDeadline: now + data.settings.memorizeSeconds * 1000,
+        memorizeDeadline: now + memSec * 1000,
         recallDeadline: null,
         result: null,
         isSubmitting: false,
@@ -320,7 +392,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
           if (!newCompletedLevels.includes(result.levelId)) {
             newCompletedLevels.push(result.levelId);
           }
-          if (result.levelId >= newUnlockedLevel && result.levelId < 5) {
+          if (result.levelId >= newUnlockedLevel && result.levelId < 10) {
             newUnlockedLevel = result.levelId + 1;
           }
         }
@@ -362,7 +434,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
 
   goToNextLevel: async () => {
     const { currentLevelId, startLevelGame } = get();
-    if (currentLevelId && currentLevelId < 5) {
+    if (currentLevelId && currentLevelId < 10) {
       await startLevelGame(currentLevelId + 1);
     }
   },

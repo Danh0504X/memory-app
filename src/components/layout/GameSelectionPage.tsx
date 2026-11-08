@@ -1,9 +1,10 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import type { GameCatalogItem } from "@/features/shared-game/api/games.api";
 import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
+import { useFaceNameStore } from "@/features/facename-game/store/faceNameStore";
 import { PlayingCard } from "@/features/cards-game/components/PlayingCard";
 import type { Card } from "@/features/cards-game/types/types";
 import cat from "@/assets/memio/game/card-cat.svg";
@@ -21,6 +22,16 @@ const FAN_CARDS: Card[] = [
 ];
 
 const FAN_PICTURES = [cat, umbrella, cake, bicycle];
+
+const FAN_FACES = [
+  "https://i.pravatar.cc/150?img=1",
+  "https://i.pravatar.cc/150?img=5",
+  "https://i.pravatar.cc/150?img=7",
+  "https://i.pravatar.cc/150?img=11",
+  "https://i.pravatar.cc/150?img=15",
+];
+
+const FACE_LEVEL_COUNTS = [6, 8, 10, 12, 14, 16, 18, 22, 26, 30];
 
 const spread = (i: number, count: number) => ({ "--o": i - (count - 1) / 2 }) as CSSProperties;
 
@@ -87,6 +98,18 @@ const GamePick = ({ to, variant, title, description, unit, game, fan }: GamePick
 export const GameSelectionPage = () => {
   const { game: cardGame } = useGameCatalog("card");
   const { game: imageGame } = useGameCatalog("image");
+  const { stats: faceStats, levels: faceLevels, initialize: initFace } = useFaceNameStore();
+
+  useEffect(() => {
+    initFace();
+  }, [initFace]);
+
+  const faceUnlocked = faceStats?.unlockedLevel ?? 1;
+  const faceNextCount =
+    faceLevels?.[faceUnlocked - 1]?.faceCount ??
+    FACE_LEVEL_COUNTS[faceUnlocked - 1] ??
+    6;
+  const facePlayed = faceStats?.totalRounds ?? 0;
 
   return (
     <>
@@ -127,28 +150,16 @@ export const GameSelectionPage = () => {
           <Link
             to="/games/facename"
             viewTransition
-            className="pick pick--cards"
-            aria-label="Gương mặt & Tên: luyện trí nhớ Memory League"
+            className="pick pick--facename"
+            aria-label={`Gương mặt & Tên: chơi cấp ${faceUnlocked}`}
           >
             <div className="pick__table" aria-hidden="true">
-              <div className="pick__fan" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                <div style={{ display: "flex", margin: "0 auto" }}>
-                  <img
-                    src="https://i.pravatar.cc/150?img=1"
-                    alt=""
-                    style={{ width: "64px", height: "64px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", objectFit: "cover" }}
-                  />
-                  <img
-                    src="https://i.pravatar.cc/150?img=5"
-                    alt=""
-                    style={{ width: "64px", height: "64px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", objectFit: "cover", marginLeft: "-16px" }}
-                  />
-                  <img
-                    src="https://i.pravatar.cc/150?img=8"
-                    alt=""
-                    style={{ width: "64px", height: "64px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)", objectFit: "cover", marginLeft: "-16px" }}
-                  />
-                </div>
+              <div className="pick__fan">
+                {FAN_FACES.map((src, i) => (
+                  <span key={src} className="pfacetile" style={spread(i, FAN_FACES.length)}>
+                    <img src={src} alt="" />
+                  </span>
+                ))}
               </div>
             </div>
             <div className="pick__body">
@@ -156,16 +167,29 @@ export const GameSelectionPage = () => {
               <p>Rèn luyện trí nhớ gương mặt & tên gọi theo chuẩn Memory League Names.</p>
               <dl className="pick__facts">
                 <div>
-                  <dt>Thử thách</dt>
-                  <dd>5 cấp độ</dd>
+                  <dt>Cấp đang mở</dt>
+                  <dd>
+                    {faceUnlocked} / 10
+                  </dd>
                 </div>
                 <div>
-                  <dt>Chế độ</dt>
-                  <dd>Cấp độ & Tự do</dd>
+                  <dt>Ván tới</dt>
+                  <dd>
+                    {faceNextCount} người
+                  </dd>
+                </div>
+                <div>
+                  <dt>Đã chơi</dt>
+                  <dd>{facePlayed} ván</dd>
                 </div>
               </dl>
+              <ol className="pick__ladder" aria-hidden="true">
+                {Array.from({ length: 10 }, (_, i) => (
+                  <li key={i} data-on={i < faceUnlocked} />
+                ))}
+              </ol>
               <span className="btn btn--brand pick__cta">
-                Chơi ngay
+                {faceUnlocked > 1 ? `Chơi tiếp cấp ${faceUnlocked}` : "Chơi ngay"}
                 <ArrowRight size={18} aria-hidden="true" />
               </span>
             </div>

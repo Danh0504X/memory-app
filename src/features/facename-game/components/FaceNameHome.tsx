@@ -43,7 +43,7 @@ export const FaceNameHome = () => {
           <div>
             <div className="text-xs font-semibold text-[#77839a]">Cấp độ mở khóa</div>
             <div className="text-xl font-bold text-[#2e7d32]">
-              Cấp {stats.unlockedLevel}/5
+              Cấp {stats.unlockedLevel}/10
             </div>
           </div>
           <div className="border-x border-[#e6efe8]">
