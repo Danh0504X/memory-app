@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { BookOpen, Check, Minus, SlidersHorizontal, X } from 'lucide-react-native';
+import { BarChart3, BookOpen, Check, Minus, SlidersHorizontal, X } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -65,14 +65,14 @@ function LoadingFaces() {
 function SettingsPhase() {
     const { levels, stats, selectedLevel, setSelectedLevel, startLevelGame, startFreeGame, isLoading, errorMessage, initialize } = useFaceNameStore();
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const [panel, setPanel] = useState<'guide' | 'free' | null>(null);
+    const [panel, setPanel] = useState<'guide' | 'free' | 'stats' | null>(null);
     const [free, setFree] = useState({ faceCount: 10, memorizeSeconds: 60, recallSeconds: 120 });
 
     const maxLevel = levels.length || 10;
     const unlocked = Math.min(maxLevel, stats.unlockedLevel);
     const level = Math.min(selectedLevel ?? unlocked, unlocked);
     const config = levels.find((item) => item.levelId === level);
-    const toggle = (name: 'guide' | 'free') => setPanel((open) => (open === name ? null : name));
+    const toggle = (name: 'guide' | 'free' | 'stats') => setPanel((open) => (open === name ? null : name));
 
     return (
         <Screen edges={['bottom']}>
@@ -117,6 +117,7 @@ function SettingsPhase() {
             <View style={styles.tools}>
                 <ToolButton icon={<BookOpen color={colors.brandDeep} size={18} />} label="Cách chơi" open={panel === 'guide'} onPress={() => toggle('guide')} />
                 <ToolButton icon={<SlidersHorizontal color={colors.brandDeep} size={18} />} label="Ván tự chọn" open={panel === 'free'} onPress={() => toggle('free')} />
+                <ToolButton icon={<BarChart3 color={colors.brandDeep} size={18} />} label="Thống kê" open={panel === 'stats'} onPress={() => toggle('stats')} />
             </View>
 
             {panel === 'guide' ? (
@@ -128,6 +129,8 @@ function SettingsPhase() {
                     </GuideItem>
                 </View>
             ) : null}
+
+            {panel === 'stats' ? <StatsPanel /> : null}
 
             {panel === 'free' ? (
                 <View style={styles.panel}>
@@ -185,6 +188,50 @@ function SettingsPhase() {
                 <Button title={isLoading ? 'Đang tải cấp độ...' : 'Tải lại cấp độ'} variant="secondary" disabled={isLoading} onPress={() => void initialize()} />
             )}
         </Screen>
+    );
+}
+
+// Thống kê (bản web: FaceNameStatsModal). Số ván và cấp đã mở lấy từ backend; độ chính xác trung bình và
+// điểm cao nhất từng cấp chỉ tính các ván đã chơi từ khi mở app (backend chưa trả hai số này)
+function StatsPanel() {
+    const { stats, levels } = useFaceNameStore();
+    const average = stats.totalAccuracies.length
+        ? Math.round(stats.totalAccuracies.reduce((sum, value) => sum + value, 0) / stats.totalAccuracies.length)
+        : null;
+    const best = levels.filter((level) => stats.bestScores[level.levelId] !== undefined);
+    return (
+        <View style={styles.panel}>
+            <View style={styles.statRow}>
+                <Stat label="Tổng ván" value={String(stats.totalRounds)} />
+                <Stat label="Chính xác TB" value={average === null ? '—' : `${average}%`} />
+                <Stat label="Đã vượt" value={`${stats.completedLevels.length} cấp`} />
+            </View>
+            {best.length ? (
+                <>
+                    <AppText variant="small" style={styles.optionTitle}>Điểm cao nhất từng cấp</AppText>
+                    {best.map((level) => {
+                        const score = stats.bestScores[level.levelId];
+                        return (
+                            <View key={level.levelId} style={styles.bestRow}>
+                                <AppText style={styles.optionTitle}>Cấp {level.levelId}</AppText>
+                                <AppText variant="small" style={{ flex: 1 }}>{level.nameType}</AppText>
+                                <AppText style={styles.optionTitle}>{score > 0 ? `+${score}` : score}/{level.faceCount}</AppText>
+                            </View>
+                        );
+                    })}
+                </>
+            ) : null}
+            <AppText variant="small">Độ chính xác trung bình và điểm cao nhất tính các ván bạn chơi từ khi mở app.</AppText>
+        </View>
+    );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+    return (
+        <View style={styles.stat}>
+            <AppText variant="small">{label}</AppText>
+            <AppText style={styles.statValue}>{value}</AppText>
+        </View>
     );
 }
 
@@ -370,8 +417,12 @@ const styles = StyleSheet.create({
     count: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 40 },
     center: { textAlign: 'center' },
     section: { gap: spacing.sm },
-    tools: { flexDirection: 'row', gap: spacing.sm },
-    tool: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
+    statRow: { flexDirection: 'row', gap: spacing.sm },
+    stat: { flex: 1, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.wall, gap: 2 },
+    statValue: { fontFamily: fonts.extrabold, fontSize: 20 },
+    bestRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6, borderBottomWidth: 1, borderColor: colors.step },
+    tools: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    tool: { flexGrow: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
     toolOpen: { borderColor: colors.brand, backgroundColor: colors.mint },
     toolLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
     panel: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
