@@ -51,9 +51,12 @@ export const FaceNameSettingsPhase = () => {
                     {config && <>
                         <p className="deal__count"><strong>{config.faceCount}</strong><span>gương mặt cần nhớ</span></p>
                         <div className="face-preview" aria-hidden="true">
-                            {["Anna", "Claire", "Bryan"].map((name) => <div key={name}>
-                                <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`} alt="" /><span>{name}</span>
-                            </div>)}
+                            {["Anna", "Claire", "Bryan"].map((name) => (
+                                <div key={name}>
+                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} alt="" />
+                                    <span>{name}</span>
+                                </div>
+                            ))}
                         </div>
                         <ul className="deal__facts">
                             <li>Ghi nhớ {formatSeconds(config.memorizeSeconds)}</li>
