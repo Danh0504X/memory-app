@@ -39,6 +39,7 @@ export function MethodsScreen() {
                         ))}
                         <AppText variant="small" style={styles.example}>Ví dụ: {method.example}</AppText>
                         <Button title="Hướng dẫn và chơi thử" onPress={() => router.push(method.guide as Href)} />
+                        <Button title={method.practice.label} variant="secondary" onPress={() => router.push(method.practice.to as Href)} />
                     </Animated.View>
                 );
             })}

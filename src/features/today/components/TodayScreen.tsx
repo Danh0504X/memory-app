@@ -12,6 +12,7 @@ import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useDailyChallenge } from '@/features/daily/hooks/useDailyChallenge';
+import { HomeScreen } from '@/features/home/HomeScreen';
 import { GAME_IDS, GAME_META } from '@/features/dashboard/constants';
 import { PROFILE_KEY, useCatalog, useProfile, useRecentSessions } from '@/features/dashboard/hooks/useOverview';
 import type { DashboardSummary } from '@/features/dashboard/types';
@@ -27,24 +28,8 @@ const timeZone = PROGRESS_TIME_ZONE;
 
 export function TodayScreen() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    return isAuthenticated ? <MemberToday /> : <GuestToday />;
-}
-
-function GuestToday() {
-    const daily = useDailyChallenge();
-    return (
-        <SafeAreaView style={styles.safe} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={false} onRefresh={daily.reload} tintColor={colors.brand} />}>
-                <AppText variant="small" style={styles.overline}>Memio</AppText>
-                <AppText variant="title">Rèn trí nhớ mỗi ngày</AppText>
-                <AppText variant="lead">Chơi ngay không cần tài khoản. Đăng nhập để lưu EXP, kỷ lục và chuỗi ngày.</AppText>
-                <Button title="Chọn trò chơi" onPress={() => router.navigate('/games')} />
-                <Button title="Đăng nhập" variant="secondary" onPress={() => router.push('/login')} />
-                <DailyMini request={daily.state} onRetry={daily.reload} />
-                <Tip />
-            </ScrollView>
-        </SafeAreaView>
-    );
+    // Khách thấy trang chủ giới thiệu Memio (bản web: trang "/"), người đã đăng nhập thấy việc hôm nay
+    return isAuthenticated ? <MemberToday /> : <HomeScreen />;
 }
 
 // Màn chính của người đã đăng nhập: việc nên làm hôm nay đứng trước, số liệu tóm tắt đứng sau.
