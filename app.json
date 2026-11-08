@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Memio",
+    "slug": "memio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "memio",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.memio.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.memio.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#F8FBF8",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-sqlite",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F8FBF8",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

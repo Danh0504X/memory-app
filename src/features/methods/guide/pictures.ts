@@ -1,5 +1,8 @@
 // Hình dùng chung cho ba trang hướng dẫn phương pháp và các trò thử trong đó.
 
+import type { FC } from "react";
+import type { SvgProps } from "react-native-svg";
+
 import egg from "@/assets/memio/guides/num-0-egg.svg";
 import candle from "@/assets/memio/guides/num-1-candle.svg";
 import swan from "@/assets/memio/guides/num-2-swan.svg";
@@ -24,7 +27,8 @@ export type ShapeMotion = "wobble" | "flicker" | "glide" | "flap" | "rock" | "sw
 
 export interface Picture {
     name: string;
-    src: string;
+    // Component SVG (metro.config.js): vẽ bằng <Picture.src width={...} height={...} />
+    src: FC<SvgProps>;
     motion: ShapeMotion;
 }
 

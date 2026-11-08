@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { appStorage } from "@/lib/storage";
 import { gamesApi, type CompletedRound, type RoundRules, type StartedRound } from "@/features/shared-game/api/games.api";
 import { synchronizeRoundCompletion } from "@/features/shared-game/completion";
 import { clientDeadline } from "@/features/shared-game/utils/deadline";
@@ -217,10 +218,11 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "cards-game-storage",
+      storage: createJSONStorage(() => appStorage),
       // Chỉ lưu tuỳ chọn; ván đang chơi và level giờ do backend giữ
       version: 1,
       partialize: (state) => ({ preferences: state.preferences, memorizeTime: state.memorizeTime }),
-      // Bản cũ lưu cả ván đang chơi và level vào localStorage: chỉ giữ lại tuỳ chọn.
+      // Bản web cũ lưu cả ván đang chơi và level: chỉ giữ lại tuỳ chọn.
       // Modal cũ luôn lưu cardCount thành một số nên không phải người chơi chủ động chọn ván tự chọn:
       // đặt lại về null để không bị kẹt ở chế độ không mở được cấp mới.
       migrate: (persisted) => {

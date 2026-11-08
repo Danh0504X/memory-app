@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { appStorage } from '@/lib/storage';
 import { numbersApi } from '../api/numbers.api';
 import { synchronizeRoundCompletion } from '../../shared-game/completion.ts';
 import { clientDeadline } from '../../shared-game/utils/deadline.ts';
@@ -42,7 +43,7 @@ let pendingSettings: NumberSettings | null = null;
 const progressStorageKey = (userId: string) => `memio:number-progress:${userId}`;
 const readStoredProgress = (userId: string): NumberProgress | null => {
     try {
-        const raw = sessionStorage.getItem(progressStorageKey(userId)) ?? localStorage.getItem(progressStorageKey(userId));
+        const raw = appStorage.getItem(progressStorageKey(userId));
         if (raw) return JSON.parse(raw);
     } catch { /* Storage có thể bị chặn. */ }
     return null;
@@ -50,17 +51,12 @@ const readStoredProgress = (userId: string): NumberProgress | null => {
 const writeStoredProgress = (userId: string, progress: NumberProgress | null) => {
     try {
         const key = progressStorageKey(userId);
-        if (progress) {
-            sessionStorage.setItem(key, JSON.stringify(progress));
-            localStorage.setItem(key, JSON.stringify(progress));
-        } else {
-            sessionStorage.removeItem(key);
-            localStorage.removeItem(key);
-        }
+        if (progress) appStorage.setItem(key, JSON.stringify(progress));
+        else appStorage.removeItem(key);
     } catch { /* Storage có thể bị chặn. */ }
 };
 const persistId = (id: string | null) => {
-    try { if (id) sessionStorage.setItem(storageKey, id); else sessionStorage.removeItem(storageKey); } catch { /* Storage có thể bị chặn. */ }
+    try { if (id) appStorage.setItem(storageKey, id); else appStorage.removeItem(storageKey); } catch { /* Storage có thể bị chặn. */ }
 };
 const errorText = (error: unknown) => {
     const value = error as ApiErrorResponse;
@@ -250,4 +246,4 @@ export const useNumbersGameStore = create<NumbersGameState>()(persist((set, get)
             get().refresh();
         },
     };
-}, { name: 'memio-number-preferences', partialize: (state) => ({ preferences: state.preferences }) }));
+}, { name: 'memio-number-preferences', storage: createJSONStorage(() => appStorage), partialize: (state) => ({ preferences: state.preferences }) }));

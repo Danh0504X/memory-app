@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { appStorage } from "@/lib/storage";
 import {
   gamesApi,
   type CompletedRound,
@@ -266,6 +267,7 @@ export const useWordsGameStore = create<WordsGameState>()(
     }),
     {
       name: "memio_words_game_storage",
+      storage: createJSONStorage(() => appStorage),
       partialize: (state) => ({
         preferences: state.preferences,
         memorizeTime: state.memorizeTime,

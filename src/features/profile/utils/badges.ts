@@ -1,3 +1,5 @@
+import type { FC } from "react";
+import type { SvgProps } from "react-native-svg";
 import type { GameCatalogItem } from '@/features/shared-game/api/games.api';
 import candle from '@/assets/memio/guides/num-1-candle.svg';
 import swan from '@/assets/memio/guides/num-2-swan.svg';
@@ -10,7 +12,8 @@ import type { UserProfile } from '../api/profile.api';
 export type Badge = {
     id: string;
     number: number;     // Con số của huy hiệu; hình là hình móc số của chính con số đó
-    shape: string;
+    // Component SVG (metro.config.js)
+    shape: FC<SvgProps>;
     motion: string;
     title: string;
     current: number;

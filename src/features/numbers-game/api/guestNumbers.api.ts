@@ -13,7 +13,8 @@ export const createGuestNumbersApi = (api: Pick<typeof gamesApi, 'startRound' | 
         if (!session) throw failure(404, 'SESSION_NOT_FOUND', 'Guest session not found');
         return session;
     };
-    const view = (session: NumberSession) => structuredClone({ ...session, serverNow: new Date().toISOString() });
+    // Bản sao để màn hình không sửa được ván đang giữ ở đây; ván chỉ chứa dữ liệu JSON nên sao qua JSON là đủ (Hermes có thể thiếu structuredClone)
+    const view = (session: NumberSession): NumberSession => JSON.parse(JSON.stringify({ ...session, serverNow: new Date().toISOString() }));
     const answersFor = (session: NumberSession, revision: number, answers: NumberAnswers) => {
         if (revision !== session.revision) throw failure(409, 'REVISION_CONFLICT', 'Revision conflict');
         if (session.phase !== 'recalling') throw failure(409, 'INVALID_PHASE', 'Recall has not started');

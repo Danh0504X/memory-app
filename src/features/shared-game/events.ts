@@ -1,6 +1,14 @@
-// Phát sau khi nộp xong một ván để các trang đang mở (hồ sơ, xem trước hồ sơ) tải lại EXP và chuỗi ngày chơi
-export const GAME_SESSION_RECORDED_EVENT = 'memio:game-session-recorded';
+// Phát sau khi nộp xong một ván để các màn đang mở (hồ sơ, Today) tải lại EXP và chuỗi ngày chơi.
+// Bản web dùng window.dispatchEvent; React Native không có window event nên dùng danh sách listener.
+const listeners = new Set<() => void>();
+
+export const onGameSessionRecorded = (listener: () => void): (() => void) => {
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
+    };
+};
 
 export const notifyGameSessionRecorded = () => {
-    window.dispatchEvent(new Event(GAME_SESSION_RECORDED_EVENT));
+    listeners.forEach((listener) => listener());
 };

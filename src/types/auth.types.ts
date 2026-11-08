@@ -20,15 +20,15 @@ export interface RegisterRequest {
 }
 
 // Payload gửi lên API AUTH-02 Đăng nhập
+// App luôn gửi rememberMe: true (auth.api.ts), màn đăng nhập không cần ô "Duy trì đăng nhập"
 export interface LoginRequest {
     email: string;
     password: string;
-    rememberMe: boolean;    // false: đăng xuất khi đóng trình duyệt
 }
 
-// Payload gửi lên API Google OAuth
+// Payload gửi lên API Google OAuth: id token từ Google Sign-In native (backend kiểm tra aud)
 export interface GoogleLoginRequest {
-    accessToken: string;
+    idToken: string;
 }
 
 // Khung response thành công chung của backend
@@ -41,7 +41,7 @@ export interface ApiSuccessResponse<T = undefined> {
 // AUTH-01 Đăng ký: trả về thông tin user vừa tạo
 export type RegisterResponse = ApiSuccessResponse<{ userInfo: User }>;
 
-// AUTH-02 Đăng nhập và AUTH-03 Refresh: token nằm trong cookie httpOnly, body chỉ dùng userInfo
+// AUTH-02 Đăng nhập và AUTH-03 Refresh: body còn có accessToken/refreshToken, api-client tự lấy và lưu vào SecureStore
 export type AuthSuccessResponse = ApiSuccessResponse<{ userInfo: User }>;
 
 // AUTH-04 Logout

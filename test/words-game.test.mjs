@@ -15,6 +15,8 @@ globalThis.window = { localStorage: globalThis.localStorage };
 
 registerHooks({
     resolve(specifier, context, next) {
+        // App lưu bằng expo-sqlite (src/lib/storage.ts), không chạy được trong Node: thay bằng localStorage giả ở trên
+        if (specifier === '@/lib/storage') return { url: 'data:text/javascript,export const appStorage = globalThis.localStorage;', shortCircuit: true };
         if (specifier === '@/features/auth/store/authStore') {
             return {
                 url: 'data:text/javascript,export const useAuthStore = { subscribe: (listener) => globalThis.__wordsOwnerListeners.push(listener) };',

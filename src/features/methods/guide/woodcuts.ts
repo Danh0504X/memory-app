@@ -15,7 +15,8 @@ import biblioteca from "@/assets/memio/history/loci-biblioteca.jpg";
 import capella from "@/assets/memio/history/loci-capella.jpg";
 
 export interface Woodcut {
-    src: string;
+    // Ảnh JPG import qua metro: giá trị đưa thẳng vào <Image source={...} /> của expo-image
+    src: number;
     alt: string;
     caption: string;
     source: string;   // Trang ảnh gốc trên Wikimedia Commons

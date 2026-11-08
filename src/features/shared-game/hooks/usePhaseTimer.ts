@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { AppState } from "react-native";
 
 export const usePhaseTimer = (
     phaseDeadline: number | null,
@@ -50,16 +51,16 @@ export const usePhaseTimer = (
             }
         }, 200);
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") {
+        // App bị đưa xuống nền thì interval ngừng chạy: khi quay lại, tính ngay theo deadline
+        const subscription = AppState.addEventListener("change", (state) => {
+            if (state === "active") {
                 checkTime();
             }
-        };
-        document.addEventListener("visibilitychange", handleVisibilityChange);
+        });
 
         return () => {
             clearInterval(timer);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            subscription.remove();
         };
     }, [phaseDeadline, calculateRemaining]);
 

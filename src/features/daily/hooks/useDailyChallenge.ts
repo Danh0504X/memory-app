@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { router } from 'expo-router';
 import { useGameStore } from '@/features/cards-game/store/gameStore';
 import { useImagesGameStore } from '@/features/images-game/store/imagesGameStore';
 import { GAME_META } from '@/features/dashboard/constants';
@@ -45,7 +45,6 @@ const describeStartError = (error: unknown) => {
 
 // Dùng lượt hôm nay: lấy ván từ backend, nạp vào store của đúng trò rồi chuyển sang trang trò đó (vào thẳng phase ghi nhớ)
 export const useStartDaily = (onFailed?: () => void) => {
-    const navigate = useNavigate();
     const [starting, setStarting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +55,7 @@ export const useStartDaily = (onFailed?: () => void) => {
             const { data } = await dailyApi.start();
             if (data.session.gameName === 'card') useGameStore.getState().loadRound(data.session);
             else await useImagesGameStore.getState().loadRound(data.session);
-            navigate(GAME_META[data.session.gameName].route);
+            router.push(GAME_META[data.session.gameName].route);
         } catch (startError) {
             setError(describeStartError(startError));
             setStarting(false);

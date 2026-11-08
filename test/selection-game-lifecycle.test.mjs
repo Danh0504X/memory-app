@@ -13,6 +13,8 @@ globalThis.__selectionCompleted = () => completions++;
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 globalThis.window = { localStorage: globalThis.localStorage };
 registerHooks({ resolve(specifier, context, next) {
+    // App lưu bằng expo-sqlite (src/lib/storage.ts), không chạy được trong Node: thay bằng localStorage giả ở trên
+    if (specifier === '@/lib/storage') return { url: 'data:text/javascript,export const appStorage = globalThis.localStorage;', shortCircuit: true };
     if (specifier === '@/features/auth/store/authStore') return { url: 'data:text/javascript,export const useAuthStore = { subscribe: (listener) => globalThis.__selectionOwnerListeners.push(listener) };', shortCircuit: true };
     if (specifier === '@/features/shared-game/api/games.api') return { url: 'data:text/javascript,export const gamesApi = globalThis.__selectionApi;', shortCircuit: true };
     if (specifier === '@/features/shared-game/completion') return { url: 'data:text/javascript,export const synchronizeRoundCompletion = globalThis.__selectionCompleted;', shortCircuit: true };

@@ -14,6 +14,8 @@ window.localStorage = localStorage;
 const api = {};
 globalThis.__numberTestApi = api;
 registerHooks({ resolve(specifier, context, nextResolve) {
+    // App lưu bằng expo-sqlite (src/lib/storage.ts), không chạy được trong Node: thay bằng localStorage giả ở trên
+    if (specifier === '@/lib/storage') return { url: 'data:text/javascript,export const appStorage = globalThis.localStorage;', shortCircuit: true };
     if (specifier === '../../shared-game/completion.ts') {
         return { url: 'data:text/javascript,export const synchronizeRoundCompletion = () => {};', shortCircuit: true };
     }
@@ -170,7 +172,8 @@ test('initialize always starts with null session for settings home and clears se
 
 test('initialize restores cached progress immediately preventing level 1 flash', async () => {
     const account = `unit-cached-${++owner}`;
-    sessionStorage.setItem(`memio:number-progress:${account}`, JSON.stringify({ unlockedLevel: 2, digitCounts: [8, 12, 18, 24, 30, 40, 50, 60, 70, 80] }));
+    // App chỉ có một kho lưu (appStorage, giả lập bằng localStorage trong test)
+    localStorage.setItem(`memio:number-progress:${account}`, JSON.stringify({ unlockedLevel: 2, digitCounts: [8, 12, 18, 24, 30, 40, 50, 60, 70, 80] }));
     let releaseGate;
     const gate = new Promise((resolve) => { releaseGate = resolve; });
     const originalProgress = api.progress;

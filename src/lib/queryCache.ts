@@ -2,9 +2,9 @@
 // - hai nơi cùng hỏi một khoá trong lúc đang tải thì dùng chung một request;
 // - dữ liệu đã có thì hiện ngay khi quay lại trang, rồi làm mới ở nền;
 // - vừa tải trong FRESH_MS (vd. đã tải trước lúc rê chuột lên link) thì không gọi lại.
-// Xoá hết khi đăng xuất và sau mỗi ván chơi (GAME_SESSION_RECORDED_EVENT).
+// Xoá hết khi đăng xuất và sau mỗi ván chơi (onGameSessionRecorded).
 
-import { GAME_SESSION_RECORDED_EVENT } from '@/features/shared-game/events';
+import { onGameSessionRecorded } from '@/features/shared-game/events';
 
 type Entry = { data?: unknown; updatedAt: number; promise?: Promise<unknown> };
 
@@ -50,6 +50,4 @@ export const setQuery = <T>(key: string, data: T) => {
 export const clearQueries = () => entries.clear();
 
 // Sau mỗi ván, EXP, chuỗi ngày, cấp đã mở và lịch sử đều đổi: bỏ hết để lần sau tải mới
-if (typeof window !== 'undefined') {
-    window.addEventListener(GAME_SESSION_RECORDED_EVENT, clearQueries);
-}
+onGameSessionRecorded(clearQueries);

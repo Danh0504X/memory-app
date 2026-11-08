@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { setSessionHandlers } from '@/lib/api-client';
+import { sessionStore } from '@/lib/session';
 import { clearQueries } from '@/lib/queryCache';
 import { authApi } from '@/features/auth/api/auth.api';
 import type { User } from '@/types/auth.types';
@@ -15,14 +16,18 @@ interface AuthState {
     logout: () => Promise<void>;
 }
 
-// Token nằm trong cookie httpOnly nên frontend không đọc được; store chỉ giữ thông tin user.
+// Token nằm ở SecureStore (src/lib/session.ts) và do api-client quản lý; store chỉ giữ thông tin user.
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     isAuthenticated: false,
     isLoading: true,
 
-    // Khôi phục phiên khi tải trang: gọi refresh để lấy access token mới và userInfo từ cookie.
+    // Khôi phục phiên khi mở app: có refresh token đã lưu thì refresh để lấy access token mới và userInfo.
     hydrate: async () => {
+        if (!sessionStore.getRefreshToken()) {
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            return;
+        }
         try {
             const user = await authApi.refreshToken();
             set({ user, isAuthenticated: true, isLoading: false });
@@ -45,17 +50,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ user: null, isAuthenticated: false, isLoading: false });
     },
 
-    // Gọi backend để thu hồi session và xóa cookie; chỉ xóa phiên ở client khi backend thành công.
+    // Gọi backend để thu hồi session. Khác bản web: mất mạng vẫn đăng xuất trên máy,
+    // vì không còn cookie nào để trình duyệt xoá hộ; refresh token cũ tự hết hạn ở backend.
     logout: async () => {
-        await authApi.logout();
         try {
-            localStorage.removeItem('memio_user');
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-        } catch {
-            // Bỏ qua nếu môi trường không cho phép truy cập localStorage
+            await authApi.logout(sessionStore.getRefreshToken());
+        } finally {
+            sessionStore.clearTokens();
+            useAuthStore.getState().clearSession();
         }
-        useAuthStore.getState().clearSession();
     },
 }));
 

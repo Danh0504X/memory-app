@@ -21,23 +21,25 @@ export const authApi = {
         ) as unknown as Promise<RegisterResponse>;
     },
 
-    // AUTH-02: Đăng nhập - backend set cookie accessToken/refreshToken
+    // AUTH-02: Đăng nhập - backend trả accessToken/refreshToken trong body, api-client tự lưu vào SecureStore.
+    // App gửi rememberMe: true để phiên sống theo REFRESH_TOKEN_TTL như các app mobile khác.
     login: (
         data: LoginRequest
     ): Promise<AuthSuccessResponse> => {
         return apiClient.post(
             '/auth/login',
-            data
+            { ...data, rememberMe: true }
         ) as unknown as Promise<AuthSuccessResponse>;
     },
 
-    // AUTH-03: Refresh Token - refresh token gửi qua cookie, trả về userInfo hiện tại
+    // AUTH-03: Refresh Token - gửi refresh token đã lưu trong body, trả về userInfo hiện tại
     refreshToken: refreshSession,
 
-    // AUTH-04: Logout - backend thu hồi session và xóa cookie
-    logout: (): Promise<MessageResponse> => {
+    // AUTH-04: Logout - backend thu hồi session của refresh token này
+    logout: (refreshToken: string | null): Promise<MessageResponse> => {
         return apiClient.post(
-            '/auth/logout'
+            '/auth/logout',
+            { refreshToken }
         ) as unknown as Promise<MessageResponse>;
     },
 
