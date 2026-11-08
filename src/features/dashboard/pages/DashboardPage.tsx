@@ -64,7 +64,7 @@ export const DashboardPage = () => {
 
     // Biểu đồ mặc định hiện trò được chơi nhiều hơn; chỉ vẽ khi có ít nhất 2 kỳ có ván, ít hơn thì không có gì để so
     const playedBy = (game: GameId) => buckets.reduce((sum, bucket) => sum + bucket.byGame[game].played, 0);
-    const shownGame: GameId = chartGame ?? (playedBy('card') > playedBy('image') ? 'card' : 'image');
+    const shownGame: GameId = chartGame ?? GAME_IDS.reduce((best, game) => playedBy(game) > playedBy(best) ? game : best, GAME_IDS[0]);
     const periodsPlayed = buckets.filter((bucket) => bucket.byGame[shownGame].played > 0).length;
     const passAccuracy =
         catalog.state.status === 'ready'

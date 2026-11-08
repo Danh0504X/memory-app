@@ -14,6 +14,9 @@ window.localStorage = localStorage;
 const api = {};
 globalThis.__numberTestApi = api;
 registerHooks({ resolve(specifier, context, nextResolve) {
+    if (specifier === '../../shared-game/completion.ts') {
+        return { url: 'data:text/javascript,export const synchronizeRoundCompletion = () => {};', shortCircuit: true };
+    }
     if (specifier === '../api/numbers.api' && context.parentURL?.endsWith('/store/numbersGameStore.ts')) {
         return { url: 'data:text/javascript,export const numbersApi = globalThis.__numberTestApi;', shortCircuit: true };
     }

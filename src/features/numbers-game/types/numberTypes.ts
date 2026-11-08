@@ -1,3 +1,5 @@
+import type { CompletedRound } from '@/features/shared-game/api/games.api';
+
 export type NumberMode = 'practice' | 'challenge';
 export type NumberPhase = 'memorizing' | 'preparing_recall' | 'recalling' | 'completed';
 export type NumberAnswers = (string | null)[];
@@ -10,6 +12,7 @@ export interface NumberSettings {
     prepareRecall: boolean;
 }
 export interface NumberSession {
+    completedRound?: CompletedRound;
     id: string;
     mode: NumberMode;
     level: number | null;

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { usePhaseTimer } from "@/features/shared-game/hooks/usePhaseTimer";
+import { useEffect, useRef } from "react";
 import { useFaceNameStore } from "../store/faceNameStore";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
 import { PlayHints } from "@/features/shared-game/components/PlayHints";
@@ -23,13 +24,9 @@ export const FaceNameRecallPhase = () => {
     errorMessage,
   } = useFaceNameStore();
 
-  const [timeLeft, setTimeLeft] = useState<number>(() => {
-    if (!recallDeadline) return settings.recallSeconds;
-    return Math.max(0, Math.ceil((recallDeadline - Date.now()) / 1000));
-  });
+  const { timeLeft } = usePhaseTimer(recallDeadline, submitCurrentRound);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const hasTriggeredSubmitRef = useRef(false);
 
   // Auto focus first input on mount
   useEffect(() => {
@@ -38,28 +35,11 @@ export const FaceNameRecallPhase = () => {
     }
   }, []);
 
-  // Timer effect
-  useEffect(() => {
-    if (!recallDeadline) return;
 
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((recallDeadline - Date.now()) / 1000));
-      setTimeLeft(remaining);
-      if (remaining <= 0 && !hasTriggeredSubmitRef.current) {
-        hasTriggeredSubmitRef.current = true;
-        clearInterval(interval);
-        submitCurrentRound();
-      }
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, [recallDeadline, submitCurrentRound]);
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    hasTriggeredSubmitRef.current = true;
     await submitCurrentRound();
-    hasTriggeredSubmitRef.current = false;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {

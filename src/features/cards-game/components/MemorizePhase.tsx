@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useGameStore } from "../store/gameStore";
-import { usePhaseTimer } from "../hooks/usePhaseTimer";
+import { usePhaseTimer } from "@/features/shared-game/hooks/usePhaseTimer";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
 import { MemorizeStage } from "@/features/shared-game/components/MemorizeStage";
 import { PlayHints } from "@/features/shared-game/components/PlayHints";

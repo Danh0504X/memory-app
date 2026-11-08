@@ -2194,6 +2194,12 @@
   background: var(--color-sun-field);
 }
 
+.score__breakdown { width: min(100%, 400px); margin: 0 auto; text-align: left; font-size: 14px; }
+.score__breakdown summary { min-height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.score__breakdown dl { display: grid; gap: 8px; margin: 0; padding: 12px 0; }
+.score__breakdown dl > div { display: flex; justify-content: space-between; gap: 16px; }
+.score__breakdown dd { margin: 0; font-variant-numeric: tabular-nums; }
+
 /* Ô chữ số trên bàn của trò Ghi nhớ số, xoè như lá bài */
 .pick__digit {
   width: 60px;

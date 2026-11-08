@@ -1,5 +1,6 @@
 // Trùng tên game ở backend
-export type GameId = 'card' | 'image';
+export type { GameName as GameId } from '@/features/shared-game/registry';
+import type { GameName as GameId } from '@/features/shared-game/registry';
 
 export type Period = 'week' | 'month';
 export type GameFilter = 'all' | GameId;

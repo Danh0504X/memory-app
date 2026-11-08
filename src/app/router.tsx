@@ -57,13 +57,12 @@ export const router = createBrowserRouter([
     element: <WordsGame />,
   },
   {
+    path: "/games/numbers",
+    element: <NumbersGame />,
+  },
+  {
     element: <ProtectedRoute />,
     children: [
-      // Ghi nhớ số lưu lượt chơi theo tài khoản nên cần đăng nhập
-      {
-        path: "/games/numbers",
-        element: <NumbersGame />,
-      },
       {
         path: "/profile",
         element: <ProfilePage />,

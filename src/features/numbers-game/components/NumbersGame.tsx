@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, LoaderCircle } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { GameHeader } from '@/features/shared-game/components/GameHeader';
-import { usePhaseTimer } from '@/features/cards-game/hooks/usePhaseTimer';
+import { usePhaseTimer } from '@/features/shared-game/hooks/usePhaseTimer';
 import { useNumbersGameStore } from '../store/numbersGameStore';
 import { NumbersSettingsPhase } from './NumbersSettingsPhase';
 import { NumbersMemorizePhase } from './NumbersMemorizePhase';
@@ -14,13 +14,14 @@ import '../numbers.css';
 
 export const NumbersGame = () => {
     const userId = useAuthStore((state) => state.user?._id);
+    const authLoading = useAuthStore((state) => state.isLoading);
     const state = useNumbersGameStore();
     const { session, initialize, dispose, prepDeadline, deadline, begin, recall, ready, submit, refresh, reset, busy, error, isStarting, answers, preferences } = state;
 
     useEffect(() => {
-        if (userId) initialize(userId);
+        if (!authLoading) initialize(userId ?? 'guest');
         return dispose;
-    }, [userId, initialize, dispose]);
+    }, [userId, authLoading, initialize, dispose]);
 
     // Rời tab giữa lúc gõ đáp án thì lưu ngay
     useEffect(() => {
@@ -94,6 +95,8 @@ export const NumbersGame = () => {
             )}
         </div>
     );
+
+    if (authLoading) return <div className="grid min-h-dvh place-items-center" role="status"><LoaderCircle size={28} className="animate-spin" aria-label="Đang tải" /></div>;
 
     if (!inGame) {
         return (

@@ -12,7 +12,8 @@ interface GameCatalogState {
     load: (userId: string | null, force?: boolean) => Promise<void>;
 }
 
-let inFlight: Promise<void> | null = null;
+let inFlight: { userId: string | null; promise: Promise<void> } | null = null;
+let generation = 0;
 
 export const useGameCatalogStore = create<GameCatalogState>((set, get) => ({
     games: null,
@@ -23,19 +24,21 @@ export const useGameCatalogStore = create<GameCatalogState>((set, get) => ({
     load: async (userId, force = false) => {
         const { status, loadedFor } = get();
         if (!force && status === "ready" && loadedFor === userId) return;
-        if (inFlight) return inFlight;
+        if (inFlight?.userId === userId) return inFlight.promise;
 
-        set({ status: "loading", error: null });
-        inFlight = gamesApi
+        const currentGeneration = ++generation;
+        set({ status: "loading", error: null, games: null, loadedFor: userId });
+        const promise = gamesApi
             .getGames()
-            .then(({ data }) => set({ games: data.games, status: "ready", loadedFor: userId }))
-            .catch((error: { message?: string }) =>
-                set({ status: "error", error: error.message ?? "Không thể tải thông tin trò chơi. Vui lòng thử lại." }),
-            )
+            .then(({ data }) => { if (currentGeneration === generation) set({ games: data.games, status: "ready", loadedFor: userId }); })
+            .catch((error: { message?: string }) => {
+                if (currentGeneration === generation) set({ status: "error", error: error.message ?? "Không thể tải thông tin trò chơi. Vui lòng thử lại." });
+            })
             .finally(() => {
-                inFlight = null;
+                if (currentGeneration === generation) inFlight = null;
             });
-        return inFlight;
+        inFlight = { userId, promise };
+        return promise;
     },
 }));
 

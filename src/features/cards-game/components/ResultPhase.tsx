@@ -7,7 +7,7 @@ import { cardFromCode } from "../utils/cardUtils";
 import { PlayingCard } from "./PlayingCard";
 
 export const ResultPhase = () => {
-    const { result, resetGame, level } = useGameStore();
+    const { result, resetGame, level, startGame, pending } = useGameStore();
     const { game } = useGameCatalog("card");
 
     if (!result) return null;
@@ -33,7 +33,11 @@ export const ResultPhase = () => {
             <RoundResultCard
                 round={result}
                 maxLevel={game?.maxLevel ?? 0}
-                onPlayAgain={resetGame}
+                onPlayAgain={() => void startGame({ memorizeSec: result.rules.memorizeLimitSec,
+                    customCardCount: result.rules.mode === "custom" ? result.rules.totalItems : null,
+                    gameLevel: result.rules.gameLevel ?? 1 })}
+                onNextLevel={(gameLevel) => void startGame({ memorizeSec: result.rules.memorizeLimitSec, customCardCount: null, gameLevel })}
+                busy={pending !== null}
                 onReset={resetGame}
             />
 

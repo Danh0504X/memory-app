@@ -7,7 +7,7 @@ import { imageFromView } from "../utils/imageUtils";
 import { PhotoTile } from "./PhotoTile";
 
 export const ImagesResultPhase = () => {
-    const { result, resetGame, level } = useImagesGameStore();
+    const { result, resetGame, level, startGame, pending } = useImagesGameStore();
     const { game } = useGameCatalog("image");
 
     if (!result) return null;
@@ -33,7 +33,10 @@ export const ImagesResultPhase = () => {
             <RoundResultCard
                 round={result}
                 maxLevel={game?.maxLevel ?? 0}
-                onPlayAgain={resetGame}
+                onPlayAgain={() => void startGame(result.rules.memorizeLimitSec, result.rules.gameLevel ?? 1,
+                    result.rules.mode === "custom" ? result.rules.totalItems : null)}
+                onNextLevel={(gameLevel) => void startGame(result.rules.memorizeLimitSec, gameLevel, null)}
+                busy={pending !== null}
                 onReset={resetGame}
             />
 
