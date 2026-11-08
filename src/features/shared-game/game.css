@@ -1412,6 +1412,25 @@
   background: #fae8b6;
 }
 
+.pick--words .pick__table {
+  background: #e9d5ff;
+}
+
+.pwordtile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  background: #ffffff;
+  color: #1e1b4b;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(76, 29, 149, 0.14), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+  white-space: nowrap;
+}
+
 .pfacetile {
   --w: 74px;
   flex: none;
@@ -2197,13 +2216,15 @@
 }
 
 /* Ô chữ số giãn rộng hơn lá bài để từng số đều đọc được */
-.pick--numbers .pick__fan > * {
+.pick--numbers .pick__fan > *,
+.pick--words .pick__fan > * {
   transform: translate(-50%, -50%) translateX(calc(var(--o) * 50px * var(--spread, 1)))
     rotate(calc(var(--o) * 6deg * var(--spread, 1)));
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .pick--numbers:hover .pick__fan {
+  .pick--numbers:hover .pick__fan,
+  .pick--words:hover .pick__fan {
     --spread: 1.25;
   }
 }

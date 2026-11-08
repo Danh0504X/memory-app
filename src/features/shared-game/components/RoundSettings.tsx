@@ -38,6 +38,7 @@ interface RoundSettingsProps {
     isStarting: boolean;
     error: string | null;
     onOpenPreferences?: () => void;
+    onOpenLevels?: () => void;
     renderBack: () => ReactNode;    // mặt úp của một lá/hình, xoè ra cho biết số lượng cần nhớ
 }
 
@@ -55,6 +56,7 @@ export const RoundSettings = ({
     isStarting,
     error,
     onOpenPreferences,
+    onOpenLevels,
     renderBack,
 }: RoundSettingsProps) => {
     const [showLevels, setShowLevels] = useState(false);
@@ -97,7 +99,7 @@ export const RoundSettings = ({
                                 Tùy chọn
                             </button>
                         )}
-                        <button type="button" className="tool" onClick={() => setShowLevels(true)}>
+                        <button type="button" className="tool" onClick={onOpenLevels ?? (() => setShowLevels(true))}>
                             <Info size={18} aria-hidden="true" />
                             Bảng cấp độ
                         </button>
