@@ -36,7 +36,7 @@ export default function GamesScreen() {
                 const meta = GAME_META[id];
                 const game = games?.find((item) => item.gameName === id);
                 return (
-                    <Link key={id} href={{ pathname: '/games/[game]', params: { game: id } }} asChild>
+                    <Link key={id} href={meta.route} asChild>
                         <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
                             <View style={[styles.swatch, { backgroundColor: meta.color }]} />
                             <View style={styles.rowText}>

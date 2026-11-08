@@ -1,15 +1,15 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
-import { GAME_META, type GameName } from '@/features/shared-game/registry';
+import { GAME_IDS, GAME_META } from '@/features/shared-game/registry';
 
-const isGameName = (value: unknown): value is GameName => typeof value === 'string' && value in GAME_META;
-
-// Màn tạm cho từng trò chơi: store và API của trò đã có sẵn trong features/<trò>-game,
-// giao diện các phase (ghi nhớ, nhớ lại, kết quả) sẽ được làm lần lượt từng trò ở bước sau.
+// Màn tạm cho các trò chưa làm giao diện mobile (trò đã làm có route riêng, vd. games/cards.tsx).
+// Store và API của trò đã có sẵn trong features/<trò>-game.
 export default function GameScreen() {
     const { game } = useLocalSearchParams<{ game: string }>();
-    const meta = isGameName(game) ? GAME_META[game] : null;
+    // Đường dẫn giống bản web (GAME_META.route), vd. /games/images
+    const id = GAME_IDS.find((gameId) => GAME_META[gameId].route === `/games/${game}`);
+    const meta = id ? GAME_META[id] : null;
 
     return (
         <Screen edges={['bottom']}>
