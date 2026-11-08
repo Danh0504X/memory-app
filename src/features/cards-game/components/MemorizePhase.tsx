@@ -24,8 +24,6 @@ const isRed = (suit: Suit) => suit === "hearts" || suit === "diamonds";
 const THUMB_W = 40;
 const THUMB_GAP = 8;
 const THUMB_STEP = THUMB_W + THUMB_GAP;
-const VISIBLE_THUMBS = 5;
-const STRIP_WIDTH = VISIBLE_THUMBS * THUMB_STEP - THUMB_GAP;
 
 const BigCard = ({
   card,
@@ -99,12 +97,25 @@ const ThumbStrip = ({
   groupSize: number;
   onSelect: (index: number) => void;
 }) => {
-  const centerOffset = STRIP_WIDTH / 2 - THUMB_W / 2;
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [stripWidth, setStripWidth] = useState(0);
+  const centerOffset = stripWidth / 2 - THUMB_W / 2;
   const baseTranslate = -activeIndex * THUMB_STEP + centerOffset;
   const dragRef = useRef<{ startX: number; startIndex: number } | null>(null);
   const [dragDelta, setDragDelta] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false);
+
+  useEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setStripWidth(entry.contentRect.width);
+    });
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, []);
 
   const onPointerDown = (e: React.PointerEvent) => {
     isDraggingRef.current = false;
@@ -139,7 +150,8 @@ const ThumbStrip = ({
 
   return (
     <div
-      style={{ width: STRIP_WIDTH }}
+      ref={stripRef}
+      style={{ width: "80%" }}
       className="relative overflow-hidden cursor-grab active:cursor-grabbing select-none"
     >
       <div className="pointer-events-none absolute inset-y-0 left-0 w-6 z-10 bg-gradient-to-r from-[#f5faf7] to-transparent" />
