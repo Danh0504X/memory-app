@@ -1382,24 +1382,24 @@
 .arcade__games {
   margin-top: 20px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
 .pick {
   display: flex;
   flex-direction: column;
-  border-radius: 24px;
+  border-radius: 18px;
   background: #edf3ef;
   color: inherit;
   text-decoration: none;
   overflow: hidden;
-  transition: transform 220ms var(--ease-out);
+  transition: transform 220ms var(--ease-out), box-shadow 220ms ease;
 }
 
 .pick__table {
   position: relative;
-  height: clamp(150px, 15vw, 190px);
+  height: clamp(120px, 12vw, 150px);
   background: var(--color-brand);
   overflow: hidden;
 }
@@ -1420,10 +1420,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 14px;
+  padding: 4px 10px;
   background: #ffffff;
   color: #1e1b4b;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   border-radius: 9999px;
   box-shadow: 0 4px 14px rgba(76, 29, 149, 0.14), 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -1432,13 +1432,13 @@
 }
 
 .pfacetile {
-  --w: 74px;
+  --w: 58px;
   flex: none;
   display: block;
   width: var(--w);
   aspect-ratio: 4 / 5;
-  padding: 4px 4px 10px;
-  border-radius: 12px;
+  padding: 3px 3px 8px;
+  border-radius: 10px;
   background: #ffffff;
   box-shadow: 0 4px 14px rgba(40, 30, 10, 0.16), 0 1px 3px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -1563,60 +1563,62 @@
   flex: 1;
   display: grid;
   align-content: start;
-  gap: 10px;
-  padding: clamp(16px, 1.8vw, 22px);
+  gap: 8px;
+  padding: clamp(14px, 1.4vw, 18px);
 }
 
 .pick__body h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: clamp(17px, 1.2vw, 19px);
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .pick__body > p {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--color-ink-soft);
+  min-height: 2.9em;
 }
 
 .pick__facts {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 28px;
+  gap: 6px 20px;
 }
 
 .pick__facts div {
   display: grid;
-  gap: 2px;
+  gap: 1px;
 }
 
 .pick__facts dt {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-ink-soft);
 }
 
 .pick__facts dd {
   margin: 0;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
 /* Mười cấp thành mười đoạn: đoạn đã mở tô xanh */
 .pick__ladder {
-  margin: 0;
+  margin: 2px 0 0;
   padding: 0;
   list-style: none;
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: 4px;
+  gap: 3px;
 }
 
 .pick__ladder li {
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
   background: #d3dfd6;
 }
@@ -1626,7 +1628,13 @@
 }
 
 .pick__cta {
+  height: 40px;
+  padding-inline: 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  gap: 6px;
   justify-self: start;
+  margin-top: 4px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2172,21 +2180,24 @@
   transform: translateX(-3px);
 }
 
-/* ── Trang chọn trò chơi: bốn trò, hai cột cân nhau ── */
+/* ── Trang chọn trò chơi: năm trò, 3 cột trên desktop, 2 cột tablet, 1 cột mobile ── */
 
 .arcade__games {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 960px) {
   .arcade__games {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 640px) {
   .arcade__games {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
@@ -2202,14 +2213,14 @@
 
 /* Ô chữ số trên bàn của trò Ghi nhớ số, xoè như lá bài */
 .pick__digit {
-  width: 60px;
+  width: 48px;
   aspect-ratio: 5 / 7;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff;
   color: var(--color-ink);
-  font-size: 34px;
+  font-size: 26px;
   font-weight: 800;
   box-shadow: 0 1px 2px rgba(16, 48, 24, 0.2);
 }
@@ -2224,13 +2235,13 @@
 /* Ô chữ số giãn rộng hơn lá bài để từng số đều đọc được */
 .pick--numbers .pick__fan > *,
 .pick--words .pick__fan > * {
-  transform: translate(-50%, -50%) translateX(calc(var(--o) * 50px * var(--spread, 1)))
+  transform: translate(-50%, -50%) translateX(calc(var(--o) * 40px * var(--spread, 1)))
     rotate(calc(var(--o) * 6deg * var(--spread, 1)));
 }
 
 @media (hover: hover) and (pointer: fine) {
   .pick--numbers:hover .pick__fan,
   .pick--words:hover .pick__fan {
-    --spread: 1.25;
+    --spread: 1.15;
   }
 }

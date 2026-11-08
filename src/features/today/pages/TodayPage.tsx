@@ -71,7 +71,10 @@ export const TodayPage = () => {
                     </section>
 
                     {/* Chuỗi ngày và cấp tài khoản chung một khối, như cột bên của trang Tiến độ */}
-                    <div className="panel span-4 dash__aside">
+                    <div className="panel span-4 dash__aside curtain-card">
+                        <div className="card-curtain card-curtain--pink" aria-hidden="true">
+                            <span className="card-curtain__title">Chuỗi ngày</span>
+                        </div>
                         <section aria-labelledby="streak-title">
                             <div className="panel__head">
                                 <h2 id="streak-title">Chuỗi ngày</h2>
@@ -90,14 +93,20 @@ export const TodayPage = () => {
                         </section>
                     </div>
 
-                    <section className="panel span-4" aria-labelledby="method-title">
+                    <section className="panel span-4 curtain-card" aria-labelledby="method-title">
+                        <div className="card-curtain card-curtain--blue" aria-hidden="true">
+                            <span className="card-curtain__title">Phương pháp hôm nay</span>
+                        </div>
                         <div className="panel__head">
                             <h2 id="method-title">Phương pháp hôm nay</h2>
                         </div>
                         <MethodOfDay />
                     </section>
 
-                    <section className="panel span-4" aria-labelledby="daily-title">
+                    <section className="panel span-4 curtain-card" aria-labelledby="daily-title">
+                        <div className="card-curtain card-curtain--yellow" aria-hidden="true">
+                            <span className="card-curtain__title">Thử thách hôm nay</span>
+                        </div>
                         <div className="panel__head">
                             <h2 id="daily-title">Thử thách hôm nay</h2>
                         </div>
