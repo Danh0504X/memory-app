@@ -1,7 +1,9 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
+import { STAGGER, duration, ease } from '@/constants/motion';
 import { colors, spacing } from '@/constants/theme';
 
 interface MemorizeStageProps<T> {
@@ -43,6 +45,10 @@ export function MemorizeStage<T>({
     const stripRef = useRef<ScrollViewInstance>(null);
     const [stripWidth, setStripWidth] = useState(0);
     const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set());
+    // Hướng lật (tới hay lùi) để nhóm mới trượt vào từ đúng phía
+    const [view, setView] = useState({ index, forward: true });
+    if (view.index !== index) setView({ index, forward: index > view.index });
+    const forward = view.index !== index ? index > view.index : view.forward;
 
     // Đánh dấu nhóm đang xem là đã xem ngay trong lúc render để dải lật cùng lúc với lá lớn
     const unseen: number[] = [];
@@ -80,12 +86,16 @@ export function MemorizeStage<T>({
                     style={[styles.group, { flexDirection: groupDirection }]}
                 >
                     {items.slice(index, end).map((item, offset) => (
-                        <View key={keyOf(item, index + offset)} style={styles.item}>
+                        <Animated.View
+                            key={keyOf(item, index + offset)}
+                            style={styles.item}
+                            entering={(forward ? FadeInRight : FadeInLeft).duration(duration.slide).delay(offset * STAGGER).easing(ease.enter)}
+                        >
                             {renderBig(item, index + offset)}
                             <AppText variant="small">
                                 {unit} {index + offset + 1} / {items.length}
                             </AppText>
-                        </View>
+                        </Animated.View>
                     ))}
                 </Pressable>
 

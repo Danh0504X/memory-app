@@ -1,7 +1,10 @@
 import { Undo2, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
+import { ease } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 
 interface RecallBoardProps<T> {
@@ -75,7 +78,7 @@ export function RecallBoard<T>({
                     return (
                         <View key={index} style={{ width: slotWidth, alignItems: 'center', gap: 2 }}>
                             <AppText variant="small" style={styles.slotNo}>{index + 1}</AppText>
-                            <Pressable
+                            <PressableScale
                                 onPress={() => (item === null ? onSelectSlot(index) : onClearSlot(index))}
                                 accessibilityRole="button"
                                 accessibilityLabel={item === null ? `Ô ${index + 1}, trống` : `Ô ${index + 1}: ${labelOf(item)}. Chạm để gỡ ra`}
@@ -88,13 +91,15 @@ export function RecallBoard<T>({
                             >
                                 {item !== null ? (
                                     <>
-                                        {renderItem(item, slotWidth - 4)}
+                                        <Animated.View key={keyOf(item)} entering={ZoomIn.duration(200).easing(ease.enter)}>
+                                            {renderItem(item, slotWidth - 4)}
+                                        </Animated.View>
                                         <View style={styles.clear}>
                                             <X color={colors.white} size={12} />
                                         </View>
                                     </>
                                 ) : null}
-                            </Pressable>
+                            </PressableScale>
                         </View>
                     );
                 })}
@@ -109,16 +114,16 @@ export function RecallBoard<T>({
                         const picks = group.items.map((item) => {
                             const used = isUsed(item);
                             return (
-                                <Pressable
+                                <PressableScale
                                     key={keyOf(item)}
                                     disabled={used}
                                     onPress={() => onPick(item)}
                                     accessibilityRole="button"
                                     accessibilityLabel={used ? `${labelOf(item)}, đã dùng` : `Đặt ${labelOf(item)}`}
-                                    style={({ pressed }) => [used && styles.used, pressed && styles.pressed]}
+                                    style={used && styles.used}
                                 >
                                     {renderItem(item, deckItemWidth)}
-                                </Pressable>
+                                </PressableScale>
                             );
                         });
                         return (
@@ -177,5 +182,4 @@ const styles = StyleSheet.create({
     rowItems: { flexDirection: 'row', gap: 6, paddingHorizontal: spacing.md },
     wrap: { flexWrap: 'wrap' },
     used: { opacity: 0.25 },
-    pressed: { transform: [{ scale: 0.94 }] },
 });

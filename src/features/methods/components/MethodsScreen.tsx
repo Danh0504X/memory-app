@@ -1,8 +1,11 @@
 import { router, type Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { LiveShape } from '@/components/ui/LiveShape';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
+import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { GUIDES } from '../guide/content';
 import { TONES } from '../guide/GuideScreen';
@@ -15,13 +18,13 @@ export function MethodsScreen() {
             <AppText variant="title">Ba cách để nhớ</AppText>
             <AppText variant="lead">Mỗi cách hợp với một kiểu thông tin. Chọn cách hợp với điều bạn hay phải nhớ, đọc hướng dẫn rồi chơi thử ngay.</AppText>
 
-            {METHODS.map((method) => {
-                const Picture = GUIDES[method.id].hero.picture.src;
+            {METHODS.map((method, i) => {
+                const picture = GUIDES[method.id].hero.picture;
                 return (
-                    <View key={method.id} style={[styles.chapter, { backgroundColor: TONES[method.tone] }]}>
+                    <Animated.View entering={enterUp(i + 1)} key={method.id} style={[styles.chapter, { backgroundColor: TONES[method.tone] }]}>
                         <View style={styles.chapterHead}>
                             <View style={styles.disc}>
-                                <Picture width={44} height={44} />
+                                <LiveShape art={picture.src} motion={picture.motion} size={44} label={picture.name} tappable />
                             </View>
                             <View style={{ flex: 1 }}>
                                 <AppText variant="small" style={styles.island}>{method.island}</AppText>
@@ -36,7 +39,7 @@ export function MethodsScreen() {
                         ))}
                         <AppText variant="small" style={styles.example}>Ví dụ: {method.example}</AppText>
                         <Button title="Hướng dẫn và chơi thử" onPress={() => router.push(method.guide as Href)} />
-                    </View>
+                    </Animated.View>
                 );
             })}
 

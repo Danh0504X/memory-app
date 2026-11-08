@@ -2,9 +2,11 @@ import { router } from 'expo-router';
 import { SlidersHorizontal } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
+import { ease, enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import type { GameCatalogItem } from '../api/games.api';
@@ -65,7 +67,7 @@ export function RoundSetup({
 
     return (
         <Screen edges={['bottom']}>
-            <View style={styles.deal}>
+            <Animated.View entering={enterUp(0)} style={styles.deal}>
                 <AppText variant="small" style={styles.overline}>
                     {isCustom ? 'Ván tự chọn' : `Cấp ${level} · ${levelLabel(level)}`}
                 </AppText>
@@ -73,16 +75,16 @@ export function RoundSetup({
                     {Array.from({ length: fanCount }, (_, i) => {
                         const offset = i - (fanCount - 1) / 2;
                         return (
-                            <View key={i} style={[styles.fanCard, { transform: [{ translateX: offset * 22 }, { rotate: `${offset * 6}deg` }] }]}>
-                                {renderBack(56)}
-                            </View>
+                            <Animated.View key={`${itemCount}-${i}`} style={styles.fanCard} entering={FadeInDown.duration(420).delay(i * 50).easing(ease.enter)}>
+                                <View style={{ transform: [{ translateX: offset * 22 }, { rotate: `${offset * 6}deg` }] }}>{renderBack(56)}</View>
+                            </Animated.View>
                         );
                     })}
                 </View>
                 <AppText style={styles.count}>
                     {itemCount} <AppText variant="lead">{itemUnit} cần nhớ</AppText>
                 </AppText>
-            </View>
+            </Animated.View>
 
             {isCustom ? (
                 <AppText variant="small">

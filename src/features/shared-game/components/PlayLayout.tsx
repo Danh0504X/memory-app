@@ -2,6 +2,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { X } from 'lucide-react-native';
 import { useEffect, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, BackHandler, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -85,8 +86,8 @@ export function PlayLayout({
                     </View>
                 ) : null}
             </View>
-            <View style={styles.track}>
-                <View style={[styles.fill, { width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%` }]} />
+            <View style={{ marginHorizontal: spacing.md }}>
+                <ProgressBar value={progress} height={4} />
             </View>
 
             {pendingText || error ? (
@@ -120,8 +121,6 @@ const styles = StyleSheet.create({
     clockUrgent: { backgroundColor: '#fdecea', borderColor: '#f5c2bd' },
     clockText: { fontFamily: fonts.bold, fontSize: 17, fontVariant: ['tabular-nums'] },
     clockTextUrgent: { color: colors.danger },
-    track: { height: 4, marginHorizontal: spacing.md, borderRadius: 2, backgroundColor: colors.step, overflow: 'hidden' },
-    fill: { height: '100%', backgroundColor: colors.brand },
     notice: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginHorizontal: spacing.md, marginTop: spacing.sm, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.white },
     noticeError: { backgroundColor: '#fdecea' },
     body: { flex: 1 },

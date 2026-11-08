@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { LiveShape } from '@/components/ui/LiveShape';
 import type { SvgProps } from 'react-native-svg';
 import roomAll from '@/assets/memio/practice/room-all.svg';
 import cakeBike from '@/assets/memio/guides/story-cake-bike.svg';
@@ -31,21 +32,13 @@ function Scene({ art: Art, ratio, label }: { art: FC<SvgProps>; ratio: number; l
 function Shapes({ pictures }: { pictures: Picture[] }) {
     return (
         <View style={styles.shapes} accessible accessibilityLabel={pictures.map((picture) => picture.name).join(', ')}>
-            {pictures.map((picture) => {
-                const Shape = picture.src;
-                return <Shape key={picture.name} width={56} height={56} />;
-            })}
+            {pictures.map((picture) => <LiveShape key={picture.name} art={picture.src} motion={picture.motion} size={56} />)}
         </View>
     );
 }
 
 function Big({ picture }: { picture: Picture }) {
-    const Shape = picture.src;
-    return (
-        <View accessible accessibilityRole="image" accessibilityLabel={picture.name}>
-            <Shape width={120} height={120} />
-        </View>
-    );
+    return <LiveShape art={picture.src} motion={picture.motion} size={120} label={picture.name} tappable />;
 }
 
 // Chỗ trong phòng to, đồ vật đặt vào nhỏ hơn đè lên một góc

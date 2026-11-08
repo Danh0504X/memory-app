@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
 import { useEffect, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { BlockState, Panel } from '@/components/ui/Panel';
+import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { GAME_META } from '@/features/dashboard/constants';
 import { formatClock } from '@/features/dashboard/utils/format';
@@ -57,7 +59,7 @@ function Hero({ view, onChanged }: { view: DailyChallengeView; onChanged: () => 
     else action = <Button title={starting ? 'Đang chia bài...' : me.status === 'playing' ? 'Chơi tiếp' : 'Tham gia ngay'} loading={starting} onPress={() => void start()} />;
 
     return (
-        <View style={styles.hero}>
+        <Animated.View entering={enterUp(0)} style={styles.hero}>
             <AppText variant="small" style={styles.overline}>{formatDate(challenge.date)}</AppText>
             <AppText variant="title">Thử thách hôm nay</AppText>
             <AppText variant="body">Mỗi ngày một đề mới cho tất cả mọi người. Chỉ có một lượt, nên hãy nhớ thật kỹ trước khi bắt đầu.</AppText>
@@ -72,7 +74,7 @@ function Hero({ view, onChanged }: { view: DailyChallengeView; onChanged: () => 
             <AppText variant="small">
                 Đề mới sau <AppText variant="small" style={styles.clock}>{countdown}</AppText> · {challenge.players} người đã chơi
             </AppText>
-        </View>
+        </Animated.View>
     );
 }
 

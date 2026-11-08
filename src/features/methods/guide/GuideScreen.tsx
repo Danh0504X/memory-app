@@ -3,8 +3,12 @@ import { router, type Href } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { useRef, useState, type ReactNode } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { LiveShape } from '@/components/ui/LiveShape';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import type { Picture } from './pictures';
 import type { GuideContent, Tone } from './types';
@@ -25,10 +29,10 @@ export function GuideScreen({ content }: { content: GuideContent }) {
 
     return (
         <ScrollView ref={scroll} style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            <View style={[styles.hero, { backgroundColor: tone }]}>
+            <Animated.View entering={enterUp(0)} style={[styles.hero, { backgroundColor: tone }]}>
                 <View style={styles.heroArt}>
                     <View style={styles.heroDisc}>
-                        <Shape picture={hero.picture} size={88} />
+                        <LiveShape art={hero.picture.src} motion={hero.picture.motion} size={88} label={hero.picture.name} tappable />
                     </View>
                     <Image source={hero.woodcut.src} style={styles.heroWoodcut} contentFit="contain" accessibilityLabel={hero.woodcut.alt} />
                 </View>
@@ -38,7 +42,7 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                 <Pressable onPress={() => jump(applyTop.current)} accessibilityRole="button" hitSlop={8}>
                     <AppText variant="small" style={styles.link}>Dùng trong trò chơi nào?</AppText>
                 </Pressable>
-            </View>
+            </Animated.View>
 
             <Section title={how.title}>
                 <AppText variant="body">{how.intro}</AppText>
@@ -55,7 +59,7 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                         {how.ordered.map(({ picture, label }, i) => (
                             <View key={`${label}-${i}`} style={styles.ordered}>
                                 <View style={[styles.orderedDisc, { backgroundColor: tone }]}>
-                                    <Shape picture={picture} size={36} />
+                                    <LiveShape art={picture.src} motion={picture.motion} size={36} />
                                 </View>
                                 <AppText variant="small" style={styles.orderedLabel}>{label}</AppText>
                             </View>
@@ -90,7 +94,7 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                         </Pressable>
                     ))}
                 </ScrollView>
-                <View style={[styles.stage, { backgroundColor: tone }]}>{current.art}</View>
+                <View key={selected} style={[styles.stage, { backgroundColor: tone }]}>{current.art}</View>
                 <AppText variant="body" accessibilityLiveRegion="polite">
                     <AppText style={styles.strong}>{current.name}. </AppText>
                     {current.fact}
@@ -142,14 +146,9 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                                 </>
                             );
                             return item.to ? (
-                                <Pressable
-                                    key={item.name}
-                                    onPress={() => router.push(item.to as Href)}
-                                    accessibilityRole="button"
-                                    style={({ pressed }) => [styles.applyItem, pressed && { opacity: 0.85 }]}
-                                >
+                                <PressableScale key={item.name} onPress={() => router.push(item.to as Href)} accessibilityRole="button" style={styles.applyItem}>
                                     {body}
-                                </Pressable>
+                                </PressableScale>
                             ) : (
                                 <View key={item.name} style={styles.applyItem}>{body}</View>
                             );
@@ -159,7 +158,7 @@ export function GuideScreen({ content }: { content: GuideContent }) {
             </View>
 
             <View style={[styles.close, { backgroundColor: tone }]}>
-                <Shape picture={close.picture} size={72} />
+                <LiveShape art={close.picture.src} motion={close.motion} size={72} label={close.picture.name} tappable />
                 <AppText variant="heading">{close.line}</AppText>
                 <AppText variant="body">{close.text}</AppText>
                 <AppText variant="small" style={styles.strong}>{close.fact}</AppText>

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { LiveShape } from '@/components/ui/LiveShape';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import type { Picture } from './pictures';
@@ -46,7 +48,6 @@ export function TrialFrame({
 
 // Một hình trong đĩa tròn, kèm tên bên dưới (tuỳ chọn)
 export function Disc({ picture, size = 56, label, tone }: { picture: Picture; size?: number; label?: string; tone?: 'ok' | 'bad' }) {
-    const Shape = picture.src;
     return (
         <View style={styles.cell}>
             <View
@@ -54,7 +55,7 @@ export function Disc({ picture, size = 56, label, tone }: { picture: Picture; si
                 accessible
                 accessibilityLabel={picture.name}
             >
-                <Shape width={size * 0.66} height={size * 0.66} />
+                <LiveShape art={picture.src} motion={picture.motion} size={size * 0.66} />
             </View>
             {label ? <AppText variant="small" style={styles.label} numberOfLines={2}>{label}</AppText> : null}
         </View>
@@ -75,16 +76,16 @@ export function EmptyDisc({ size = 56, text }: { size?: number; text?: string })
 export function Choice({ picture, disabled, onPress }: { picture: Picture; disabled?: boolean; onPress: () => void }) {
     const Shape = picture.src;
     return (
-        <Pressable
+        <PressableScale
             onPress={onPress}
             disabled={disabled}
             accessibilityRole="button"
             accessibilityLabel={picture.name}
-            style={({ pressed }) => [styles.choice, disabled && { opacity: 0.3 }, pressed && { backgroundColor: colors.mint }]}
+            style={[styles.choice, disabled && { opacity: 0.3 }]}
         >
             <Shape width={40} height={40} />
             <AppText variant="small" style={styles.label} numberOfLines={1}>{picture.name}</AppText>
-        </Pressable>
+        </PressableScale>
     );
 }
 

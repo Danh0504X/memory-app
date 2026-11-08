@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { ChevronLeft, ChevronRight, Delete } from 'lucide-react-native';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
@@ -321,30 +322,30 @@ function RecallPhase({ expired }: { expired: boolean }) {
 
 function Key({ label, disabled, onPress }: { label: string; disabled: boolean; onPress: () => void }) {
     return (
-        <Pressable
+        <PressableScale
             onPress={onPress}
             disabled={disabled}
             accessibilityRole="button"
             accessibilityLabel={`Số ${label}`}
-            style={({ pressed }) => [styles.key, pressed && styles.keyPressed, disabled && styles.disabled]}
+            style={[styles.key, disabled && styles.disabled]}
         >
             <AppText style={styles.keyText}>{label}</AppText>
-        </Pressable>
+        </PressableScale>
     );
 }
 
 function Tool({ label, disabled, onPress, children }: { label: string; disabled: boolean; onPress: () => void; children?: ReactNode }) {
     return (
-        <Pressable
+        <PressableScale
             onPress={onPress}
             disabled={disabled}
             accessibilityRole="button"
             accessibilityLabel={label}
-            style={({ pressed }) => [styles.tool, pressed && styles.keyPressed, disabled && styles.disabled]}
+            style={[styles.tool, disabled && styles.disabled]}
         >
             {children}
             <AppText style={styles.toolText} numberOfLines={1}>{label}</AppText>
-        </Pressable>
+        </PressableScale>
     );
 }
 
@@ -466,7 +467,6 @@ const styles = StyleSheet.create({
     keypad: { gap: 6, paddingHorizontal: spacing.md, paddingTop: spacing.sm, borderTopWidth: 1, borderColor: colors.step, backgroundColor: colors.white },
     keyRow: { flexDirection: 'row', gap: 6 },
     key: { flex: 1, height: 48, borderRadius: radius, backgroundColor: colors.wall, borderWidth: 1, borderColor: colors.step, alignItems: 'center', justifyContent: 'center' },
-    keyPressed: { backgroundColor: colors.mint },
     keyText: { fontFamily: fonts.bold, fontSize: 22 },
     tool: { flex: 1, height: 44, borderRadius: radius, borderWidth: 1, borderColor: colors.step, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
     toolText: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, color: colors.brandDeep },

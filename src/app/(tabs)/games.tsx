@@ -1,7 +1,8 @@
 import { Link } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
@@ -37,7 +38,7 @@ export default function GamesScreen() {
                 const game = games?.find((item) => item.gameName === id);
                 return (
                     <Link key={id} href={meta.route} asChild>
-                        <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+                        <PressableScale style={styles.row}>
                             <View style={[styles.swatch, { backgroundColor: meta.color }]} />
                             <View style={styles.rowText}>
                                 <AppText variant="heading">{meta.label}</AppText>
@@ -46,19 +47,19 @@ export default function GamesScreen() {
                                 </AppText>
                             </View>
                             <ChevronRight color={colors.inkSoft} />
-                        </Pressable>
+                        </PressableScale>
                     </Link>
                 );
             })}
 
             <Link href="/methods" asChild>
-                <Pressable style={({ pressed }) => [styles.row, styles.methods, pressed && styles.pressed]}>
+                <PressableScale style={[styles.row, styles.methods]}>
                     <View style={styles.rowText}>
                         <AppText variant="heading">Phương pháp ghi nhớ</AppText>
                         <AppText variant="small">Nối thành câu chuyện, biến số thành hình, căn phòng trí nhớ. Có trò chơi thử.</AppText>
                     </View>
                     <ChevronRight color={colors.inkSoft} />
-                </Pressable>
+                </PressableScale>
             </Link>
         </Screen>
     );
@@ -75,7 +76,6 @@ const styles = StyleSheet.create({
         borderColor: colors.step,
         padding: spacing.md,
     },
-    pressed: { opacity: 0.85 },
     methods: { backgroundColor: colors.mint, borderColor: colors.mint, marginTop: spacing.sm },
     swatch: { width: 12, alignSelf: 'stretch', borderRadius: 6 },
     rowText: { flex: 1, gap: 2 },

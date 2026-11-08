@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { colors, fonts, radius } from '@/constants/theme';
 
@@ -16,7 +17,7 @@ export function Chips<T extends string | number>({ options, value, onChange, acc
             {options.map((option) => {
                 const selected = option.value === value;
                 return (
-                    <Pressable
+                    <PressableScale
                         key={option.value}
                         accessibilityRole="radio"
                         accessibilityState={{ selected }}
@@ -26,7 +27,7 @@ export function Chips<T extends string | number>({ options, value, onChange, acc
                         <AppText variant="small" style={[styles.label, selected && styles.selectedLabel]}>
                             {option.label}
                         </AppText>
-                    </Pressable>
+                    </PressableScale>
                 );
             })}
         </View>

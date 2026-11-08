@@ -1,5 +1,6 @@
 import { Check, Lock } from 'lucide-react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { colors, fonts, radius } from '@/constants/theme';
 
@@ -20,7 +21,7 @@ export function LevelGrid({ levels, unlockedLevel, selectedLevel, shortUnit, onS
                 const done = level < unlockedLevel;
                 const selected = level === selectedLevel;
                 return (
-                    <Pressable
+                    <PressableScale
                         key={level}
                         disabled={locked}
                         onPress={() => onSelect(level)}
@@ -35,7 +36,7 @@ export function LevelGrid({ levels, unlockedLevel, selectedLevel, shortUnit, onS
                             <AppText style={styles.number}>{level}</AppText>
                         </View>
                         <AppText variant="small" style={styles.count}>{count} {shortUnit}</AppText>
-                    </Pressable>
+                    </PressableScale>
                 );
             })}
         </View>

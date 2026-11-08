@@ -2,8 +2,11 @@ import { router } from 'expo-router';
 import { Check, Flame, Medal, Star, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import type { CompletedRound, RecordKey, RoundResult as RoundVerdict } from '../api/games.api';
 import { describeCompletedRound } from '../utils/completedRound';
@@ -50,7 +53,7 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
 
     return (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            <View style={styles.card}>
+            <Animated.View entering={enterUp(0)} style={styles.card}>
                 <AppText variant="title" style={{ color: VERDICT_COLORS[result.result] }} accessibilityRole="header">
                     {VERDICTS[result.result]}
                 </AppText>
@@ -58,9 +61,7 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
                     {summary.value}
                     <AppText variant="lead"> / {summary.total} {summary.unit}</AppText>
                 </AppText>
-                <View style={styles.meter}>
-                    <View style={[styles.meterFill, { width: `${percentage}%`, backgroundColor: VERDICT_COLORS[result.result] }]} />
-                </View>
+                <ProgressBar value={result.accuracy} color={VERDICT_COLORS[result.result]} />
                 <AppText variant="body">
                     Đúng {result.correctItems}/{result.totalItems} · Chính xác {percentage}%. {summary.message}
                 </AppText>
@@ -96,7 +97,7 @@ export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, o
                 <AppText variant="small">
                     Ghi nhớ {formatSeconds(result.memorizeSec)} · Nhớ lại {formatSeconds(result.recallSec)}
                 </AppText>
-            </View>
+            </Animated.View>
 
             {children}
         </ScrollView>
@@ -166,8 +167,6 @@ const styles = StyleSheet.create({
     content: { padding: spacing.md, gap: spacing.md },
     card: { backgroundColor: colors.white, borderRadius: radius * 1.5, borderWidth: 1, borderColor: colors.step, padding: spacing.lg, gap: spacing.sm },
     count: { fontFamily: fonts.extrabold, fontSize: 40, lineHeight: 46 },
-    meter: { height: 8, borderRadius: 4, backgroundColor: colors.step, overflow: 'hidden' },
-    meterFill: { height: '100%' },
     rewards: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     reward: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.wall, borderWidth: 1, borderColor: colors.step },
     rewardHighlight: { backgroundColor: colors.sun, borderColor: colors.sun },

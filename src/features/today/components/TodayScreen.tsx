@@ -2,10 +2,13 @@ import { router, type Href } from 'expo-router';
 import { Check, ChevronRight, Flame, Lightbulb } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { BlockState, Panel } from '@/components/ui/Panel';
+import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useDailyChallenge } from '@/features/daily/hooks/useDailyChallenge';
@@ -101,10 +104,12 @@ function MemberToday() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={false} onRefresh={reloadAll} tintColor={colors.brand} />}>
-                <AppText variant="small" style={styles.overline}>{date.charAt(0).toUpperCase() + date.slice(1)}</AppText>
-                <AppText variant="title">{hello?.title ?? 'Chào bạn'}</AppText>
-                <AppText variant="lead" style={hello?.urgent ? styles.urgent : null}>{hello?.line ?? 'Đang tải việc hôm nay…'}</AppText>
-                {exam ? <AppText variant="body" style={[styles.exam, exam.urgent && styles.urgent]}>{exam.text}</AppText> : null}
+                <Animated.View entering={enterUp(0)} style={styles.hello}>
+                    <AppText variant="small" style={styles.overline}>{date.charAt(0).toUpperCase() + date.slice(1)}</AppText>
+                    <AppText variant="title">{hello?.title ?? 'Chào bạn'}</AppText>
+                    <AppText variant="lead" style={hello?.urgent ? styles.urgent : null}>{hello?.line ?? 'Đang tải việc hôm nay…'}</AppText>
+                    {exam ? <AppText variant="body" style={[styles.exam, exam.urgent && styles.urgent]}>{exam.text}</AppText> : null}
+                </Animated.View>
 
                 {askGoals ? (
                     <Panel title="Bạn luyện trí nhớ để làm gì?" style={styles.ask}>
@@ -119,7 +124,7 @@ function MemberToday() {
                         const meta = GAME_META[recommended];
                         const game = games.find((item) => item.gameName === recommended);
                         return (
-                            <View style={[styles.next, { borderColor: meta.color }]}>
+                            <Animated.View entering={enterUp(1)} style={[styles.next, { borderColor: meta.color }]}>
                                 <AppText variant="small" style={styles.overline}>Chơi tiếp</AppText>
                                 <AppText variant="heading">{meta.label}</AppText>
                                 <AppText variant="small">
@@ -127,7 +132,7 @@ function MemberToday() {
                                     {reason ? ` · ${reason}` : ''}
                                 </AppText>
                                 <Button title="Chơi ngay" onPress={() => router.push(meta.route)} />
-                            </View>
+                            </Animated.View>
                         );
                     }}
                 </BlockState>
@@ -188,9 +193,7 @@ function StreakAndLevel({ profile }: { profile: UserProfile }) {
                 </View>
             </View>
             <AppText style={styles.levelTitle}>Cấp {profile.level.level}</AppText>
-            <View style={styles.meter}>
-                <View style={[styles.meterFill, { width: `${progress.percentage}%` }]} />
-            </View>
+            <ProgressBar value={progress.percentage / 100} />
             <AppText variant="small">
                 {formatNumber(profile.level.expIntoLevel)}/{formatNumber(profile.level.expForNextLevel)} EXP · còn {formatNumber(progress.remaining)} EXP lên cấp {progress.nextLevel}
             </AppText>
@@ -270,6 +273,7 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.wall },
     content: { padding: spacing.lg, gap: spacing.md },
     overline: { fontFamily: fonts.bold, color: colors.brandDeep },
+    hello: { gap: spacing.sm },
     urgent: { color: '#b54708', fontFamily: fonts.semibold },
     exam: { fontFamily: fonts.semibold },
     ask: { backgroundColor: '#fff8e1', borderColor: colors.sun },
@@ -282,8 +286,6 @@ const styles = StyleSheet.create({
     streakRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     streakValue: { fontFamily: fonts.extrabold, fontSize: 22 },
     levelTitle: { fontFamily: fonts.bold, fontSize: 16 },
-    meter: { height: 8, borderRadius: 4, backgroundColor: colors.step, overflow: 'hidden' },
-    meterFill: { height: '100%', backgroundColor: colors.brand },
     tip: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.sky },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     tile: { width: '48%', flexGrow: 1, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.wall, gap: 2 },

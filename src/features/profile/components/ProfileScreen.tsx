@@ -1,11 +1,15 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { LiveShape } from '@/components/ui/LiveShape';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { BlockState, Panel } from '@/components/ui/Panel';
 import { TextField } from '@/components/ui/TextField';
+import { enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { GAME_META } from '@/features/dashboard/constants';
@@ -110,7 +114,7 @@ function Header({ profile, badges }: { profile: UserProfile; badges: Badge[] | n
     const progress = getLevelProgress(profile.level);
     const initials = profile.username.trim().split(/\s+/).slice(-2).map((word) => word.charAt(0).toUpperCase()).join('');
     return (
-        <View style={styles.header}>
+        <Animated.View entering={enterUp(0)} style={styles.header}>
             <View style={styles.headerTop}>
                 <View style={styles.avatar}>
                     <AppText style={styles.avatarText}>{initials || 'M'}</AppText>
@@ -123,11 +127,9 @@ function Header({ profile, badges }: { profile: UserProfile; badges: Badge[] | n
                     </AppText>
                 </View>
             </View>
-            <View style={styles.meter}>
-                <View style={[styles.meterFill, { width: `${progress.percentage}%` }]} />
-            </View>
+            <ProgressBar value={progress.percentage / 100} track={colors.white} />
             <AppText variant="small">Còn {formatNumber(progress.remaining)} EXP lên cấp {progress.nextLevel}</AppText>
-        </View>
+        </Animated.View>
     );
 }
 
@@ -136,7 +138,6 @@ function Badges({ badges }: { badges: Badge[] }) {
         <View style={styles.badges}>
             {badges.map((badge) => {
                 const earned = isEarned(badge);
-                const Shape = badge.shape;
                 return (
                     <View
                         key={badge.id}
@@ -144,7 +145,7 @@ function Badges({ badges }: { badges: Badge[] }) {
                         accessibilityLabel={`${badge.title}: ${earned ? 'đã đạt' : badge.unit(badge.current)}`}
                     >
                         <View style={[styles.badgeShape, !earned && styles.badgeLocked]}>
-                            <Shape width={44} height={44} />
+                            {earned ? <LiveShape art={badge.shape} motion={badge.motion} size={44} tappable /> : <badge.shape width={44} height={44} />}
                         </View>
                         <AppText variant="small" style={styles.badgeTitle} numberOfLines={2}>{badge.title}</AppText>
                         <AppText variant="small" style={styles.badgeProgress}>{earned ? 'Đã đạt' : badge.unit(badge.current)}</AppText>
@@ -306,8 +307,6 @@ const styles = StyleSheet.create({
     headerTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
     avatarText: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.white },
-    meter: { height: 8, borderRadius: 4, backgroundColor: colors.white, overflow: 'hidden' },
-    meterFill: { height: '100%', backgroundColor: colors.brand },
     badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     badge: { width: '31%', flexGrow: 1, alignItems: 'center', gap: 4, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.wall, borderWidth: 1, borderColor: colors.step },
     badgeEarned: { backgroundColor: '#fff8e1', borderColor: colors.sun },
