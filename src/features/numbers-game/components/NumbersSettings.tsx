@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { BookOpen, SlidersHorizontal } from 'lucide-react-native';
+import { BookOpen, Info, SlidersHorizontal } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
@@ -10,6 +10,7 @@ import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { Chips } from '@/features/shared-game/components/Chips';
 import { LevelGrid } from '@/features/shared-game/components/LevelGrid';
+import { LevelTableSheet } from '@/features/shared-game/components/LevelTableSheet';
 import { useGameCatalog } from '@/features/shared-game/store/gameCatalogStore';
 import { formatSeconds } from '@/features/shared-game/utils/formatTime';
 import { useNumbersGameStore } from '../store/numbersGameStore';
@@ -39,6 +40,7 @@ export function NumbersSettings() {
     const [standardMemorize, setStandardMemorize] = useState(60);
     const [custom, setCustom] = useState({ count: 8, memorize: 60, recall: 240 });
     const [panel, setPanel] = useState<'guide' | 'options' | null>(null);
+    const [showLevels, setShowLevels] = useState(false);
 
     const digitCounts = game?.levels.map((item) => item.itemCount) ?? progress?.digitCounts ?? DEFAULT_DIGIT_COUNTS;
     const maxLevel = digitCounts.length;
@@ -159,10 +161,20 @@ export function NumbersSettings() {
 
             <View style={styles.tools}>
                 <ToolButton icon={<BookOpen color={colors.brandDeep} size={18} />} label="Cách chơi" open={panel === 'guide'} onPress={() => toggle('guide')} />
+                <ToolButton icon={<Info color={colors.brandDeep} size={18} />} label="Bảng cấp độ" open={false} onPress={() => setShowLevels(true)} />
                 <ToolButton icon={<SlidersHorizontal color={colors.brandDeep} size={18} />} label="Tùy chọn" open={panel === 'options'} onPress={() => toggle('options')} />
             </View>
             {panel === 'guide' ? <Guide /> : null}
             {panel === 'options' ? <Options /> : null}
+            <LevelTableSheet
+                visible={showLevels}
+                onClose={() => setShowLevels(false)}
+                gameTitle="Ghi nhớ số"
+                itemUnit="chữ số"
+                levels={digitCounts.map((count, index) => ({ level: index + 1, itemCount: count }))}
+                unlockedLevel={unlocked}
+                unlockOn={game?.unlockOn ?? 'perfect'}
+            />
 
             <AppText variant="body" style={styles.goal}>{goal}</AppText>
             {!isAuthenticated && mode !== 'challenge' ? (
@@ -256,8 +268,8 @@ const styles = StyleSheet.create({
     section: { gap: spacing.sm },
     panel: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
     title: { fontFamily: fonts.semibold, color: colors.ink },
-    tools: { flexDirection: 'row', gap: spacing.sm },
-    tool: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
+    tools: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    tool: { flexGrow: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
     toolOpen: { borderColor: colors.brand, backgroundColor: colors.mint },
     toolLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
     goal: { fontFamily: fonts.semibold },

@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { SlidersHorizontal } from 'lucide-react-native';
+import { BookOpen, Info, SlidersHorizontal } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Screen } from '@/components/ui/Screen';
 import { ease } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
@@ -12,6 +13,8 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import type { GameCatalogItem } from '../api/games.api';
 import { formatSeconds } from '../utils/formatTime';
 import { Chips } from './Chips';
+import { GuideSheet } from './GuideSheet';
+import { LevelTableSheet } from './LevelTableSheet';
 import { LevelGrid } from './LevelGrid';
 
 const levelLabel = (level: number) => (level <= 3 ? 'Mức căn bản' : level <= 6 ? 'Mức trung cấp' : 'Mức nâng cao');
@@ -31,6 +34,8 @@ interface RoundSetupProps {
     error: string | null;
     renderBack: (width: number) => ReactNode; // mặt úp, xoè ra cho biết số lượng cần nhớ
     options?: ReactNode;            // tuỳ chọn riêng của từng trò, hiện khi bấm "Tùy chọn"
+    gameTitle: string;              // tên trò trên bảng cấp độ
+    typing?: boolean;               // Ghi nhớ từ: nhớ lại bằng cách gõ (đổi nội dung "Cách chơi")
 }
 
 export function RoundSetup({
@@ -47,9 +52,12 @@ export function RoundSetup({
     error,
     renderBack,
     options,
+    gameTitle,
+    typing = false,
 }: RoundSetupProps) {
     const isGuest = !useAuthStore((state) => state.isAuthenticated);
     const [showOptions, setShowOptions] = useState(false);
+    const [sheet, setSheet] = useState<'guide' | 'levels' | null>(null);
 
     const unlockedLevel = game.player?.unlockedLevel ?? 1;
     // Cấp đã chọn có thể không còn mở (đổi tài khoản, tiến độ khách hết hạn): quay về cấp cao nhất đã mở
@@ -118,20 +126,37 @@ export function RoundSetup({
                 </AppText>
             </View>
 
-            {options ? (
-                <View style={styles.section}>
-                    <Pressable
+            {/* Công cụ như bản web: cách chơi và bảng cấp độ mở bảng trượt; tuỳ chọn mở ngay bên dưới */}
+            <View style={styles.tools}>
+                <ToolButton icon={<BookOpen color={colors.brandDeep} size={18} />} label="Cách chơi" onPress={() => setSheet('guide')} />
+                <ToolButton icon={<Info color={colors.brandDeep} size={18} />} label="Bảng cấp độ" onPress={() => setSheet('levels')} />
+                {options ? (
+                    <ToolButton
+                        icon={<SlidersHorizontal color={colors.brandDeep} size={18} />}
+                        label="Tùy chọn"
+                        open={showOptions}
                         onPress={() => setShowOptions((shown) => !shown)}
-                        accessibilityRole="button"
-                        accessibilityState={{ expanded: showOptions }}
-                        style={styles.optionsToggle}
-                    >
-                        <SlidersHorizontal color={colors.brandDeep} size={18} />
-                        <AppText style={styles.optionsLabel}>Tùy chọn</AppText>
-                    </Pressable>
-                    {showOptions ? options : null}
-                </View>
-            ) : null}
+                    />
+                ) : null}
+            </View>
+            {options && showOptions ? options : null}
+            <GuideSheet
+                visible={sheet === 'guide'}
+                onClose={() => setSheet(null)}
+                itemUnit={shortUnit}
+                recallSec={game.recallSec}
+                passPercent={passPercent}
+                typing={typing}
+            />
+            <LevelTableSheet
+                visible={sheet === 'levels'}
+                onClose={() => setSheet(null)}
+                gameTitle={gameTitle}
+                itemUnit={shortUnit}
+                levels={game.levels}
+                unlockedLevel={unlockedLevel}
+                unlockOn={game.unlockOn}
+            />
 
             <AppText variant="body" style={styles.goal}>{goal}</AppText>
 
@@ -146,6 +171,20 @@ export function RoundSetup({
 
             <Button title={isStarting ? 'Đang chia bài...' : 'Bắt đầu'} loading={isStarting} onPress={() => onStart(level)} />
         </Screen>
+    );
+}
+
+function ToolButton({ icon, label, open, onPress }: { icon: ReactNode; label: string; open?: boolean; onPress: () => void }) {
+    return (
+        <PressableScale
+            onPress={onPress}
+            accessibilityRole="button"
+            accessibilityState={open === undefined ? undefined : { expanded: open }}
+            style={[styles.tool, open && styles.toolOpen]}
+        >
+            {icon}
+            <AppText style={styles.toolLabel}>{label}</AppText>
+        </PressableScale>
     );
 }
 
@@ -175,8 +214,10 @@ const styles = StyleSheet.create({
     fanCard: { position: 'absolute' },
     count: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 40 },
     section: { gap: spacing.sm },
-    optionsToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44 },
-    optionsLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
+    tools: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    tool: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, paddingHorizontal: 12, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
+    toolOpen: { borderColor: colors.brand, backgroundColor: colors.mint },
+    toolLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
     goal: { fontFamily: fonts.semibold },
     link: { fontFamily: fonts.bold, color: colors.brand, textDecorationLine: 'underline' },
     loading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

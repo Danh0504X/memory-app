@@ -47,6 +47,7 @@ function SettingsPhase() {
 
     return (
         <RoundSetup
+            gameTitle={GAME_NAME}
             itemUnit="hình ảnh"
             shortUnit="hình"
             game={game}

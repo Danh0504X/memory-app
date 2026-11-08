@@ -56,6 +56,8 @@ function SettingsPhase() {
 
     return (
         <RoundSetup
+            gameTitle={GAME_NAME}
+            typing
             itemUnit="từ"
             shortUnit="từ"
             game={game}
