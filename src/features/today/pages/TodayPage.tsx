@@ -12,7 +12,10 @@ import { PROGRESS_TIME_ZONE, formatWeekday } from '@/features/dashboard/utils/fo
 import { ContinueTable } from '../components/ContinueTable';
 import { DailyGoals } from '../components/DailyGoals';
 import { MethodOfDay } from '../components/MethodOfDay';
-import { dailyGoals, greet, lastWeekSummary, recommendGame, sessionsOfDay } from '../utils/today';
+import { GAME_IDS } from '@/features/dashboard/constants';
+import { dayKey } from '@/features/dashboard/utils/format';
+import { dailyGoals, greet, lastWeekSummary, sessionsOfDay } from '../utils/today';
+import { daysUntilExam, examLine, recommendGame, roundsPerDay } from '../utils/personalize';
 import '@/styles/app-screen.css';
 import '@/features/shared-game/game.css';
 import '../today.css';
@@ -29,9 +32,11 @@ export const TodayPage = () => {
 
     const sessions = recent.state.status === 'ready' ? recent.state.data : null;
     const hello = profile.state.status === 'ready' ? greet(profile.state.data, sessions, timeZone) : null;
-    const recommended = recommendGame(sessions);
+    const preferences = profile.state.status === 'ready' ? profile.state.data.preferences : null;
+    const { game: recommended, reason } = recommendGame(sessions, preferences, GAME_IDS);
     const today = new Date();
     const date = formatWeekday(today, timeZone);
+    const exam = examLine(daysUntilExam(preferences, dayKey(today, timeZone)), roundsPerDay(preferences));
     // Tài khoản chưa trả lời cũng chưa bỏ qua câu hỏi mục tiêu thì hỏi một lần ở đây
     const [askedGoals, setAskedGoals] = useState(false);
     const askGoals = !askedGoals && profile.state.status === 'ready' && profile.state.data.preferences?.status === 'unset';
@@ -46,6 +51,11 @@ export const TodayPage = () => {
                     <div>
                         <h1>{hello?.title ?? 'Chào bạn'}</h1>
                         <p>{hello?.line ?? 'Đang tải việc hôm nay…'}</p>
+                        {exam && (
+                            <p className="today-hello__exam" data-urgent={exam.urgent}>
+                                {exam.text}
+                            </p>
+                        )}
                     </div>
                     <p className="today-hello__date">{date.charAt(0).toUpperCase() + date.slice(1)}</p>
                 </header>
@@ -54,13 +64,14 @@ export const TodayPage = () => {
                     <div className="span-8">
                         <BlockState request={catalog.state} onRetry={catalog.reload}>
                             {(games) => (
-                                // Đợi lịch sử để gợi ý đúng trò vừa chơi, tránh bàn đổi trò khi lịch sử tải xong
+                                // Đợi lịch sử và hồ sơ (mục tiêu) để gợi ý đúng trò, tránh bàn đổi trò khi tải xong
                                 <ContinueTable
-                                    key={recent.state.status === 'loading' ? 'loading' : recommended}
+                                    key={recent.state.status === 'loading' || profile.state.status === 'loading' ? 'loading' : recommended}
                                     games={games}
                                     sessions={sessions}
                                     timeZone={timeZone}
                                     recommended={recommended}
+                                    reason={reason}
                                 />
                             )}
                         </BlockState>
@@ -71,7 +82,7 @@ export const TodayPage = () => {
                             <h2 id="goals-title">Mục tiêu hôm nay</h2>
                         </div>
                         <BlockState request={recent.state} onRetry={recent.reload}>
-                            {(data) => <DailyGoals goals={dailyGoals(sessionsOfDay(data, timeZone), recommended)} />}
+                            {(data) => <DailyGoals goals={dailyGoals(sessionsOfDay(data, timeZone), recommended, preferences)} />}
                         </BlockState>
                     </section>
 
@@ -123,7 +134,14 @@ export const TodayPage = () => {
                 </div>
             </main>
 
-            {askGoals && <PreferencesDialog onDone={() => setAskedGoals(true)} />}
+            {askGoals && (
+                <PreferencesDialog
+                    onDone={(saved) => {
+                        setAskedGoals(true);
+                        if (saved) profile.reload();
+                    }}
+                />
+            )}
         </div>
     );
 };

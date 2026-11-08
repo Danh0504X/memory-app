@@ -15,10 +15,12 @@ interface ContinueTableProps {
     sessions: GameSession[] | null;
     timeZone: string;
     recommended: GameId;
+    // Vì sao gợi ý trò này (theo mục tiêu luyện tập); chỉ hiện khi đang xem đúng trò được gợi ý
+    reason?: string | null;
 }
 
 // Khối chính của trang: bàn xanh như trong game, gợi ý trò và cấp nên chơi tiếp, bấm một lần là vào
-export const ContinueTable = ({ games, sessions, timeZone, recommended }: ContinueTableProps) => {
+export const ContinueTable = ({ games, sessions, timeZone, recommended, reason = null }: ContinueTableProps) => {
     const [chosen, setChosen] = useState<GameId>(recommended);
     const game = games.find((item) => item.gameName === chosen);
     if (!game) return null;
@@ -60,6 +62,7 @@ export const ContinueTable = ({ games, sessions, timeZone, recommended }: Contin
                         <span>{meta.unit} cần nhớ</span>
                     </p>
                     <p className="today-table__note">
+                        {reason && chosen === recommended && <strong className="today-table__why">{reason} </strong>}
                         {last
                             ? `Lần trước: đúng ${last.correctItems}/${last.totalItems} ${meta.unit}, ${formatWhen(last.playedAt, timeZone).toLowerCase()}. `
                             : 'Bạn chưa chơi trò này. '}

@@ -1,4 +1,5 @@
-import type { UserProfile } from '@/features/profile/api/profile.api';
+import type { TrainingPreferences, UserProfile } from '@/features/profile/api/profile.api';
+import { goalGames, roundsPerDay } from './personalize';
 import { GAME_META } from '@/features/dashboard/constants';
 import { dayKey } from '@/features/dashboard/utils/format';
 import type { DashboardSummary, GameId, GameSession } from '@/features/dashboard/types';
@@ -58,9 +59,6 @@ export const greet = (profile: UserProfile, sessions: GameSession[] | null, time
     };
 };
 
-// Trò nên chơi tiếp: trò vừa chơi gần nhất; chưa chơi ván nào thì bắt đầu bằng trò hình (dễ nhất)
-export const recommendGame = (sessions: GameSession[] | null): GameId => sessions?.[0]?.game ?? 'image';
-
 export interface DailyGoal {
     id: string;
     label: string;
@@ -69,23 +67,48 @@ export interface DailyGoal {
     action: string;
 }
 
-// Ba mục tiêu nhỏ mỗi ngày, tính từ các ván đã chơi hôm nay (chưa có phần thưởng riêng ở backend)
-export const dailyGoals = (today: GameSession[], recommended: GameId): DailyGoal[] => {
+// Ba mục tiêu nhỏ mỗi ngày, tính từ các ván đã chơi hôm nay (chưa có phần thưởng riêng ở backend).
+// Có mục tiêu luyện tập thì số ván theo thời gian đã chọn, và ván cần đạt phải thuộc trò hợp mục tiêu.
+export const dailyGoals = (
+    today: GameSession[],
+    recommended: GameId,
+    preferences?: TrainingPreferences | null,
+): DailyGoal[] => {
+    const rounds = roundsPerDay(preferences);
+    const preferred = goalGames(preferences);
+    const route = GAME_META[recommended].route;
+
     return [
-        {
-            id: 'play',
-            label: 'Chơi 1 ván để giữ chuỗi ngày',
-            done: today.length > 0,
-            to: GAME_META[recommended].route,
-            action: 'Chơi',
-        },
-        {
-            id: 'pass',
-            label: 'Đạt 1 ván (đúng từ 70%)',
-            done: today.some((session) => session.grade !== 'fail'),
-            to: GAME_META[recommended].route,
-            action: 'Chơi',
-        },
+        rounds > 1
+            ? {
+                  id: 'play',
+                  label: `Chơi ${rounds} ván hôm nay (${Math.min(today.length, rounds)}/${rounds})`,
+                  done: today.length >= rounds,
+                  to: route,
+                  action: 'Chơi',
+              }
+            : {
+                  id: 'play',
+                  label: 'Chơi 1 ván để giữ chuỗi ngày',
+                  done: today.length > 0,
+                  to: route,
+                  action: 'Chơi',
+              },
+        preferred.length > 0
+            ? {
+                  id: 'pass',
+                  label: `Đạt 1 ván ${preferred.map((game) => GAME_META[game].label).join(' hoặc ')}`,
+                  done: today.some((session) => preferred.includes(session.game) && session.grade !== 'fail'),
+                  to: route,
+                  action: 'Chơi',
+              }
+            : {
+                  id: 'pass',
+                  label: 'Đạt 1 ván (đúng từ 70%)',
+                  done: today.some((session) => session.grade !== 'fail'),
+                  to: route,
+                  action: 'Chơi',
+              },
         {
             id: 'daily',
             label: 'Chơi thử thách hôm nay',

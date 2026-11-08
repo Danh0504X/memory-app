@@ -44,6 +44,24 @@
   font-weight: 700;
 }
 
+/* Dòng đếm ngược kỳ thi (khi đặt mục tiêu ôn thi); luôn nằm dòng riêng, gần ngày thi thì thành dải màu */
+.today-hello div p.today-hello__exam {
+  display: block;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 0;
+  background: none;
+  color: var(--color-brand-deep);
+  font-weight: 700;
+}
+
+.today-hello div p.today-hello__exam[data-urgent='true'] {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #fdf3d6;
+  color: #7a4b00;
+}
+
 .today-hello__date {
   align-self: start;
   font-size: 14px;
@@ -152,6 +170,11 @@
   max-width: 46ch;
   font-size: 15px;
   line-height: 1.5;
+}
+
+/* Lý do gợi ý trò này (theo mục tiêu luyện tập) */
+.today-table__why {
+  font-weight: 800;
 }
 
 .today-table__actions {

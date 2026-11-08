@@ -11,7 +11,8 @@ const NO_GOAL = 'Chọn ít nhất một mục tiêu, hoặc bấm Bỏ qua.';
 
 // Hỏi mục tiêu một lần cho tài khoản chưa trả lời. Bỏ qua (nút, Esc, dấu ×, bấm ra nền tối) cũng được lưu
 // để không hỏi lại; người dùng vẫn đặt hoặc đổi được trong trang hồ sơ.
-export const PreferencesDialog = ({ onDone }: { onDone: () => void }) => {
+// onDone(true) khi vừa lưu mục tiêu: trang gọi nên tải lại hồ sơ để gợi ý đổi theo ngay
+export const PreferencesDialog = ({ onDone }: { onDone: (saved: boolean) => void }) => {
     const [draft, setDraft] = useState(() => toDraft(undefined));
     const [isSaving, setIsSaving] = useState(false);
     const [goalsError, setGoalsError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export const PreferencesDialog = ({ onDone }: { onDone: () => void }) => {
 
     const skip = () => {
         if (isSaving) return;
-        onDone();
+        onDone(false);
         // Lỗi thì thôi: lần sau mở trang sẽ hỏi lại, không cần làm phiền người dùng bây giờ
         profileApi
             .skipPreferences()
@@ -42,7 +43,7 @@ export const PreferencesDialog = ({ onDone }: { onDone: () => void }) => {
         try {
             const { data } = await profileApi.savePreferences(toInput(draft));
             setQuery(PROFILE_KEY, data.profile);
-            onDone();
+            onDone(true);
         } catch (saveError) {
             setError((saveError as { message?: string }).message ?? 'Chưa lưu được. Vui lòng thử lại.');
             setIsSaving(false);
