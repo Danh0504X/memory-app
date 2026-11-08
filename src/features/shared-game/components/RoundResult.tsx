@@ -13,44 +13,23 @@ const VERDICTS: Record<RoundVerdict, string> = { perfect: 'Hoàn hảo!', pass: 
 const VERDICT_COLORS: Record<RoundVerdict, string> = { perfect: colors.brand, pass: colors.brand, fail: colors.danger };
 const RECORD_LABELS: Record<RecordKey, string> = { bestLevel: 'Cấp cao nhất mới', fastestMemorize: 'Ghi nhớ nhanh nhất ở cấp này' };
 
-interface RoundResultProps<T> {
+interface RoundResultProps {
     round: CompletedRound;
     maxLevel: number;
     busy: boolean;
     onPlayAgain: () => void;
     onNextLevel: (level: number) => void;
     onReset: () => void;
-    // Đối chiếu từng vị trí (đáp án của người chơi và đáp án đúng), do backend chấm
-    review: { expected: T; answer: T | null; correct: boolean }[];
-    unit: string;
-    reviewPerRow: number;
-    itemRatio: number;
-    renderItem: (item: T, width: number) => ReactNode;
+    // Phần đối chiếu riêng của từng trò (ReviewGrid cho thẻ bài/hình ảnh, danh sách tên cho gương mặt)
+    children?: ReactNode;
 }
 
-const REVIEW_GAP = 8;
-
-export function RoundResult<T>({
-    round,
-    maxLevel,
-    busy,
-    onPlayAgain,
-    onNextLevel,
-    onReset,
-    review,
-    unit,
-    reviewPerRow,
-    itemRatio,
-    renderItem,
-}: RoundResultProps<T>) {
-    const { width } = useWindowDimensions();
+// Kết quả, phần thưởng và cấp đã mở đều do backend quyết định; ở đây chỉ trình bày
+export function RoundResult({ round, maxLevel, busy, onPlayAgain, onNextLevel, onReset, children }: RoundResultProps) {
     const { result, rewards, rules } = round;
     const summary = describeCompletedRound(round, maxLevel);
     const isDaily = rules.mode === 'daily';
     const percentage = Math.round(result.accuracy * 1000) / 10;
-    const wrong = review.filter((item) => !item.correct).length;
-    const cellWidth = Math.floor((width - spacing.md * 2 - REVIEW_GAP * (reviewPerRow - 1)) / reviewPerRow);
-    const itemWidth = cellWidth - 8;
 
     const leave = (path: '/' | '/games') => {
         onReset();
@@ -64,7 +43,7 @@ export function RoundResult<T>({
     const primaryLabel = isDaily ? 'Về trang Hôm nay' : summary.nextLevel !== null ? `Chơi cấp ${summary.nextLevel}` : 'Chơi lại';
 
     return (
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <View style={styles.card}>
                 <AppText variant="title" style={{ color: VERDICT_COLORS[result.result] }} accessibilityRole="header">
                     {VERDICTS[result.result]}
@@ -112,6 +91,31 @@ export function RoundResult<T>({
                 </AppText>
             </View>
 
+            {children}
+        </ScrollView>
+    );
+}
+
+interface ReviewGridProps<T> {
+    // Đáp án của người chơi và đáp án đúng ở từng vị trí, do backend chấm
+    items: { expected: T; answer: T | null; correct: boolean }[];
+    unit: string;
+    perRow: number;
+    itemRatio: number;
+    renderItem: (item: T, width: number) => ReactNode;
+}
+
+const REVIEW_GAP = 8;
+
+// Đối chiếu từng vị trí cho trò xếp thứ tự: ô sai nền đỏ nhạt, hiện cả đáp án đúng bên dưới
+export function ReviewGrid<T>({ items, unit, perRow, itemRatio, renderItem }: ReviewGridProps<T>) {
+    const { width } = useWindowDimensions();
+    const wrong = items.filter((item) => !item.correct).length;
+    const cellWidth = Math.floor((width - spacing.md * 2 - REVIEW_GAP * (perRow - 1)) / perRow);
+    const itemWidth = cellWidth - 8;
+
+    return (
+        <>
             <View style={styles.reviewHead}>
                 <AppText variant="heading">Đối chiếu từng vị trí</AppText>
                 <AppText variant="small">
@@ -119,7 +123,7 @@ export function RoundResult<T>({
                 </AppText>
             </View>
             <View style={styles.reviewGrid}>
-                {review.map((item, index) => (
+                {items.map((item, index) => (
                     <View
                         key={index}
                         style={[styles.cell, { width: cellWidth }, !item.correct && styles.cellWrong]}
@@ -138,7 +142,7 @@ export function RoundResult<T>({
                     </View>
                 ))}
             </View>
-        </ScrollView>
+        </>
     );
 }
 

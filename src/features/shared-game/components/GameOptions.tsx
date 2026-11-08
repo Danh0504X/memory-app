@@ -1,7 +1,6 @@
-import { Minus, Plus } from 'lucide-react-native';
-import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Switch, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
+import { Stepper } from '@/components/ui/Stepper';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { Chips } from './Chips';
 
@@ -54,16 +53,14 @@ export function GameOptions({ unit, groups, onGroupsChange, hideTimer, onHideTim
                         />
                     </View>
                     {custom.enabled ? (
-                        <View style={styles.stepper}>
-                            <StepButton label={`Bớt 1 ${unit}`} disabled={custom.count <= custom.min} onPress={() => custom.onCountChange(custom.count - 1)}>
-                                <Minus color={colors.brandDeep} size={20} />
-                            </StepButton>
-                            <AppText style={styles.stepValue} accessibilityLiveRegion="polite">{custom.count} {unit}</AppText>
-                            <StepButton label={`Thêm 1 ${unit}`} disabled={custom.count >= custom.max} onPress={() => custom.onCountChange(custom.count + 1)}>
-                                <Plus color={colors.brandDeep} size={20} />
-                            </StepButton>
-                            <AppText variant="small">({custom.min}–{custom.max})</AppText>
-                        </View>
+                        <Stepper
+                            value={custom.count}
+                            min={custom.min}
+                            max={custom.max}
+                            onChange={custom.onCountChange}
+                            format={(value) => `${value} ${unit}`}
+                            label={`số ${unit}`}
+                        />
                     ) : null}
                 </>
             ) : null}
@@ -71,20 +68,8 @@ export function GameOptions({ unit, groups, onGroupsChange, hideTimer, onHideTim
     );
 }
 
-function StepButton({ label, disabled, onPress, children }: { label: string; disabled: boolean; onPress: () => void; children: ReactNode }) {
-    return (
-        <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label} style={[styles.step, disabled && styles.disabled]}>
-            {children}
-        </Pressable>
-    );
-}
-
 const styles = StyleSheet.create({
     options: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
     title: { fontFamily: fonts.semibold, color: colors.ink, flex: 1 },
     switchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44 },
-    stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    step: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: colors.mint, alignItems: 'center', justifyContent: 'center' },
-    disabled: { opacity: 0.4 },
-    stepValue: { fontFamily: fonts.bold, fontSize: 18, minWidth: 64, textAlign: 'center' },
 });

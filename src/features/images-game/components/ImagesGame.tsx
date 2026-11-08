@@ -4,16 +4,16 @@ import { spacing } from '@/constants/theme';
 import type { GameCatalogItem } from '@/features/shared-game/api/games.api';
 import { GameOptions, MAX_GROUP } from '@/features/shared-game/components/GameOptions';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
+import { PhotoBack, PhotoTile } from '@/features/shared-game/components/PhotoTile';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RecallBoard } from '@/features/shared-game/components/RecallBoard';
-import { RoundResult } from '@/features/shared-game/components/RoundResult';
+import { ReviewGrid, RoundResult } from '@/features/shared-game/components/RoundResult';
 import { RoundSetup, RoundSetupStatus } from '@/features/shared-game/components/RoundSetup';
 import { usePhaseTimer } from '@/features/shared-game/hooks/usePhaseTimer';
 import { useGameCatalog } from '@/features/shared-game/store/gameCatalogStore';
 import { useImagesGameStore } from '../store/imagesGameStore';
 import type { ImageCard } from '../types/imageTypes';
 import { imageFromView } from '../utils/imageUtils';
-import { PhotoBack, PhotoTile } from './PhotoTile';
 
 const GAME_NAME = 'Hình ảnh';
 const keyOf = (image: ImageCard) => image.id;
@@ -132,8 +132,8 @@ function MemorizePhase() {
                 onNext={nextMemorizeCard}
                 keyOf={keyOf}
                 miniWidth={40}
-                renderBig={(image, index) => <PhotoTile image={image} width={bigWidth} label={`Hình ${index + 1}`} />}
-                renderMini={(image, index, seen) => (seen ? <PhotoTile image={image} width={40} label={`Hình ${index + 1}`} /> : <PhotoBack width={40} />)}
+                renderBig={(image, index) => <PhotoTile uri={image.imageUrl} width={bigWidth} label={`Hình ${index + 1}`} />}
+                renderMini={(image, index, seen) => (seen ? <PhotoTile uri={image.imageUrl} width={40} label={`Hình ${index + 1}`} /> : <PhotoBack width={40} />)}
             />
         </PlayLayout>
     );
@@ -182,7 +182,7 @@ function RecallPhase() {
                 onPick={placeImage}
                 keyOf={keyOf}
                 labelOf={labelOf}
-                renderItem={(image, itemWidth) => <PhotoTile image={image} width={itemWidth} label={labelOf(image)} />}
+                renderItem={(image, itemWidth) => <PhotoTile uri={image.imageUrl} width={itemWidth} label={labelOf(image)} />}
             />
         </PlayLayout>
     );
@@ -213,7 +213,7 @@ function ResultPhase() {
             pendingText={pending === 'start' ? 'Đang chuẩn bị ảnh...' : null}
             error={error}
         >
-            <RoundResult<ImageCard>
+            <RoundResult
                 round={result}
                 maxLevel={game?.maxLevel ?? 0}
                 busy={pending !== null}
@@ -222,12 +222,15 @@ function ResultPhase() {
                 }
                 onNextLevel={(gameLevel) => void startGame(memorizeSec, gameLevel, null)}
                 onReset={resetGame}
-                review={review}
-                unit="hình"
-                reviewPerRow={COLUMNS}
-                itemRatio={1}
-                renderItem={(image, itemWidth) => <PhotoTile image={image} width={itemWidth} label="" />}
-            />
+            >
+                <ReviewGrid<ImageCard>
+                    items={review}
+                    unit="hình"
+                    perRow={COLUMNS}
+                    itemRatio={1}
+                    renderItem={(image, itemWidth) => <PhotoTile uri={image.imageUrl} width={itemWidth} label="" />}
+                />
+            </RoundResult>
         </PlayLayout>
     );
 }

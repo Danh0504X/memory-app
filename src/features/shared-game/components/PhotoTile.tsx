@@ -2,15 +2,15 @@ import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { MemioMark } from '@/components/ui/MemioMark';
 import { colors } from '@/constants/theme';
-import type { ImageCard } from '../types/imageTypes';
 
 const cornerRadius = (width: number) => Math.max(6, width * 0.08);
 
-// Ảnh vuông; store đã tải trước vào cache (Image.prefetch) nên hiện ngay khi vào phase ghi nhớ
-export function PhotoTile({ image, width, label }: { image: ImageCard; width: number; label: string }) {
+// Ảnh vuông từ backend (game hình ảnh, gương mặt). Store đã tải trước vào cache (Image.prefetch)
+// nên ảnh hiện ngay khi vào phase ghi nhớ.
+export function PhotoTile({ uri, width, label }: { uri: string; width: number; label: string }) {
     return (
         <Image
-            source={{ uri: image.imageUrl }}
+            source={{ uri }}
             style={[styles.photo, { width, height: width, borderRadius: cornerRadius(width) }]}
             contentFit="cover"
             cachePolicy="memory-disk"

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Check, Lock, SlidersHorizontal } from 'lucide-react-native';
+import { SlidersHorizontal } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
@@ -10,6 +10,7 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import type { GameCatalogItem } from '../api/games.api';
 import { formatSeconds } from '../utils/formatTime';
 import { Chips } from './Chips';
+import { LevelGrid } from './LevelGrid';
 
 const levelLabel = (level: number) => (level <= 3 ? 'Mức căn bản' : level <= 6 ? 'Mức trung cấp' : 'Mức nâng cao');
 const FAN_MAX = 7;
@@ -91,31 +92,13 @@ export function RoundSetup({
                 <View style={styles.section}>
                     <AppText variant="heading">Cấp độ</AppText>
                     <AppText variant="small">Đã mở {unlockedLevel}/{game.maxLevel} cấp. Chọn lại cấp đã mở để luyện tập.</AppText>
-                    <View style={styles.levels}>
-                        {game.levels.map(({ level: option, itemCount: count }) => {
-                            const locked = option > unlockedLevel;
-                            const done = option < unlockedLevel;
-                            const selected = option === level;
-                            return (
-                                <Pressable
-                                    key={option}
-                                    disabled={locked}
-                                    onPress={() => onSelectLevel(option === unlockedLevel ? null : option)}
-                                    accessibilityRole="button"
-                                    accessibilityState={{ selected, disabled: locked }}
-                                    accessibilityLabel={`Cấp ${option}, ${count} ${shortUnit}${locked ? ', chưa mở khoá' : done ? ', đã qua' : ''}`}
-                                    style={[styles.level, selected && styles.levelSelected, locked && styles.levelLocked]}
-                                >
-                                    <View style={styles.levelTop}>
-                                        {locked ? <Lock color={colors.inkSoft} size={12} /> : null}
-                                        {done ? <Check color={colors.brand} size={12} /> : null}
-                                        <AppText style={styles.levelNo}>{option}</AppText>
-                                    </View>
-                                    <AppText variant="small" style={styles.levelCount}>{count} {shortUnit}</AppText>
-                                </Pressable>
-                            );
-                        })}
-                    </View>
+                    <LevelGrid
+                        levels={game.levels.map(({ level: option, itemCount }) => ({ level: option, count: itemCount }))}
+                        unlockedLevel={unlockedLevel}
+                        selectedLevel={level}
+                        shortUnit={shortUnit}
+                        onSelect={(option) => onSelectLevel(option === unlockedLevel ? null : option)}
+                    />
                 </View>
             )}
 
@@ -190,22 +173,6 @@ const styles = StyleSheet.create({
     fanCard: { position: 'absolute' },
     count: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 40 },
     section: { gap: spacing.sm },
-    levels: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    level: {
-        width: 62,
-        minHeight: 56,
-        borderRadius: radius,
-        borderWidth: 1.5,
-        borderColor: colors.step,
-        backgroundColor: colors.white,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    levelSelected: { borderColor: colors.brand, backgroundColor: colors.mint },
-    levelLocked: { opacity: 0.45 },
-    levelTop: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-    levelNo: { fontFamily: fonts.extrabold, fontSize: 18 },
-    levelCount: { fontSize: 12, lineHeight: 16 },
     optionsToggle: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44 },
     optionsLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
     goal: { fontFamily: fonts.semibold },

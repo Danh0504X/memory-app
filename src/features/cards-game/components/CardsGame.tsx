@@ -6,7 +6,7 @@ import { GameOptions, MAX_GROUP } from '@/features/shared-game/components/GameOp
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RecallBoard } from '@/features/shared-game/components/RecallBoard';
-import { RoundResult } from '@/features/shared-game/components/RoundResult';
+import { ReviewGrid, RoundResult } from '@/features/shared-game/components/RoundResult';
 import { RoundSetup, RoundSetupStatus } from '@/features/shared-game/components/RoundSetup';
 import { usePhaseTimer } from '@/features/shared-game/hooks/usePhaseTimer';
 import { useGameCatalog } from '@/features/shared-game/store/gameCatalogStore';
@@ -211,7 +211,7 @@ function ResultPhase() {
             pendingText={pending === 'start' ? 'Đang chia bài...' : null}
             error={error}
         >
-            <RoundResult<Card>
+            <RoundResult
                 round={result}
                 maxLevel={game?.maxLevel ?? 0}
                 busy={pending !== null}
@@ -224,12 +224,15 @@ function ResultPhase() {
                 }
                 onNextLevel={(gameLevel) => void startGame({ memorizeSec, customCardCount: null, gameLevel })}
                 onReset={resetGame}
-                review={review}
-                unit="lá"
-                reviewPerRow={6}
-                itemRatio={1.4}
-                renderItem={(card, width) => <PlayingCard card={card} width={width} />}
-            />
+            >
+                <ReviewGrid<Card>
+                    items={review}
+                    unit="lá"
+                    perRow={6}
+                    itemRatio={1.4}
+                    renderItem={(card, width) => <PlayingCard card={card} width={width} />}
+                />
+            </RoundResult>
         </PlayLayout>
     );
 }
