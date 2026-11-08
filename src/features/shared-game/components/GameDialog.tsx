@@ -7,11 +7,12 @@ interface GameDialogProps {
     onClose: () => void;
     footer: ReactNode;
     wide?: boolean;
+    narrow?: boolean;
     children: ReactNode;
 }
 
 // Khung hộp thoại chung của trang game: Esc hoặc bấm ra ngoài để đóng, nút đóng luôn ở góc
-export const GameDialog = ({ title, subtitle, onClose, footer, wide = false, children }: GameDialogProps) => {
+export const GameDialog = ({ title, subtitle, onClose, footer, wide = false, narrow = false, children }: GameDialogProps) => {
     const titleId = useId();
     const panelRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +35,7 @@ export const GameDialog = ({ title, subtitle, onClose, footer, wide = false, chi
                 tabIndex={-1}
                 className="gdlg__panel"
                 data-wide={wide}
+                data-narrow={narrow}
             >
                 <header className="gdlg__head">
                     <div>

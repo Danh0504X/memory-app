@@ -9,6 +9,7 @@ import { AccountSettings } from '../components/AccountSettings';
 import { Achievements } from '../components/Achievements';
 import { ProfileHeader } from '../components/ProfileHeader';
 import { Records } from '../components/Records';
+import { TrainingGoals } from '../components/TrainingGoals';
 import { buildBadges, isEarned } from '../utils/badges';
 import '@/styles/app-screen.css';
 import '../profile.css';
@@ -89,6 +90,15 @@ export const ProfilePage = ({ startEditing = false }: { startEditing?: boolean }
                                 {() => null}
                             </BlockState>
                         )}
+                    </section>
+
+                    <section className="panel span-12" aria-labelledby="goals-title">
+                        <div className="panel__head">
+                            <h2 id="goals-title">Mục tiêu luyện tập</h2>
+                        </div>
+                        <BlockState request={profileState} onRetry={profile.reload}>
+                            {(data) => <TrainingGoals profile={data} onSaved={onSaved} />}
+                        </BlockState>
                     </section>
 
                     <section className="panel span-12" aria-labelledby="account-title">

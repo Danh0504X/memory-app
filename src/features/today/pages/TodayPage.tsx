@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PreferencesDialog } from '@/features/profile/components/PreferencesDialog';
 import { Header } from '@/components/layout/Header';
 import mascot from '@/assets/memio/mascot.svg';
 import { BlockState } from '@/features/dashboard/components/BlockState';
@@ -30,6 +32,9 @@ export const TodayPage = () => {
     const recommended = recommendGame(sessions);
     const today = new Date();
     const date = formatWeekday(today, timeZone);
+    // Tài khoản chưa trả lời cũng chưa bỏ qua câu hỏi mục tiêu thì hỏi một lần ở đây
+    const [askedGoals, setAskedGoals] = useState(false);
+    const askGoals = !askedGoals && profile.state.status === 'ready' && profile.state.data.preferences?.status === 'unset';
 
     return (
         <div className="min-h-svh">
@@ -117,6 +122,8 @@ export const TodayPage = () => {
                     </section>
                 </div>
             </main>
+
+            {askGoals && <PreferencesDialog onDone={() => setAskedGoals(true)} />}
         </div>
     );
 };

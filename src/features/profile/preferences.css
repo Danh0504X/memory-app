@@ -1,0 +1,152 @@
+/* ── Mục tiêu luyện tập: ô chọn dùng chung cho hộp thoại lần đầu và trang hồ sơ ── */
+
+.prefs {
+  display: grid;
+  gap: 20px;
+}
+
+.prefs__field {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.prefs__label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.prefs__label span {
+  margin-left: 6px;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}
+
+.prefs__goals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Nút bật/tắt: trắng có viền khi chưa chọn, nền xanh khi đã chọn, nên đặt trên nền trắng hay nền khối đều rõ */
+.prefs__goal {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 14px;
+  border: 1px solid #c4d2c8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+
+.prefs__goal:hover {
+  border-color: var(--color-brand);
+}
+
+.prefs__goal:active {
+  transform: scale(0.97);
+}
+
+.prefs__goal[aria-pressed='true'] {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.prefs__goal[aria-pressed='true']:hover {
+  background: var(--color-brand-deep);
+}
+
+.prefs__date {
+  width: min(100%, 220px);
+  height: 40px;
+  padding-inline: 12px;
+  border: 1px solid #c4d2c8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.prefs__date:focus-visible {
+  border-color: var(--color-brand);
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+.prefs__error {
+  margin: 0;
+  font-size: 13px;
+  color: #b42318;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prefs__goal {
+    transition: none;
+  }
+
+  .prefs__goal:active {
+    transform: none;
+  }
+}
+
+/* ── Hộp thoại hỏi mục tiêu lần đầu ── */
+
+.gdlg__panel[data-narrow='true'] {
+  width: min(100%, 480px);
+}
+
+.prefs-dialog__lead {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-ink);
+}
+
+.prefs-dialog__error {
+  margin-top: 16px;
+}
+
+/* ── Khối "Mục tiêu luyện tập" trong trang hồ sơ ── */
+
+.prefs-panel__form {
+  display: grid;
+  gap: 20px;
+}
+
+.prefs-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.prefs-panel__actions .prefs__error {
+  margin-right: auto;
+}
+
+.prefs-panel__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.prefs-panel__empty p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.55;
+}
