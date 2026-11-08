@@ -1,37 +1,45 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  createWordsSession,
-  submitWordsSession,
-  type CreateWordsSessionParams,
-} from "../api/wordsApi";
+  gamesApi,
+  type CompletedRound,
+  type RoundRules,
+  type StartedRound,
+} from "@/features/shared-game/api/games.api";
+import { synchronizeRoundCompletion } from "@/features/shared-game/completion";
+import { clientDeadline } from "@/features/shared-game/utils/deadline";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import {
+  describeRoundError,
+  isRoundClosed,
+} from "@/features/shared-game/utils/roundErrors";
 import type {
   WordsGamePhase,
   WordsPreferences,
-  WordsSession,
-  WordsSessionResult,
 } from "../types/wordsTypes";
 
 type PendingAction = "start" | "recall" | "submit" | null;
 
 interface StartOptions {
-  memorizeSec: number;
-  gameLevel: number;
+  memorizeSec?: number;
+  gameLevel?: number;
+  customWordCount?: number | null;
 }
 
 interface WordsGameState {
   preferences: WordsPreferences;
   memorizeTime: number;
   selectedLevel: number | null;
-  unlockedLevel: number;
 
   phase: WordsGamePhase;
-  session: WordsSession | null;
+  sessionId: string | null;
+  rules: RoundRules | null;
+  level: number | null;
   wordsToMemorize: string[];
   currentMemorizeIndex: number;
   userAnswers: Record<number, string>;
   phaseDeadline: number | null;
-  result: WordsSessionResult | null;
+  result: CompletedRound | null;
   pending: PendingAction;
   error: string | null;
 
@@ -39,11 +47,12 @@ interface WordsGameState {
   setMemorizeTime: (time: number) => void;
   setSelectedLevel: (level: number | null) => void;
   startGame: (options?: StartOptions) => Promise<void>;
+  loadRound: (session: StartedRound) => void;
   beginMemorization: () => void;
   nextMemorizeWord: () => void;
   prevMemorizeWord: () => void;
   jumpMemorize: (index: number) => void;
-  finishMemorize: () => void;
+  finishMemorize: () => Promise<void>;
   setAnswer: (index: number, answer: string) => void;
   finishGame: () => Promise<void>;
   resetGame: () => void;
@@ -56,7 +65,20 @@ const DEFAULT_PREFERENCES: WordsPreferences = {
   prepTime: 0,
 };
 
-const deadlineIn = (seconds: number) => Date.now() + seconds * 1000;
+const EMPTY_ROUND = {
+  phase: "settings" as WordsGamePhase,
+  sessionId: null,
+  rules: null,
+  level: null,
+  wordsToMemorize: [],
+  currentMemorizeIndex: 0,
+  userAnswers: {},
+  phaseDeadline: null,
+  result: null,
+  pending: null,
+};
+
+let generation = 0;
 
 export const useWordsGameStore = create<WordsGameState>()(
   persist(
@@ -64,16 +86,7 @@ export const useWordsGameStore = create<WordsGameState>()(
       preferences: DEFAULT_PREFERENCES,
       memorizeTime: 60,
       selectedLevel: null,
-      unlockedLevel: 1,
-
-      phase: "settings",
-      session: null,
-      wordsToMemorize: [],
-      currentMemorizeIndex: 0,
-      userAnswers: {},
-      phaseDeadline: null,
-      result: null,
-      pending: null,
+      ...EMPTY_ROUND,
       error: null,
 
       setPreferences: (preferences) =>
@@ -88,69 +101,72 @@ export const useWordsGameStore = create<WordsGameState>()(
       setSelectedLevel: (level) => set({ selectedLevel: level }),
 
       startGame: async (options) => {
-        const { preferences, memorizeTime, unlockedLevel, selectedLevel, pending } = get();
-        if (pending !== null) return;
-
+        if (get().pending) return;
+        const requestId = ++generation;
         set({ pending: "start", error: null });
 
-        const targetLevel = options?.gameLevel ?? selectedLevel ?? unlockedLevel ?? 1;
+        const { memorizeTime, selectedLevel } = get();
         const targetMemorizeSec = options?.memorizeSec ?? memorizeTime ?? 60;
+        const targetLevel = options?.gameLevel ?? selectedLevel ?? 1;
+        const customCount = options?.customWordCount ?? null;
 
         try {
-          const params: CreateWordsSessionParams = {
-            level: targetLevel,
-            language: preferences.language,
+          const { data } = await gamesApi.startRound({
+            gameName: "word",
             memorizeSec: targetMemorizeSec,
-            groups: preferences.groups,
-            prepTime: preferences.prepTime,
-          };
+            ...(customCount !== null
+              ? { mode: "custom", itemCount: customCount }
+              : { gameLevel: targetLevel }),
+          });
 
-          const session = await createWordsSession(params);
-          if (!session || !Array.isArray(session.words) || session.words.length === 0) {
-            throw new Error("Không nhận được danh sách từ hợp lệ từ máy chủ.");
+          if (requestId === generation) {
+            get().loadRound(data.session);
           }
+        } catch (error) {
+          if (requestId !== generation) return;
+          set({ pending: null, error: describeRoundError(error, "start") });
+        }
+      },
 
-          // Nếu có thời gian chuẩn bị (prepTime > 0), chuyển sang màn prep trước
-          if (preferences.prepTime > 0) {
-            set({
-              session,
-              wordsToMemorize: session.words,
-              currentMemorizeIndex: 0,
-              userAnswers: {},
-              result: null,
-              phase: "prep",
-              phaseDeadline: deadlineIn(preferences.prepTime),
-              pending: null,
-            });
-          } else {
-            set({
-              session,
-              wordsToMemorize: session.words,
-              currentMemorizeIndex: 0,
-              userAnswers: {},
-              result: null,
-              phase: "memorize",
-              phaseDeadline: deadlineIn(session.memorizeSec),
-              pending: null,
-            });
-          }
-        } catch (err: unknown) {
-          const msg =
-            err instanceof Error
-              ? err.message
-              : typeof err === "object" && err !== null && "message" in err
-              ? String((err as { message?: unknown }).message)
-              : "Không thể tạo ván chơi mới";
-          set({ error: msg, pending: null });
+      loadRound: (session: StartedRound) => {
+        const words = session.items.map((item) => item.label || item.code);
+        const deadline = clientDeadline(session.memorizeDeadline, session.serverNow);
+        const { preferences } = get();
+
+        if (preferences.prepTime > 0) {
+          set({
+            ...EMPTY_ROUND,
+            error: null,
+            phase: "prep",
+            sessionId: session.sessionId,
+            rules: session.rules,
+            level: session.rules.gameLevel,
+            wordsToMemorize: words,
+            userAnswers: {},
+            phaseDeadline: Date.now() + preferences.prepTime * 1000,
+          });
+        } else {
+          set({
+            ...EMPTY_ROUND,
+            error: null,
+            phase: "memorize",
+            sessionId: session.sessionId,
+            rules: session.rules,
+            level: session.rules.gameLevel,
+            wordsToMemorize: words,
+            userAnswers: {},
+            phaseDeadline: deadline,
+          });
         }
       },
 
       beginMemorization: () => {
-        const { session } = get();
-        if (!session) return;
+        const { rules, phase } = get();
+        if (phase !== "prep") return;
+        const memorizeLimitSec = rules?.memorizeLimitSec || 60;
         set({
           phase: "memorize",
-          phaseDeadline: deadlineIn(session.memorizeSec),
+          phaseDeadline: Date.now() + memorizeLimitSec * 1000,
         });
       },
 
@@ -175,15 +191,29 @@ export const useWordsGameStore = create<WordsGameState>()(
         }
       },
 
-      finishMemorize: () => {
-        const { session, phase } = get();
-        if (phase !== "memorize" && phase !== "prep") return;
-        const recallSec = session?.recallSec || 240;
+      finishMemorize: async () => {
+        const { sessionId, pending, phase } = get();
+        if (!sessionId || pending || (phase !== "memorize" && phase !== "prep")) return;
+        set({ pending: "recall", error: null });
 
-        set({
-          phase: "recall",
-          phaseDeadline: deadlineIn(recallSec),
-        });
+        try {
+          const { data } = await gamesApi.startRecall(sessionId);
+          if (get().sessionId !== sessionId) return;
+
+          set({
+            phase: "recall",
+            phaseDeadline: clientDeadline(data.session.recallDeadline, data.session.serverNow),
+            pending: null,
+          });
+        } catch (error) {
+          if (get().sessionId !== sessionId) return;
+          const message = describeRoundError(error, "recall");
+          set(
+            isRoundClosed(error)
+              ? { ...EMPTY_ROUND, error: message }
+              : { pending: null, error: message }
+          );
+        }
       },
 
       setAnswer: (index, answer) => {
@@ -197,72 +227,51 @@ export const useWordsGameStore = create<WordsGameState>()(
       },
 
       finishGame: async () => {
-        const { session, userAnswers, phaseDeadline, pending, unlockedLevel } = get();
-        if (!session || pending !== null) return;
-
+        const { sessionId, pending, phase, wordsToMemorize, userAnswers } = get();
+        if (!sessionId || pending || phase !== "recall") return;
         set({ pending: "submit", error: null });
 
-        const timeSpent = phaseDeadline
-          ? Math.max(1, session.recallSec - Math.max(0, Math.round((phaseDeadline - Date.now()) / 1000)))
-          : session.recallSec;
-
-        const answersList = session.words.map((_, i) => userAnswers[i] ?? null);
-
         try {
-          const result = await submitWordsSession(session.sessionId, {
-            answers: answersList,
-            timeSpent,
-          });
-
-          if (!result || typeof result.score !== "number") {
-            throw new Error("Không nhận được kết quả chấm bài từ máy chủ.");
-          }
-
-          // Cập nhật cấp độ mở khóa nếu người chơi vượt qua level hiện tại
-          let newUnlocked = unlockedLevel;
-          if (result.passed && result.unlockedNextLevel && result.unlockedNextLevel > unlockedLevel) {
-            newUnlocked = result.unlockedNextLevel;
-          }
+          const answers = wordsToMemorize.map((_, i) => userAnswers[i]?.trim() || null);
+          const { data } = await gamesApi.submitRound(sessionId, answers);
+          if (get().sessionId !== sessionId) return;
 
           set({
-            result,
-            unlockedLevel: newUnlocked,
             phase: "result",
+            result: data.session,
             phaseDeadline: null,
             pending: null,
           });
-        } catch (err: unknown) {
-          const msg =
-            err instanceof Error
-              ? err.message
-              : typeof err === "object" && err !== null && "message" in err
-              ? String((err as { message?: unknown }).message)
-              : "Lỗi khi chấm bài thi";
-          set({ error: msg, pending: null });
+
+          synchronizeRoundCompletion(data.session.sessionId);
+        } catch (error) {
+          if (get().sessionId !== sessionId) return;
+          const message = describeRoundError(error, "submit");
+          set(
+            isRoundClosed(error)
+              ? { ...EMPTY_ROUND, error: message }
+              : { pending: null, error: message }
+          );
         }
       },
 
-      resetGame: () =>
-        set({
-          phase: "settings",
-          session: null,
-          wordsToMemorize: [],
-          currentMemorizeIndex: 0,
-          userAnswers: {},
-          phaseDeadline: null,
-          result: null,
-          pending: null,
-          error: null,
-        }),
+      resetGame: () => {
+        generation++;
+        set({ ...EMPTY_ROUND, error: null });
+      },
     }),
     {
       name: "memio_words_game_storage",
       partialize: (state) => ({
         preferences: state.preferences,
         memorizeTime: state.memorizeTime,
-        unlockedLevel: state.unlockedLevel,
       }),
     }
   )
 );
 
+useAuthStore.subscribe((state, previous) => {
+  if (state.user?._id !== previous.user?._id) {
+    useWordsGameStore.getState().resetGame();
+  }
+});

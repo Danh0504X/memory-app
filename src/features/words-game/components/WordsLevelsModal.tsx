@@ -1,8 +1,8 @@
 import type { FC } from "react";
 import { Check, Lock } from "lucide-react";
 import { GameDialog } from "@/features/shared-game/components/GameDialog";
+import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { DEFAULT_WORDS_LEVELS } from "../api/wordsApi";
-import { useWordsGameStore } from "../store/wordsGameStore";
 
 interface WordsLevelsModalProps {
   isOpen: boolean;
@@ -10,7 +10,8 @@ interface WordsLevelsModalProps {
 }
 
 export const WordsLevelsModal: FC<WordsLevelsModalProps> = ({ isOpen, onClose }) => {
-  const unlockedLevel = useWordsGameStore((state) => state.unlockedLevel);
+  const { game } = useGameCatalog("word");
+  const unlockedLevel = game?.player?.unlockedLevel ?? 1;
 
   if (!isOpen) return null;
 

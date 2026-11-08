@@ -3,7 +3,7 @@ import { GameHeader } from "@/features/shared-game/components/GameHeader";
 import { MemorizeStage } from "@/features/shared-game/components/MemorizeStage";
 import { PlayHints } from "@/features/shared-game/components/PlayHints";
 import { RoundStatusBar } from "@/features/shared-game/components/RoundStatusBar";
-import { usePhaseTimer } from "@/features/cards-game/hooks/usePhaseTimer";
+import { usePhaseTimer } from "@/features/shared-game/hooks/usePhaseTimer";
 import { useWordsGameStore } from "../store/wordsGameStore";
 import { WordCard } from "./WordCard";
 
@@ -15,7 +15,8 @@ const HINTS = [
 
 export const WordsMemorizePhase = () => {
   const {
-    session,
+    rules,
+    level,
     wordsToMemorize,
     currentMemorizeIndex,
     nextMemorizeWord,
@@ -29,7 +30,7 @@ export const WordsMemorizePhase = () => {
     error,
   } = useWordsGameStore();
 
-  const { timeLeft } = usePhaseTimer(phaseDeadline, finishMemorize);
+  const { timeLeft } = usePhaseTimer(phaseDeadline, () => void finishMemorize());
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -41,7 +42,7 @@ export const WordsMemorizePhase = () => {
         e.preventDefault();
         jumpMemorize(0);
       } else if (e.key === "Enter") {
-        finishMemorize();
+        void finishMemorize();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -57,14 +58,15 @@ export const WordsMemorizePhase = () => {
     <div className="play">
       <GameHeader
         gameName="Ghi nhớ từ"
-        level={session?.level ?? 1}
+        level={level ?? 1}
+        daily={rules?.mode === "daily"}
         status={`Ghi nhớ thứ tự · đang xem từ ${shownTo} trên ${total}`}
         progress={total > 0 ? shownTo / total : 0}
         timeLeft={preferences.hideTimer ? undefined : timeLeft}
-        timeLimit={session?.memorizeSec}
+        timeLimit={rules?.memorizeLimitSec}
         actionLabel={pending === "recall" ? "Đang chuyển..." : "Đã nhớ xong"}
         actionBusy={pending === "recall"}
-        onAction={finishMemorize}
+        onAction={() => void finishMemorize()}
         onReset={resetGame}
       />
 
@@ -98,4 +100,3 @@ export const WordsMemorizePhase = () => {
     </div>
   );
 };
-

@@ -1,3 +1,7 @@
+import type { CompletedRound, StartedRound, RecallRound, ItemView, RoundRules } from "@/features/shared-game/api/games.api";
+
+export type { CompletedRound, StartedRound, RecallRound, ItemView, RoundRules };
+
 export type SupportedLanguageCode = "vi" | "en" | "fr" | "ja" | "ko" | "zh" | "ru";
 
 export interface WordLevelConfig {

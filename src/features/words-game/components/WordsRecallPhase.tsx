@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
 import { PlayHints } from "@/features/shared-game/components/PlayHints";
 import { RoundStatusBar } from "@/features/shared-game/components/RoundStatusBar";
-import { usePhaseTimer } from "@/features/cards-game/hooks/usePhaseTimer";
+import { usePhaseTimer } from "@/features/shared-game/hooks/usePhaseTimer";
 import { useWordsGameStore } from "../store/wordsGameStore";
 
 const HINTS = [
@@ -13,7 +13,8 @@ const HINTS = [
 
 export const WordsRecallPhase = () => {
   const {
-    session,
+    rules,
+    level,
     wordsToMemorize,
     userAnswers,
     setAnswer,
@@ -24,7 +25,7 @@ export const WordsRecallPhase = () => {
     error,
   } = useWordsGameStore();
 
-  const { timeLeft } = usePhaseTimer(phaseDeadline, finishGame);
+  const { timeLeft } = usePhaseTimer(phaseDeadline, () => void finishGame());
   const [activeSlot, setActiveSlot] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -34,7 +35,6 @@ export const WordsRecallPhase = () => {
   ).length;
 
   useEffect(() => {
-    // Tự động focus ô đầu tiên
     inputRefs.current[0]?.focus();
   }, []);
 
@@ -44,13 +44,11 @@ export const WordsRecallPhase = () => {
   ) => {
     if (e.key === "Enter" || e.key === "Tab") {
       if (!e.shiftKey) {
-        // Chuyển sang ô tiếp theo
         e.preventDefault();
         const next = (currentIndex + 1) % total;
         setActiveSlot(next);
         inputRefs.current[next]?.focus();
       } else if (e.shiftKey && e.key === "Tab") {
-        // Lùi lại ô trước
         e.preventDefault();
         const prev = (currentIndex - 1 + total) % total;
         setActiveSlot(prev);
@@ -73,14 +71,15 @@ export const WordsRecallPhase = () => {
     <div className="play flex min-h-dvh flex-col bg-[#f5faf7] font-sans">
       <GameHeader
         gameName="Ghi nhớ từ"
-        level={session?.level ?? 1}
+        level={level ?? 1}
+        daily={rules?.mode === "daily"}
         status={`Nhớ lại · đã điền ${filledCount} trên ${total} từ`}
         progress={total > 0 ? filledCount / total : 0}
         timeLeft={timeLeft}
-        timeLimit={session?.recallSec}
+        timeLimit={rules?.recallLimitSec}
         actionLabel={pending === "submit" ? "Đang chấm..." : "Nộp bài"}
         actionBusy={pending === "submit"}
-        onAction={finishGame}
+        onAction={() => void finishGame()}
         onReset={resetGame}
       />
 
@@ -105,7 +104,6 @@ export const WordsRecallPhase = () => {
             </span>
           </div>
 
-          {/* Lưới các ô nhập từ (Recall input grid) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
             {wordsToMemorize.map((_, index) => {
               const isActive = activeSlot === index;
@@ -154,4 +152,3 @@ export const WordsRecallPhase = () => {
     </div>
   );
 };
-

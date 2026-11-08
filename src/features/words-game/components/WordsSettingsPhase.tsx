@@ -1,19 +1,21 @@
-import { useState, useMemo } from "react";
-import { RoundSettings } from "@/features/shared-game/components/RoundSettings";
-import type { GameCatalogItem } from "@/features/shared-game/api/games.api";
-import { DEFAULT_WORDS_LEVELS } from "../api/wordsApi";
+import { useState } from "react";
+import {
+  RoundSettings,
+  RoundSettingsStatus,
+} from "@/features/shared-game/components/RoundSettings";
+import { useGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
 import { useWordsGameStore } from "../store/wordsGameStore";
 import { WordsPreferencesModal } from "./WordsPreferencesModal";
 import { WordsLevelsModal } from "./WordsLevelsModal";
 import { WordCard } from "./WordCard";
 
 export const WordsSettingsPhase = () => {
+  const { game, status, error: catalogError, reload } = useGameCatalog("word");
   const {
     memorizeTime,
     setMemorizeTime,
     selectedLevel,
     setSelectedLevel,
-    unlockedLevel,
     startGame,
     pending,
     error,
@@ -22,26 +24,20 @@ export const WordsSettingsPhase = () => {
   const [showPreferences, setShowPreferences] = useState(false);
   const [showLevels, setShowLevels] = useState(false);
 
-  // Xây dựng GameCatalogItem ảo từ cấu hình Words Game để tái sử dụng component RoundSettings
-  const wordsCatalogItem: GameCatalogItem = useMemo(
-    () => ({
-      gameName: "card" as any, // Dùng schema tương thích
-      maxLevel: 10,
-      levels: DEFAULT_WORDS_LEVELS.map((l) => ({ level: l.level, itemCount: l.itemCount })),
-      customItems: null,
-      memorizeSecOptions: [30, 60, 120, 300],
-      defaultMemorizeSec: 60,
-      recallSec: 240,
-      passAccuracy: 2 / 3,
-      unlockOn: "pass",
-      player: {
-        unlockedLevel: unlockedLevel || 1,
-        bestLevel: null,
-        played: 0,
-      },
-    }),
-    [unlockedLevel]
-  );
+  if (!game) {
+    return (
+      <RoundSettingsStatus
+        title="Ghi nhớ từ"
+        status={status}
+        error={catalogError}
+        onRetry={() => void reload()}
+      />
+    );
+  }
+
+  const memorizeSec = game.memorizeSecOptions.includes(memorizeTime)
+    ? memorizeTime
+    : game.defaultMemorizeSec;
 
   return (
     <>
@@ -50,13 +46,15 @@ export const WordsSettingsPhase = () => {
         itemUnit="từ vựng"
         shortUnit="từ"
         renderBack={() => <WordCard size="sm" isBack />}
-        game={wordsCatalogItem}
+        game={game}
         customItemCount={null}
         selectedLevel={selectedLevel}
         onSelectLevel={setSelectedLevel}
-        memorizeSec={memorizeTime}
+        memorizeSec={memorizeSec}
         onMemorizeSecChange={setMemorizeTime}
-        onStart={(gameLevel) => void startGame({ gameLevel, memorizeSec: memorizeTime })}
+        onStart={(gameLevel) =>
+          void startGame({ gameLevel, memorizeSec })
+        }
         isStarting={pending === "start"}
         error={error}
         onOpenPreferences={() => setShowPreferences(true)}
@@ -79,4 +77,3 @@ export const WordsSettingsPhase = () => {
     </>
   );
 };
-

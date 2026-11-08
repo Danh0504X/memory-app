@@ -3,8 +3,8 @@ import { Play } from "lucide-react";
 import { useWordsGameStore } from "../store/wordsGameStore";
 
 export const WordsPrepPhase: FC = () => {
-  const { session, beginMemorization } = useWordsGameStore();
-  const prepSeconds = session?.prepTime || 5;
+  const { preferences, beginMemorization } = useWordsGameStore();
+  const prepSeconds = preferences.prepTime || 5;
   const [secondsLeft, setSecondsLeft] = useState(prepSeconds);
 
   useEffect(() => {
