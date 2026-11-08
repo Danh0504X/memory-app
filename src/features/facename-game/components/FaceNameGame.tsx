@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { Loader2 } from "lucide-react";
 import { useFaceNameStore } from "../store/faceNameStore";
 import { FaceNameSettingsPhase } from "./FaceNameSettingsPhase";
@@ -9,11 +10,14 @@ import "@/features/shared-game/game.css";
 import "../facename.css";
 
 export const FaceNameGame = () => {
-  const { phase, initialize, isLoading } = useFaceNameStore();
+  const { phase, initialize, isLoading, goHome } = useFaceNameStore();
+  const userId = useAuthStore((state) => state.user?._id ?? null);
 
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    goHome();
+    void initialize();
+    return goHome;
+  }, [initialize, goHome, userId]);
 
   if (phase === "loading-faces" && isLoading) {
     return (

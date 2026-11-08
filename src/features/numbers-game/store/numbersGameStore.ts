@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { numbersApi } from '../api/numbers.api';
+import { synchronizeRoundCompletion } from '../../shared-game/completion.ts';
+import { clientDeadline } from '../../shared-game/utils/deadline.ts';
 import type { NumberAnswers, NumberPreferences, NumberProgress, NumberSession, NumberSettings } from '../types/numberTypes';
 import type { ApiErrorResponse } from '@/types/auth.types';
 
@@ -78,7 +80,7 @@ export const useNumbersGameStore = create<NumbersGameState>()(persist((set, get)
             : session.phase === 'preparing_recall' ? session.recallStartedAt
             : session.phase === 'recalling' ? session.recallEndsAt : null;
         // Quy đổi deadline server sang mốc thời gian client
-        const deadline = end ? Date.now() + Math.max(0, Date.parse(end) - Date.parse(session.serverNow)) : null;
+        const deadline = end ? clientDeadline(end, session.serverNow) : null;
         persistId(session.id);
         set({ session, deadline, savedSessionId: session.id,
             isStarting: false,
@@ -88,6 +90,10 @@ export const useNumbersGameStore = create<NumbersGameState>()(persist((set, get)
                 answers: session.answers ?? Array<string | null>(session.digitCount).fill(null), dirty: false,
             }),
         });
+        if (session.phase === 'completed') {
+            persistId(null);
+            synchronizeRoundCompletion(session.id);
+        }
     };
     const enqueue = (job: (active: () => boolean) => Promise<void>, saving = false) => {
         const generation = epoch;
@@ -118,7 +124,6 @@ export const useNumbersGameStore = create<NumbersGameState>()(persist((set, get)
                     if (next.phase === 'completed') {
                         set({ dirty: false });
                         persistId(null);
-                        window.dispatchEvent(new Event('memio:game-session-recorded'));
                     } else if (get().dirty) {
                         debounce = setTimeout(() => get().save(), 500);
                     }
@@ -141,7 +146,7 @@ export const useNumbersGameStore = create<NumbersGameState>()(persist((set, get)
         initialize: (userId) => {
             epoch++; queue = Promise.resolve(); clearTimeout(debounce);
             storageKey = `memio:number-session:${userId}`;
-            const cachedProgress = readStoredProgress(userId);
+            const cachedProgress = userId === 'guest' ? null : readStoredProgress(userId);
             set({ session: null, answers: [], progress: cachedProgress, busy: false, saving: false,
                 dirty: false, hidden: false, error: null, deadline: null, prepDeadline: null,
                 isStarting: false, savedSessionId: null });
@@ -191,7 +196,7 @@ export const useNumbersGameStore = create<NumbersGameState>()(persist((set, get)
                 if (active()) {
                     if (storageKey) {
                         const currentUserId = storageKey.replace('memio:number-session:', '');
-                        if (currentUserId) writeStoredProgress(currentUserId, progress);
+                        if (currentUserId && currentUserId !== 'guest') writeStoredProgress(currentUserId, progress);
                     }
                     set({ progress });
                 }

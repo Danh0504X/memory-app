@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { gamesApi, type CompletedRound, type RoundRules, type StartedRound } from "@/features/shared-game/api/games.api";
-import { notifyGameSessionRecorded } from "@/features/shared-game/events";
-import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
+import { synchronizeRoundCompletion } from "@/features/shared-game/completion";
+import { clientDeadline } from "@/features/shared-game/utils/deadline";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { describeRoundError, isRoundClosed } from "@/features/shared-game/utils/roundErrors";
 import type { Card, GamePhase } from "../types/types";
 import { cardFromCode, cardToCode, isSameCard } from "../utils/cardUtils";
@@ -79,7 +80,7 @@ const EMPTY_ROUND = {
 };
 
 // Đếm ngược theo đồng hồ máy người chơi, tính từ lúc nhận phản hồi, để không lệch khi giờ máy khác giờ server
-const deadlineIn = (seconds: number) => Date.now() + seconds * 1000;
+let generation = 0;
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -102,6 +103,7 @@ export const useGameStore = create<GameState>()(
 
       startGame: async ({ memorizeSec, customCardCount, gameLevel }) => {
         if (get().pending) return;
+        const requestId = ++generation;
         set({ pending: "start", error: null });
         try {
           const { data } = await gamesApi.startRound({
@@ -109,8 +111,9 @@ export const useGameStore = create<GameState>()(
             memorizeSec,
             ...(customCardCount !== null ? { mode: "custom", itemCount: customCardCount } : { gameLevel }),
           });
-          get().loadRound(data.session);
+          if (requestId === generation) get().loadRound(data.session);
         } catch (error) {
+          if (requestId !== generation) return;
           set({ pending: null, error: describeRoundError(error, "start") });
         }
       },
@@ -126,7 +129,7 @@ export const useGameStore = create<GameState>()(
           level: session.rules.gameLevel,
           cardsToMemorize: cards,
           userRecall: Array(cards.length).fill(null),
-          phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
+          phaseDeadline: clientDeadline(session.memorizeDeadline, session.serverNow),
         });
       },
 
@@ -151,14 +154,16 @@ export const useGameStore = create<GameState>()(
         set({ pending: "recall", error: null });
         try {
           const { data } = await gamesApi.startRecall(sessionId);
+          if (get().sessionId !== sessionId) return;
           set({
             phase: "recall",
             deckCards: data.session.recallOptions.map((item) => cardFromCode(item.code)),
             selectedSlotIndex: null,
-            phaseDeadline: deadlineIn(data.session.rules.recallLimitSec),
+            phaseDeadline: clientDeadline(data.session.recallDeadline, data.session.serverNow),
             pending: null,
           });
         } catch (error) {
+          if (get().sessionId !== sessionId) return;
           const message = describeRoundError(error, "recall");
           set(isRoundClosed(error) ? { ...EMPTY_ROUND, error: message } : { pending: null, error: message });
         }
@@ -196,18 +201,19 @@ export const useGameStore = create<GameState>()(
         try {
           const answers = userRecall.map((card) => (card ? cardToCode(card) : null));
           const { data } = await gamesApi.submitRound(sessionId, answers);
+          if (get().sessionId !== sessionId) return;
           set({ phase: "result", result: data.session, phaseDeadline: null, pending: null });
           // Trang hồ sơ và level đã mở cần số liệu mới sau mỗi ván
-          notifyGameSessionRecorded();
-          void reloadGameCatalog();
+          synchronizeRoundCompletion(data.session.sessionId);
         } catch (error) {
+          if (get().sessionId !== sessionId) return;
           const message = describeRoundError(error, "submit");
           set(isRoundClosed(error) ? { ...EMPTY_ROUND, error: message } : { pending: null, error: message });
         }
       },
 
       // Thoát ván: backend tự xoá ván chưa nộp sau một thời gian
-      resetGame: () => set({ ...EMPTY_ROUND, error: null }),
+      resetGame: () => { generation++; set({ ...EMPTY_ROUND, error: null }); },
     }),
     {
       name: "cards-game-storage",
@@ -227,3 +233,7 @@ export const useGameStore = create<GameState>()(
     },
   ),
 );
+
+useAuthStore.subscribe((state, previous) => {
+  if (state.user?._id !== previous.user?._id) useGameStore.getState().resetGame();
+});

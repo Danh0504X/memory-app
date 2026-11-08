@@ -5,11 +5,12 @@ import { Header } from '@/components/layout/Header';
 import { PhotoBack } from '@/features/images-game/components/PhotoTile';
 import { ChoiceGroup, GameDialog, SettingRow, Switch } from '@/features/shared-game/components/GameDialog';
 import { formatSeconds } from '@/features/shared-game/utils/formatTime';
+import { useGameCatalog } from '@/features/shared-game/store/gameCatalogStore';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { useNumbersGameStore } from '../store/numbersGameStore';
 import { isValidGroups } from '../utils/numberUtils';
 import type { NumberPreferences } from '../types/numberTypes';
 
-const MAX_LEVEL = 10;
 const DEFAULT_DIGIT_COUNTS = [8, 12, 18, 24, 30, 40, 50, 60, 70, 80];
 const TIME_OPTIONS = [30, 60, 120, 300];
 const STANDARD_RECALL_SEC = 240;
@@ -180,6 +181,8 @@ const parseIntIn = (value: string, min: number, max: number) => {
 
 export const NumbersSettingsPhase = () => {
     const { progress, busy, prepare, preferences } = useNumbersGameStore();
+    const { game } = useGameCatalog('number');
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const [mode, setMode] = useState<Mode>('standard');
     const [level, setLevel] = useState<number | null>(null);
     const [standardMemorize, setStandardMemorize] = useState(60);
@@ -188,22 +191,28 @@ export const NumbersSettingsPhase = () => {
     const [recall, setRecall] = useState('240');
     const [modal, setModal] = useState<'guide' | 'preferences' | 'levels' | null>(null);
 
-    const digitCounts = progress?.digitCounts ?? DEFAULT_DIGIT_COUNTS;
-    const unlocked = progress?.unlockedLevel ?? 1;
+    const digitCounts = game?.levels.map((item) => item.itemCount) ?? progress?.digitCounts ?? DEFAULT_DIGIT_COUNTS;
+    const maxLevel = digitCounts.length;
+    const timeOptions = game?.memorizeSecOptions ?? TIME_OPTIONS;
+    const selectedMemorize = timeOptions.includes(standardMemorize) ? standardMemorize : game?.defaultMemorizeSec ?? 60;
+    const unlocked = Math.min(maxLevel, game?.player?.unlockedLevel ?? progress?.unlockedLevel ?? 1);
     const selectedLevel = Math.min(level ?? unlocked, unlocked);
     const today = progress?.todayChallenge;
     const challengeDone = mode === 'challenge' && !!today?.played;
+    const challengeNeedsLogin = mode === 'challenge' && !isAuthenticated;
+    const memorizeMin = isAuthenticated ? 5 : game?.customTimeRange?.min ?? 10;
+    const memorizeMax = isAuthenticated ? 300 : game?.customTimeRange?.max ?? 600;
 
-    const customValid = parseIntIn(count, 4, 80) && parseIntIn(memorize, 5, 300) && parseIntIn(recall, 10, 600);
+    const customValid = parseIntIn(count, 4, 80) && parseIntIn(memorize, memorizeMin, memorizeMax) && parseIntIn(recall, 10, 600);
     const valid = mode !== 'custom' || customValid;
 
     const digitCount = mode === 'standard' ? (digitCounts[selectedLevel - 1] ?? 8) : mode === 'challenge' ? CHALLENGE.digits : Number(count) || 0;
-    const memorizeSec = mode === 'standard' ? standardMemorize : mode === 'challenge' ? CHALLENGE.memorizeSec : Number(memorize);
-    const recallSec = mode === 'standard' ? STANDARD_RECALL_SEC : mode === 'challenge' ? CHALLENGE.recallSec : Number(recall);
+    const memorizeSec = mode === 'standard' ? selectedMemorize : mode === 'challenge' ? CHALLENGE.memorizeSec : Number(memorize);
+    const recallSec = mode === 'standard' ? game?.recallSec ?? STANDARD_RECALL_SEC : mode === 'challenge' ? CHALLENGE.recallSec : Number(recall);
     const groupCount = Math.min(FAN_MAX, Math.max(1, Math.ceil(digitCount / 3)));
 
     const start = () => {
-        if (!valid || challengeDone) return;
+        if (!valid || challengeDone || challengeNeedsLogin) return;
         prepare(
             mode === 'challenge'
                 ? { mode: 'challenge', prepareRecall: true }
@@ -219,7 +228,7 @@ export const NumbersSettingsPhase = () => {
 
     let goal = 'Đây là cấp cao nhất. Thử ghi nhớ nhanh hơn để phá kỷ lục!';
     if (mode === 'standard' && selectedLevel < unlocked) goal = `Chơi lại để luyện tập. Chỉ ván ở cấp ${unlocked} mới mở cấp tiếp theo.`;
-    else if (mode === 'standard' && selectedLevel < MAX_LEVEL) goal = `Nhớ đúng hết để mở cấp ${selectedLevel + 1}.`;
+    else if (mode === 'standard' && selectedLevel < maxLevel) goal = `Nhớ đúng hết để mở cấp ${selectedLevel + 1}.`;
     else if (mode === 'custom') goal = 'Ván tự chọn để luyện tập, không mở cấp mới.';
     else if (mode === 'challenge') goal = 'Mỗi ngày một lượt. Bắt đầu rồi thì lượt được tính.';
 
@@ -266,7 +275,7 @@ export const NumbersSettingsPhase = () => {
                             <>
                                 <h2 id="nside-title">Cấp độ</h2>
                                 <p>
-                                    Đã mở {unlocked} trên {MAX_LEVEL} cấp. Chọn lại cấp đã mở để luyện tập.
+                                    Đã mở {unlocked} trên {maxLevel} cấp. Chọn lại cấp đã mở để luyện tập.
                                 </p>
                                 <ol className="levels__grid">
                                     {digitCounts.map((digits, index) => {
@@ -308,8 +317,8 @@ export const NumbersSettingsPhase = () => {
                                     </label>
                                     <label>
                                         Ghi nhớ (giây)
-                                        <input className="ninput" type="number" min={5} max={300} value={memorize} onChange={(event) => setMemorize(event.target.value)} />
-                                        <span>Từ 5 đến 300</span>
+                                        <input className="ninput" type="number" min={memorizeMin} max={memorizeMax} value={memorize} onChange={(event) => setMemorize(event.target.value)} />
+                                        <span>Từ {memorizeMin} đến {memorizeMax}</span>
                                     </label>
                                     <label>
                                         Gõ lại (giây)
@@ -327,7 +336,7 @@ export const NumbersSettingsPhase = () => {
                                     Ai cũng nhớ {CHALLENGE.digits} chữ số trong {formatSeconds(CHALLENGE.memorizeSec)}, mỗi người một lượt
                                     mỗi ngày.
                                 </p>
-                                {today?.played && today.phase !== 'completed' ? (
+                                {!isAuthenticated ? <p className="levels__custom"><Link to="/login" state={{ from: { pathname: '/games/numbers' } }}>Đăng nhập</Link> để tham gia thử thách ngày. Bạn vẫn có thể luyện theo cấp hoặc chơi ván tự chọn.</p> : today?.played && today.phase !== 'completed' ? (
                                     // Đã bắt đầu nhưng chưa nộp (ví dụ tải lại trang giữa ván): chưa có điểm để hiện
                                     <div className="nchallenge">
                                         <p className="nchallenge__label">Bạn đã bắt đầu thử thách hôm nay</p>
@@ -352,6 +361,7 @@ export const NumbersSettingsPhase = () => {
                                 )}
                             </>
                         )}
+                        {!isAuthenticated && mode !== 'challenge' && <p className="levels__note">Bạn đang chơi với tư cách khách. Cấp đã mở được giữ tạm theo phiên khách; đáp án đang nhập chỉ giữ trong tab này. Đăng nhập để lưu lịch sử và nhận EXP.</p>}
                     </section>
 
                     <section className="deal" aria-labelledby="deal-title">
@@ -380,8 +390,8 @@ export const NumbersSettingsPhase = () => {
                             <div className="timepick-field">
                                 <p id="number-memorize-time">Thời gian ghi nhớ</p>
                                 <div className="timepick" role="group" aria-labelledby="number-memorize-time">
-                                    {TIME_OPTIONS.map((seconds) => (
-                                        <button key={seconds} type="button" aria-pressed={standardMemorize === seconds} onClick={() => setStandardMemorize(seconds)}>
+                                    {timeOptions.map((seconds) => (
+                                        <button key={seconds} type="button" aria-pressed={selectedMemorize === seconds} onClick={() => setStandardMemorize(seconds)}>
                                             {formatSeconds(seconds)}
                                         </button>
                                     ))}
@@ -404,7 +414,7 @@ export const NumbersSettingsPhase = () => {
                             </p>
                         )}
 
-                        <button type="button" onClick={start} disabled={!valid || challengeDone || busy} className="btn btn--sun deal__start">
+                        <button type="button" onClick={start} disabled={!valid || challengeDone || challengeNeedsLogin || busy} className="btn btn--sun deal__start">
                             {busy ? <LoaderCircle size={20} className="animate-spin" aria-hidden="true" /> : <Play size={20} aria-hidden="true" />}
                             {challengeDone ? 'Đã hoàn thành hôm nay' : 'Bắt đầu'}
                         </button>

@@ -12,7 +12,6 @@ import cake from "@/assets/memio/game/card-cake.svg";
 import bicycle from "@/assets/memio/game/card-bicycle.svg";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useNumbersProgress } from "@/features/numbers-game/hooks/useNumbersProgress";
-import { useFaceNameStore } from "@/features/facename-game/store/faceNameStore";
 import "@/features/shared-game/game.css";
 
 const FAN_CARDS: Card[] = [
@@ -109,7 +108,7 @@ export const GameSelectionPage = () => {
     const { game: cardGame } = useGameCatalog("card");
     const { game: imageGame } = useGameCatalog("image");
     const numbers = useNumbersProgress();
-    const faceStats = useFaceNameStore((state) => state.stats);
+    const { game: faceGame } = useGameCatalog("facename");
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     return (
@@ -128,8 +127,8 @@ export const GameSelectionPage = () => {
                         title="Gương mặt & Tên"
                         description="Gắn một tên gọi với một gương mặt, rồi nhớ lại khi vị trí được xáo trộn."
                         unit="người"
-                        progress={{ unlocked: faceStats.unlockedLevel, maxLevel: 10, played: faceStats.totalRounds }}
-                        note="Tiến độ được lưu trên trình duyệt này."
+                        progress={fromCatalog(faceGame)}
+                        note={isAuthenticated ? undefined : "Đăng nhập để lưu lịch sử và nhận EXP."}
                         fan={["Anna", "Claire", "Bryan"].map((name, i) => (
                             <span key={name} className="ptile" data-size="md" style={spread(i, 3)}>
                                 <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${name}`} alt="" />
@@ -177,7 +176,7 @@ export const GameSelectionPage = () => {
                                   }
                                 : null
                         }
-                        note={isAuthenticated ? undefined : "Cần đăng nhập để chơi và lưu tiến độ."}
+                        note={isAuthenticated ? undefined : "Khách có thể chơi thử. Đăng nhập để lưu lịch sử và nhận EXP."}
                         fan={FAN_DIGITS.map((digit, i) => (
                             <span key={i} className="pick__digit" style={spread(i, FAN_DIGITS.length)}>
                                 {digit}

@@ -3,24 +3,15 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { numbersApi } from '../api/numbers.api';
 import type { NumberProgress } from '../types/numberTypes';
 
-// Tiến độ trò Ghi nhớ số cho thẻ ở trang chọn trò chơi. Trò này cần đăng nhập nên khách không gọi API.
 export const useNumbersProgress = () => {
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const [progress, setProgress] = useState<NumberProgress | null>(null);
-
+    const owner = useAuthStore((state) => state.user?._id ?? 'guest');
+    const loading = useAuthStore((state) => state.isLoading);
+    const [stored, setStored] = useState<{ owner: string; progress: NumberProgress } | null>(null);
     useEffect(() => {
-        if (!isAuthenticated) return;
+        if (loading) return;
         let active = true;
-        numbersApi
-            .progress()
-            .then((value) => active && setProgress(value))
-            .catch(() => {
-                /* Thẻ vẫn hiện được không cần số liệu */
-            });
-        return () => {
-            active = false;
-        };
-    }, [isAuthenticated]);
-
-    return isAuthenticated ? progress : null;
+        numbersApi.progress().then((progress) => { if (active) setStored({ owner, progress }); }).catch(() => {});
+        return () => { active = false; };
+    }, [owner, loading]);
+    return !loading && stored?.owner === owner ? stored.progress : null;
 };

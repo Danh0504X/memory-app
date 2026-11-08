@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { usePhaseTimer } from "@/features/shared-game/hooks/usePhaseTimer";
+import { useEffect } from "react";
 import { useFaceNameStore } from "../store/faceNameStore";
 import { GameHeader } from "@/features/shared-game/components/GameHeader";
 import { PlayHints } from "@/features/shared-game/components/PlayHints";
@@ -25,28 +26,13 @@ export const FaceNameMemorizePhase = () => {
     goHome,
     currentMode,
     currentLevelId,
+    isLoading,
+    errorMessage,
   } = useFaceNameStore();
 
-  const [timeLeft, setTimeLeft] = useState<number>(() => {
-    if (!memorizeDeadline) return settings.memorizeSeconds;
-    return Math.max(0, Math.ceil((memorizeDeadline - Date.now()) / 1000));
-  });
+  const { timeLeft } = usePhaseTimer(memorizeDeadline, finishMemorize);
 
-  // Timer effect
-  useEffect(() => {
-    if (!memorizeDeadline) return;
 
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((memorizeDeadline - Date.now()) / 1000));
-      setTimeLeft(remaining);
-      if (remaining <= 0) {
-        clearInterval(interval);
-        finishMemorize();
-      }
-    }, 250);
-
-    return () => clearInterval(interval);
-  }, [memorizeDeadline, finishMemorize]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -81,9 +67,11 @@ export const FaceNameMemorizePhase = () => {
         timeLeft={timeLeft}
         timeLimit={settings.memorizeSeconds}
         actionLabel="Đã nhớ xong"
+        actionBusy={isLoading}
         onAction={finishMemorize}
         onReset={goHome}
       />
+      {errorMessage && <p role="alert" className="face-recall__error">{errorMessage}</p>}
 
       <MemorizeStage<Person>
         items={memorizePeople}
