@@ -15,6 +15,8 @@ export const LoginForm = (): ReactElement => {
     const location = useLocation();
     // Quay lại trang được bảo vệ đã chặn trước đó (ProtectedRoute), mặc định về trang chủ
     const redirectTo = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/';
+    // Thông báo từ trang khác chuyển tới (ví dụ vừa đổi mật khẩu xong)
+    const notice = (location.state as { notice?: string } | null)?.notice;
     const { saveSession } = useAuthStore();
     const [serverError, setServerError] = useState<string | null>(null);
 
@@ -64,6 +66,9 @@ export const LoginForm = (): ReactElement => {
             title={['Bước vào', 'phòng nhớ']}
             lead="Đăng nhập để tiếp tục buổi luyện trí nhớ của bạn với Memio."
         >
+            {notice && !serverError && (
+                <p className="auth-notice" role="status">{notice}</p>
+            )}
             {serverError && (
                 <p className="auth-alert" role="alert">{serverError}</p>
             )}

@@ -5,6 +5,8 @@ import type {
     LoginRequest,
     AuthSuccessResponse,
     MessageResponse,
+    PasswordResetRequestResponse,
+    PasswordResetValidateResponse,
 } from '@/types/auth.types';
 
 export const authApi = {
@@ -35,6 +37,33 @@ export const authApi = {
     logout: (): Promise<MessageResponse> => {
         return apiClient.post(
             '/auth/logout'
+        ) as unknown as Promise<MessageResponse>;
+    },
+
+    // Gửi link đổi mật khẩu tới email của chính tài khoản đang đăng nhập; không có body vì backend tự lấy email
+    requestPasswordResetLink: (): Promise<PasswordResetRequestResponse> => {
+        return apiClient.post(
+            '/password-reset/request'
+        ) as unknown as Promise<PasswordResetRequestResponse>;
+    },
+
+    // Chỉ kiểm tra link, không làm link mất hiệu lực. Token đi trong body (không đặt trên URL) để khỏi vào log
+    validatePasswordResetToken: (token: string): Promise<PasswordResetValidateResponse> => {
+        return apiClient.post(
+            '/password-reset/validate',
+            { token }
+        ) as unknown as Promise<PasswordResetValidateResponse>;
+    },
+
+    // Đặt mật khẩu mới; chỉ lúc này backend mới tiêu thụ token
+    confirmPasswordReset: (data: {
+        token: string;
+        newPassword: string;
+        confirmPassword: string;
+    }): Promise<MessageResponse> => {
+        return apiClient.post(
+            '/password-reset/confirm',
+            data
         ) as unknown as Promise<MessageResponse>;
     },
 };
