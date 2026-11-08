@@ -1,6 +1,8 @@
 import { Stack } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
 import { Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { ease } from '@/constants/motion';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -111,7 +113,9 @@ function PrepPhase() {
             <AppText variant="small" style={styles.overline}>Chuẩn bị ghi nhớ</AppText>
             <AppText variant="heading">Ván chơi sắp bắt đầu</AppText>
             <View style={styles.countdown} accessibilityLiveRegion="polite" accessibilityLabel={`Còn ${timeLeft} giây`}>
-                <AppText style={styles.countdownText}>{timeLeft}</AppText>
+                <Animated.View key={timeLeft} entering={ZoomIn.duration(220).easing(ease.enter)}>
+                    <AppText style={styles.countdownText}>{timeLeft}</AppText>
+                </Animated.View>
             </View>
             <AppText variant="small" style={styles.center}>Hít thở sâu và sẵn sàng liên kết các từ thành một câu chuyện.</AppText>
             <Button title="Bắt đầu ngay" onPress={beginMemorization} />

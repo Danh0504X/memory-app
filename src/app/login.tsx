@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { AppText } from '@/components/ui/AppText';
+import { Mascot } from '@/components/ui/Mascot';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
@@ -33,6 +34,7 @@ export default function LoginScreen() {
 
     return (
         <Screen edges={['bottom']}>
+            <Mascot />
             <AppText variant="lead">Đăng nhập để lưu EXP, kỷ lục và chuỗi ngày luyện tập.</AppText>
             <Controller
                 control={control}

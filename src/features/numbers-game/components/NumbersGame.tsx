@@ -2,6 +2,8 @@ import { router, Stack } from 'expo-router';
 import { ChevronLeft, ChevronRight, Delete } from 'lucide-react-native';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, AppState, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ease } from '@/constants/motion';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -162,7 +164,9 @@ function WaitPanel({ title, description, timeLeft, buttonLabel, disabled, onSkip
         <View style={styles.wait}>
             <AppText variant="heading">{title}</AppText>
             <View style={styles.countdown} accessibilityLiveRegion="polite" accessibilityLabel={`Còn ${timeLeft} giây`}>
-                <AppText style={styles.countdownText}>{timeLeft}</AppText>
+                <Animated.View key={timeLeft} entering={ZoomIn.duration(220).easing(ease.enter)}>
+                    <AppText style={styles.countdownText}>{timeLeft}</AppText>
+                </Animated.View>
             </View>
             <AppText variant="small" style={styles.center}>{description}</AppText>
             <Button title={buttonLabel} disabled={disabled} onPress={onSkip} />
@@ -293,7 +297,11 @@ function RecallPhase({ expired }: { expired: boolean }) {
                                     accessibilityLabel={`Chữ số ${index + 1}: ${value ?? 'trống'}`}
                                     style={[styles.cell, { width: cellWidth }, value !== null && styles.cellFilled, current && styles.cellCurrent]}
                                 >
-                                    <AppText style={styles.cellText}>{value ?? ''}</AppText>
+                                    {value !== null ? (
+                                        <Animated.View key={value} entering={ZoomIn.duration(150).easing(ease.enter)}>
+                                            <AppText style={styles.cellText}>{value}</AppText>
+                                        </Animated.View>
+                                    ) : null}
                                 </Pressable>
                             );
                         })}

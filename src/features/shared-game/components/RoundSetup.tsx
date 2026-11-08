@@ -6,7 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
-import { ease, enterUp } from '@/constants/motion';
+import { ease } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import type { GameCatalogItem } from '../api/games.api';
@@ -67,7 +67,7 @@ export function RoundSetup({
 
     return (
         <Screen edges={['bottom']}>
-            <Animated.View entering={enterUp(0)} style={styles.deal}>
+            <View style={styles.deal}>
                 <AppText variant="small" style={styles.overline}>
                     {isCustom ? 'Ván tự chọn' : `Cấp ${level} · ${levelLabel(level)}`}
                 </AppText>
@@ -84,7 +84,7 @@ export function RoundSetup({
                 <AppText style={styles.count}>
                     {itemCount} <AppText variant="lead">{itemUnit} cần nhớ</AppText>
                 </AppText>
-            </Animated.View>
+            </View>
 
             {isCustom ? (
                 <AppText variant="small">

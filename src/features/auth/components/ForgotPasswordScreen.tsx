@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
+import { Mascot } from '@/components/ui/Mascot';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
@@ -58,6 +59,7 @@ export function ForgotPasswordScreen() {
 
     return (
         <Screen edges={['bottom']}>
+            <Mascot />
             <AppText variant="lead">Nhập email của tài khoản để nhận liên kết đặt lại mật khẩu.</AppText>
             <Controller
                 control={control}

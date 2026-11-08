@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { ease, enterUp } from '@/constants/motion';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { BlockState, Panel } from '@/components/ui/Panel';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
@@ -66,9 +68,11 @@ export function ProgressScreen() {
                     const { label, compareLabel } = describePeriod(period, data.buckets.length);
                     return (
                         <>
-                            <Panel title={label}>
-                                <SummaryTiles summary={data.summary} previous={data.previousSummary} compareLabel={compareLabel} />
-                            </Panel>
+                            <Animated.View entering={enterUp(0)}>
+                                <Panel title={label}>
+                                    <SummaryTiles summary={data.summary} previous={data.previousSummary} compareLabel={compareLabel} />
+                                </Panel>
+                            </Animated.View>
                             <Panel title="Độ chính xác theo kỳ">
                                 <AccuracyChart
                                     buckets={data.buckets}
@@ -93,6 +97,17 @@ export function ProgressScreen() {
             </Panel>
         </ScrollView>
     );
+}
+
+// Cột mọc lên từ đáy khi biểu đồ hiện hoặc đổi trò, cột sau trễ hơn cột trước một chút; chỉ đổi scaleY
+function GrowBar({ index, height, color }: { index: number; height: number; color: string }) {
+    const reduceMotion = useReducedMotion();
+    const scale = useSharedValue(reduceMotion ? 1 : 0);
+    useEffect(() => {
+        if (!reduceMotion) scale.value = withDelay(index * 40, withTiming(1, { duration: 600, easing: ease.enter }));
+    }, [index, reduceMotion, scale]);
+    const grow = useAnimatedStyle(() => ({ transform: [{ scaleY: scale.value }] }));
+    return <Animated.View style={[styles.bar, { height, backgroundColor: color, transformOrigin: 'bottom' }, grow]} />;
 }
 
 function SummaryTiles({ summary, previous, compareLabel }: { summary: DashboardSummary; previous: DashboardSummary; compareLabel: string }) {
@@ -154,7 +169,12 @@ function AccuracyChart({ buckets, passAccuracyOf }: { buckets: PeriodBucket[]; p
                                 {accuracy !== null ? (
                                     <>
                                         <AppText style={styles.barValue}>{formatPercent(accuracy)}</AppText>
-                                        <View style={[styles.bar, { height: Math.max(2, CHART_HEIGHT * accuracy - 16), backgroundColor: index === current ? GAME_META[game].color : '#c9d6cc' }]} />
+                                        <GrowBar
+                                            key={game}
+                                            index={index}
+                                            height={Math.max(2, CHART_HEIGHT * accuracy - 16)}
+                                            color={index === current ? GAME_META[game].color : '#c9d6cc'}
+                                        />
                                     </>
                                 ) : (
                                     <AppText style={styles.none}>–</AppText>

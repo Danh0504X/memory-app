@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { AppText } from '@/components/ui/AppText';
+import { Mascot } from '@/components/ui/Mascot';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
@@ -42,6 +43,7 @@ export default function RegisterScreen() {
 
     return (
         <Screen edges={['bottom']}>
+            <Mascot />
             <AppText variant="lead">Tài khoản giúp lưu tiến độ và mở thử thách mỗi ngày.</AppText>
             {FIELDS.map(({ name, label, props }) => (
                 <Controller
