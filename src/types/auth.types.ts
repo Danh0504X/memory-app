@@ -56,6 +56,40 @@ export interface MessageResponse {
     message: string;
 }
 
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+// Đổi mật khẩu bằng link gửi qua email - khớp /api/password-reset của backend (controller/passwordReset.controller.ts)
+export interface PasswordResetRequestData {
+    maskedEmail: string;
+    expiresInMinutes: number;
+    resendAfterSeconds: number;
+}
+
+export type PasswordResetRequestResponse = ApiSuccessResponse<PasswordResetRequestData>;
+export type PasswordResetValidateResponse = ApiSuccessResponse<{ maskedEmail: string }>;
+
+// Mã lỗi của luồng đổi mật khẩu (config/passwordReset.ts ở backend)
+export const PASSWORD_RESET_ERROR_CODES = {
+    INVALID_TOKEN: 'INVALID_RESET_TOKEN',
+    RATE_LIMITED: 'RESET_LINK_RATE_LIMITED',
+    INVALID_PASSWORD: 'INVALID_PASSWORD',
+    PASSWORD_MISMATCH: 'PASSWORD_MISMATCH',
+    SAME_PASSWORD: 'SAME_PASSWORD',
+    INCORRECT_CURRENT_PASSWORD: 'INCORRECT_CURRENT_PASSWORD',
+    CURRENT_PASSWORD_REQUIRED: 'CURRENT_PASSWORD_REQUIRED',
+    EMAIL_NOT_CONFIGURED: 'EMAIL_NOT_CONFIGURED',
+    EMAIL_DELIVERY_FAILED: 'EMAIL_DELIVERY_FAILED',
+    SESSION_REVOKE_FAILED: 'SESSION_REVOKE_FAILED',
+} as const;
+
 // Mã lỗi backend gửi kèm (middlewares/authMiddleware.ts - AUTH_ERROR_CODES)
 export const AUTH_ERROR_CODES = {
     TOKEN_EXPIRED: 'TOKEN_EXPIRED',

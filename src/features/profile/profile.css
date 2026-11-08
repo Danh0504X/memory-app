@@ -530,3 +530,68 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ── Form đổi mật khẩu trong Hồ sơ → Tài khoản ── */
+.settings__password-form {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.settings__password-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings__password-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.settings__password-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.settings__password-control .settings__input {
+  padding-right: 40px;
+}
+
+.settings__reveal-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.settings__reveal-btn:hover {
+  color: var(--color-ink);
+}
+
+.settings__password-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.settings__password-actions {
+  display: flex;
+  gap: 8px;
+}
+
