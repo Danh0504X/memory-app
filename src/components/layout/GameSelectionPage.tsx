@@ -28,6 +28,8 @@ const FAN_DIGITS = ["2", "0", "8", "5", "1"];
 
 const FAN_FACES = ["John", "Mary", "David", "Linh", "Mai"];
 
+const FAN_WORDS = ["Bồ câu", "Hải đăng", "Kim tự tháp", "Gió mùa", "Hoa sen"];
+
 const spread = (i: number, count: number) => ({ "--o": i - (count - 1) / 2 }) as CSSProperties;
 
 // Tiến độ hiện trên thẻ; null khi chưa có (khách, hoặc chưa tải được)
@@ -46,7 +48,7 @@ const fromCatalog = (game: GameCatalogItem | null): PickProgress | null => {
 
 interface GamePickProps {
     to: string;
-    variant: "cards" | "images" | "numbers" | "facename";
+    variant: "cards" | "images" | "numbers" | "facename" | "words";
     title: string;
     description: string;
     unit: string;
@@ -111,6 +113,7 @@ export const GameSelectionPage = () => {
     const { game: imageGame } = useGameCatalog("image");
     const numbers = useNumbersProgress();
     const { game: faceGame } = useGameCatalog("facename");
+    const { game: wordGame } = useGameCatalog("word");
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
     return (
@@ -119,10 +122,24 @@ export const GameSelectionPage = () => {
             <main className="arcade page-col">
                 <div className="arcade__head">
                     <h1>Chọn trò chơi</h1>
-                    <p>Bốn trò, mỗi trò mười cấp. Luyện nhớ thứ tự, chữ số và tên gọi.</p>
+                    <p>Năm trò, mỗi trò mười cấp. Luyện nhớ thứ tự, chữ số, từ vựng và gương mặt.</p>
                 </div>
 
                 <div className="arcade__games">
+                    <GamePick
+                        to="/games/words"
+                        variant="words"
+                        title="Ghi nhớ từ"
+                        description="Ghi nhớ danh sách từ vựng theo thứ tự, rồi tự gõ lại từng từ chính xác."
+                        unit="từ"
+                        progress={fromCatalog(wordGame)}
+                        note={isAuthenticated ? undefined : "Đăng nhập để lưu lịch sử và nhận EXP."}
+                        fan={FAN_WORDS.map((word, i) => (
+                            <span key={word} className="pwordtile" style={spread(i, FAN_WORDS.length)}>
+                                {word}
+                            </span>
+                        ))}
+                    />
                     <GamePick
                         to="/games/facename"
                         variant="facename"
