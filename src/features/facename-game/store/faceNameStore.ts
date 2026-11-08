@@ -159,95 +159,12 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   },
 
   initialize: async () => {
+    set({ isLoading: true, errorMessage: null });
     try {
       const levels = await fetchLevels();
-      set({ levels, stats: getStoredStats() });
+      set({ levels, stats: getStoredStats(), isLoading: false });
     } catch {
-      // Fallback default levels if offline/network error
-      set({
-        levels: [
-          {
-            levelId: 1,
-            faceCount: 6,
-            memorizeSeconds: 60,
-            recallSeconds: 120,
-            nameType: "Tên phổ biến",
-            unlockThreshold: 4 / 6,
-          },
-          {
-            levelId: 2,
-            faceCount: 8,
-            memorizeSeconds: 60,
-            recallSeconds: 150,
-            nameType: "Tên phổ biến",
-            unlockThreshold: 6 / 8,
-          },
-          {
-            levelId: 3,
-            faceCount: 10,
-            memorizeSeconds: 60,
-            recallSeconds: 180,
-            nameType: "Tên đa dạng (Việt + Quốc tế)",
-            unlockThreshold: 7 / 10,
-          },
-          {
-            levelId: 4,
-            faceCount: 12,
-            memorizeSeconds: 60,
-            recallSeconds: 180,
-            nameType: "Tên đa dạng (Việt + Quốc tế)",
-            unlockThreshold: 8 / 12,
-          },
-          {
-            levelId: 5,
-            faceCount: 14,
-            memorizeSeconds: 60,
-            recallSeconds: 210,
-            nameType: "Tên quốc tế",
-            unlockThreshold: 10 / 14,
-          },
-          {
-            levelId: 6,
-            faceCount: 16,
-            memorizeSeconds: 60,
-            recallSeconds: 210,
-            nameType: "Tên quốc tế phong phú",
-            unlockThreshold: 11 / 16,
-          },
-          {
-            levelId: 7,
-            faceCount: 18,
-            memorizeSeconds: 60,
-            recallSeconds: 240,
-            nameType: "Tên quốc tế phong phú",
-            unlockThreshold: 12 / 18,
-          },
-          {
-            levelId: 8,
-            faceCount: 22,
-            memorizeSeconds: 60,
-            recallSeconds: 240,
-            nameType: "Tên quốc tế thử thách",
-            unlockThreshold: 15 / 22,
-          },
-          {
-            levelId: 9,
-            faceCount: 26,
-            memorizeSeconds: 60,
-            recallSeconds: 270,
-            nameType: "Tên quốc tế dễ nhầm lẫn",
-            unlockThreshold: 18 / 26,
-          },
-          {
-            levelId: 10,
-            faceCount: 30,
-            memorizeSeconds: 60,
-            recallSeconds: 300,
-            nameType: "Tên quốc tế dễ nhầm lẫn",
-            unlockThreshold: 20 / 30,
-          },
-        ],
-      });
+      set({ isLoading: false, errorMessage: "Không thể tải cấp độ. Kiểm tra kết nối rồi thử lại." });
     }
   },
 
@@ -255,17 +172,16 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
 
   clearError: () => set({ errorMessage: null }),
 
-  startLevelGame: async (levelId: number, customMemorizeSec?: number) => {
+  startLevelGame: async (levelId: number) => {
     set({ isLoading: true, phase: "loading-faces", errorMessage: null });
     try {
       const data = await startLevelRound(levelId);
       const imageUrls = data.people.map((p) => p.imageUrl);
 
-      // Preload all face images before starting memorize countdown
+      const now = Date.now();
       await preloadImages(imageUrls);
 
-      const now = Date.now();
-      const memSec = customMemorizeSec ?? data.settings.memorizeSeconds;
+      const memSec = data.settings.memorizeSeconds;
       set({
         isLoading: false,
         currentRoundId: data.roundId,
@@ -286,11 +202,11 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         isSubmitting: false,
         phase: "memorize",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         isLoading: false,
         phase: "home",
-        errorMessage: err?.message || "Không thể khởi tạo ván chơi. Vui lòng thử lại.",
+        errorMessage: (err && typeof err === "object" && "message" in err ? String(err.message) : "") || "Không thể khởi tạo ván chơi. Vui lòng thử lại.",
       });
     }
   },
@@ -305,10 +221,9 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
       const data = await startFreeRound(faceCount, memorizeSeconds, recallSeconds);
       const imageUrls = data.people.map((p) => p.imageUrl);
 
-      // Preload all face images before starting memorize countdown
+      const now = Date.now();
       await preloadImages(imageUrls);
 
-      const now = Date.now();
       set({
         isLoading: false,
         currentRoundId: data.roundId,
@@ -325,11 +240,11 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         isSubmitting: false,
         phase: "memorize",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         isLoading: false,
         phase: "home",
-        errorMessage: err?.message || "Không thể khởi tạo ván tự do. Vui lòng kiểm tra lại thiết lập.",
+        errorMessage: (err && typeof err === "object" && "message" in err ? String(err.message) : "") || "Không thể khởi tạo ván tự do. Vui lòng kiểm tra lại thiết lập.",
       });
     }
   },
@@ -414,11 +329,11 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         isSubmitting: false,
         phase: "result",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         isSubmitting: false,
         phase: "recall",
-        errorMessage: err?.message || "Lỗi khi nộp bài. Vui lòng thử lại.",
+        errorMessage: (err && typeof err === "object" && "message" in err ? String(err.message) : "") || "Lỗi khi nộp bài. Vui lòng thử lại.",
       });
     }
   },

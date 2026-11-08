@@ -11,6 +11,7 @@ export interface LevelConfig {
   recallSeconds: number;
   nameType: string;
   unlockThreshold: number;
+  requiredScore: number;
 }
 
 export interface AnswerResultItem {

@@ -10,7 +10,7 @@ const passwordField = z.string();
 const usernameField = z.string();
 
 // Hiển thị cạnh ô mật khẩu khi đăng ký, khớp với passwordField ở trên
-export const passwordRules = [];
+export const passwordRules: { label: string; test: (value: string) => boolean }[] = [];
 
 export const registerSchema = z
   .object({

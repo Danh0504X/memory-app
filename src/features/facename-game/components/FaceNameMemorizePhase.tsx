@@ -51,6 +51,7 @@ export const FaceNameMemorizePhase = () => {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && e.target.closest("button, input, textarea, select")) return;
       if (e.key === "ArrowLeft") {
         prevMemorizePerson();
       } else if (e.key === "ArrowRight") {
@@ -70,11 +71,12 @@ export const FaceNameMemorizePhase = () => {
   if (total === 0) return null;
 
   return (
-    <div className="play">
+    <div className="play face-play">
+      <h1 className="sr-only">Ghi nhớ gương mặt và tên</h1>
       <GameHeader
         gameName="Gương mặt & Tên"
         level={currentMode === "level" ? currentLevelId : null}
-        status={`Ghi nhớ thứ tự · đang xem người ${currentMemorizeIndex + 1} trên ${total}`}
+        status={`Ghi nhớ tên · Người ${currentMemorizeIndex + 1} trên ${total}`}
         progress={(currentMemorizeIndex + 1) / total}
         timeLeft={timeLeft}
         timeLimit={settings.memorizeSeconds}
@@ -94,16 +96,10 @@ export const FaceNameMemorizePhase = () => {
         keyOf={(person) => String(person.id)}
         renderBig={(person) => (
           <div
-            className="flex flex-col items-center justify-center rounded-3xl bg-white p-4 sm:p-5 shadow-2xl transition-all"
-            style={{
-              width: "clamp(240px, 28vw, 320px)",
-              aspectRatio: "3 / 4",
-              border: "4px solid rgba(255, 255, 255, 0.9)",
-            }}
+            className="face-card"
           >
             <div
-              className="overflow-hidden rounded-2xl border-2 border-slate-100 bg-slate-50 shadow-inner"
-              style={{ width: "84%", aspectRatio: "1" }}
+              className="face-card__portrait"
             >
               <img
                 src={person.imageUrl}
@@ -111,8 +107,8 @@ export const FaceNameMemorizePhase = () => {
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="mt-3 sm:mt-4 text-center">
-              <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f2937]">
+            <div className="face-card__name">
+              <span>
                 {person.name}
               </span>
             </div>

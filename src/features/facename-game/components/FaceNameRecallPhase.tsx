@@ -20,6 +20,7 @@ export const FaceNameRecallPhase = () => {
     goHome,
     currentMode,
     currentLevelId,
+    errorMessage,
   } = useFaceNameStore();
 
   const [timeLeft, setTimeLeft] = useState<number>(() => {
@@ -55,9 +56,10 @@ export const FaceNameRecallPhase = () => {
   }, [recallDeadline, submitCurrentRound]);
 
   const handleSubmit = async () => {
-    if (hasTriggeredSubmitRef.current || isSubmitting) return;
+    if (isSubmitting) return;
     hasTriggeredSubmitRef.current = true;
     await submitCurrentRound();
+    hasTriggeredSubmitRef.current = false;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -79,12 +81,13 @@ export const FaceNameRecallPhase = () => {
   const filledCount = Object.values(userAnswers).filter((v) => v.trim() !== "").length;
 
   return (
-    <div className="play">
+    <div className="play face-play">
+      <h1 className="sr-only">Nhớ lại tên từng gương mặt</h1>
       <GameHeader
         gameName="Gương mặt & Tên"
         level={currentMode === "level" ? currentLevelId : null}
         status={`Nhớ lại · đã điền ${filledCount} trên ${total} người`}
-        progress={filledCount / total}
+        progress={total ? filledCount / total : 0}
         timeLeft={timeLeft}
         timeLimit={settings.recallSeconds}
         actionLabel={isSubmitting ? "Đang chấm..." : "Nộp bài"}
@@ -93,16 +96,16 @@ export const FaceNameRecallPhase = () => {
         onReset={goHome}
       />
 
-      <main className="play__table play__table--facename-recall">
+      <main className="play__table face-recall">
+        <p className="face-recall__hint">Gương mặt đã đổi chỗ. Bạn còn nhớ tên ai?</p>
+        {errorMessage && <p className="face-recall__error" role="alert">{errorMessage} Bấm Nộp bài để thử lại.</p>}
         <div className="facename-recall-container">
           <div className="facename-recall-list">
             {recallPeople.map((person, index) => {
               const currentAnswer = userAnswers[person.id] || "";
               return (
                 <div key={person.id} className="facename-recall-card">
-                  <span className="facename-recall-badge">
-                    #{index + 1}
-                  </span>
+                  <label htmlFor={`face-answer-${person.id}`} className="facename-recall-badge">Người {index + 1}</label>
 
                   <div className="facename-recall-avatar">
                     <img
@@ -112,10 +115,14 @@ export const FaceNameRecallPhase = () => {
                   </div>
 
                   <input
+                    id={`face-answer-${person.id}`}
                     ref={(el) => {
                       inputRefs.current[index] = el;
                     }}
                     type="text"
+                    autoComplete="off"
+                    spellCheck={false}
+                    disabled={isSubmitting || timeLeft <= 0}
                     placeholder="Gõ tên..."
                     value={currentAnswer}
                     maxLength={50}

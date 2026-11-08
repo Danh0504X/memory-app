@@ -1,0 +1,64 @@
+/* Keep the existing Memio palette and game table; portraits carry the identity. */
+.facename-settings .round__head h1 { font-size: clamp(24px, 3vw, 32px); }
+.facename-settings .lvl { align-content: center; gap: 12px; min-height: 84px; }
+.facename-settings .deal__count strong { font-size: 38px; }
+.facename-settings .levels__note { margin-top: 16px; }
+.face-local-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 12px 0 0; }
+.face-local-stats dt { font-size: 14px; color: var(--color-ink-soft); }
+.face-local-stats dd { margin: 4px 0 0; font-size: 20px; font-variant-numeric: tabular-nums; }
+.face-preview { display: flex; justify-content: center; gap: 16px; margin: 24px 0; }
+.face-preview > div { width: min(27%, 104px); text-align: center; }
+.face-preview img { width: 100%; aspect-ratio: 1; border-radius: var(--radius-ui); background: var(--color-step); }
+.face-preview span { display: block; margin-top: 8px; font-size: 14px; color: white; }
+.face-number { width: 88px; height: 44px; padding: 8px; border: 1px solid var(--color-ink-soft); border-radius: 8px; background: white; color: var(--color-ink); font: inherit; font-variant-numeric: tabular-nums; }
+.face-number:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 3px; }
+.face-loading { display: grid; min-height: 100dvh; place-items: center; color: var(--color-ink-soft); }
+.face-card { width: clamp(170px, 25vw, 280px); padding: 16px; border-radius: var(--radius-ui); background: white; color: var(--color-ink); }
+.face-card__portrait { width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 8px; background: var(--color-step); }
+.face-card__portrait img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.face-card__name { margin-top: 16px; text-align: center; font-size: clamp(20px, 2.5vw, 28px); font-weight: 700; overflow-wrap: anywhere; }
+.face-play .stage__item { animation: none; }
+.face-recall { flex: 1; display: flex; flex-direction: column; gap: 24px; padding: clamp(16px, 3vw, 32px); }
+.face-recall__hint { margin: 0; color: white; text-align: center; font-size: 16px; }
+.face-recall__error { margin: 0; padding: 12px; background: white; color: var(--color-ink); border-radius: 8px; }
+.face-recall .facename-recall-container { max-width: 1100px; margin-inline: auto; }
+/* Six 160px portrait slots + five 16px gaps = 1040px; smaller viewports wrap. */
+.face-recall .facename-recall-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+.face-recall .facename-recall-card { width: 100%; border: 0; border-radius: var(--radius-ui); padding: 12px; box-shadow: none; background: white; }
+.face-recall .facename-recall-card:focus-within { outline: 3px solid var(--color-sun); outline-offset: 3px; transform: none; box-shadow: none; }
+.face-recall .facename-recall-badge { align-self: flex-start; margin-bottom: 8px; font-size: 12px; font-weight: 500; color: var(--color-ink-soft); }
+.face-recall .facename-recall-avatar { max-width: 180px; border: 0; background: var(--color-step); }
+.face-recall .facename-recall-input { height: 44px; font-size: 16px; font-weight: 500; color: var(--color-ink); border: 1px solid var(--color-ink-soft); }
+.face-recall .facename-recall-input:focus { outline: 2px solid var(--color-brand); outline-offset: 2px; box-shadow: none; }
+.face-results { padding-block: 32px 56px; }
+.face-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; padding: 24px; background: white; border-radius: var(--radius-ui); }
+.face-summary h1 { margin: 0 0 8px; font-size: clamp(24px, 3vw, 32px); font-weight: 700; }
+.face-summary p { margin: 0; color: var(--color-ink-soft); }
+.face-summary .face-summary__score { color: var(--color-brand-deep); font-size: 36px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.face-summary__score span { font-size: 14px; font-weight: 400; color: var(--color-ink-soft); }
+.face-summary__facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; gap: 16px; }
+.face-summary__facts dt { margin-bottom: 4px; color: var(--color-ink-soft); font-size: 14px; }
+.face-summary__facts dd { margin: 0; font-size: 18px; font-variant-numeric: tabular-nums; }
+.face-summary__actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; }
+.face-summary__actions .btn { height: 44px; font-size: 15px; padding-inline: 20px; }
+.face-review { margin-top: 32px; }
+.face-review__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+.face-review h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.face-review__head p { margin: 0; font-size: 14px; color: var(--color-ink-soft); }
+.face-review__list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
+.face-review__list li { display: flex; gap: 12px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--color-step); }
+.face-review__index { color: var(--color-ink-soft); font-size: 12px; min-width: 18px; font-variant-numeric: tabular-nums; }
+.face-review__list img { width: 56px; height: 56px; flex: none; border-radius: 8px; background: var(--color-step); }
+.face-review__list li > div { min-width: 0; flex: 1; }
+.face-review__list strong { font-size: 16px; overflow-wrap: anywhere; }
+.face-review__list li p { margin: 4px 0 0; color: var(--color-ink-soft); font-size: 14px; overflow-wrap: anywhere; }
+.face-review__status { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--color-ink-soft); white-space: nowrap; }
+.face-review__list li[data-correct='true'] .face-review__status { color: var(--color-brand-deep); }
+@media (max-width: 760px) {
+    .face-summary { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
+    .face-summary__facts { grid-template-columns: repeat(2, 1fr); }
+    .face-review__head { align-items: flex-start; flex-direction: column; }
+    .face-review__list { grid-template-columns: 1fr; }
+    .face-preview { gap: 12px; }
+    .face-recall .facename-recall-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
