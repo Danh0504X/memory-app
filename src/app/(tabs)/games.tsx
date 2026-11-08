@@ -50,6 +50,16 @@ export default function GamesScreen() {
                     </Link>
                 );
             })}
+
+            <Link href="/methods" asChild>
+                <Pressable style={({ pressed }) => [styles.row, styles.methods, pressed && styles.pressed]}>
+                    <View style={styles.rowText}>
+                        <AppText variant="heading">Phương pháp ghi nhớ</AppText>
+                        <AppText variant="small">Nối thành câu chuyện, biến số thành hình, căn phòng trí nhớ. Có trò chơi thử.</AppText>
+                    </View>
+                    <ChevronRight color={colors.inkSoft} />
+                </Pressable>
+            </Link>
         </Screen>
     );
 }
@@ -66,6 +76,7 @@ const styles = StyleSheet.create({
         padding: spacing.md,
     },
     pressed: { opacity: 0.85 },
+    methods: { backgroundColor: colors.mint, borderColor: colors.mint, marginTop: spacing.sm },
     swatch: { width: 12, alignSelf: 'stretch', borderRadius: 6 },
     rowText: { flex: 1, gap: 2 },
     errorBox: { gap: spacing.sm },

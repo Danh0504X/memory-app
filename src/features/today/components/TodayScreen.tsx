@@ -230,6 +230,7 @@ function Tip() {
             <View style={{ flex: 1, gap: 2 }}>
                 <AppText variant="small" style={styles.overline}>Mẹo hôm nay</AppText>
                 <AppText variant="body">{pickOfDay(TIPS)}</AppText>
+                <Link label="Xem các phương pháp" onPress={() => router.push('/methods')} />
             </View>
         </View>
     );

@@ -52,10 +52,12 @@ test/             Test logic, chạy bằng Node (thay module native bằng bả
 
 - 5 trò chơi: Thẻ bài, Hình ảnh, Gương mặt & Tên, Ghi nhớ từ, Ghi nhớ số (`src/app/games/`).
 - Hôm nay, Thử thách ngày (`/daily`), Hồ sơ, Mục tiêu luyện tập (`/goals`), Đổi mật khẩu, Tiến độ (`/progress`).
+- Phương pháp (`/methods`) và ba trang hướng dẫn có trò chơi thử (`/methods/story-linking`, `/methods/number-shape`, `/methods/memory-palace`).
+- Quên mật khẩu (`/forgot-password`): app gửi email; link trong email mở trang đặt lại mật khẩu của bản web.
 
 ## Việc còn lại
 
-- Trang Hướng dẫn phương pháp và các bài luyện thử (dữ liệu đã có ở `features/methods`).
-- Quên mật khẩu (link trong email cần mở được app: deep link `memio://`).
+- Mở link đặt lại mật khẩu thẳng trong app (universal link / app link, cần xác minh tên miền).
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build), Sign in with Apple, xoá tài khoản.
 - Thông báo nhắc giữ chuỗi ngày (push notification).
+- Hiệu ứng chuyển động của hình minh hoạ như bản web (Reanimated).

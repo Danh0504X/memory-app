@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { FC, ReactNode } from "react";
+import type { SvgProps } from "react-native-svg";
 import type { MethodId } from "../methodsData";
 import type { Picture, ShapeMotion } from "./pictures";
 import type { Woodcut } from "./woodcuts";
@@ -17,7 +18,7 @@ export interface ApplyItem {
     text: string;        // Áp dụng phương pháp vào đây thế nào
     note?: string;       // Một mẹo cụ thể, in màu nhấn
     to?: string;         // Trò chơi trong Memio; bỏ trống với việc ngoài đời
-    art: { src: string; color: string };
+    art: { src: FC<SvgProps>; color: string };
 }
 
 export interface GuideContent {

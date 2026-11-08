@@ -70,6 +70,7 @@ export default function LoginScreen() {
             />
             {serverError ? <AppText variant="small" style={{ color: colors.danger }}>{serverError}</AppText> : null}
             <Button title="Đăng nhập" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
+            <Button title="Quên mật khẩu?" variant="secondary" onPress={() => router.push('/forgot-password')} />
             <Button title="Chưa có tài khoản? Tạo tài khoản" variant="secondary" onPress={() => router.replace('/register')} />
         </Screen>
     );
