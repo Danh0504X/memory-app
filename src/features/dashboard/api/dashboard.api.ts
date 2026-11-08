@@ -3,7 +3,8 @@ import type { ApiSuccessResponse } from '@/types/auth.types';
 
 // Kiểu dữ liệu khớp với response của backend (GET /api/progress/timeline, GET /api/game-sessions).
 // Ngày giờ trong JSON là chuỗi ISO.
-export type ApiGameName = 'card' | 'image';
+export type { GameName as ApiGameName } from '@/features/shared-game/registry';
+import type { GameName as ApiGameName } from '@/features/shared-game/registry';
 export type ApiPeriod = 'week' | 'month';
 export type ApiResult = 'perfect' | 'pass' | 'fail';
 

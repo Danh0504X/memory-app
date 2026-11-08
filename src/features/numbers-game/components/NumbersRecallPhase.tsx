@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Delete } from 'lucide-react';
 import { PlayHints } from '@/features/shared-game/components/PlayHints';
 import { useNumbersGameStore } from '../store/numbersGameStore';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 const HINTS = [
     { keys: ['←', '→'], label: 'chọn ô' },
@@ -13,6 +14,7 @@ const HINTS = [
 // Bàn gõ lại: các ô số nằm trên bàn, mỗi hàng 10 ô; bàn phím số và công cụ ở dưới bàn
 export const NumbersRecallPhase = ({ expired }: { expired: boolean }) => {
     const { session, answers, edit, busy, saving, dirty } = useNumbersGameStore();
+    const isGuest = !useAuthStore((state) => state.isAuthenticated);
     const refs = useRef<(HTMLInputElement | null)[]>([]);
     const [selected, setSelected] = useState(0);
 
@@ -79,7 +81,7 @@ export const NumbersRecallPhase = ({ expired }: { expired: boolean }) => {
                         <p>{expired ? 'Đã hết giờ, đang chấm bài…' : `Đã điền ${filled} trên ${totalDigits}. Gõ số vào ô sáng màu.`}</p>
                     </div>
                     <p className="nsave" role="status" data-state={saving ? 'saving' : dirty ? 'dirty' : 'saved'}>
-                        {saving ? 'Đang lưu…' : dirty ? 'Chưa lưu' : filled > 0 ? 'Đã lưu' : ''}
+                        {saving ? 'Đang lưu…' : dirty ? 'Chưa lưu' : filled > 0 ? isGuest ? 'Nháp trong tab' : 'Đã lưu' : ''}
                     </p>
                 </div>
 

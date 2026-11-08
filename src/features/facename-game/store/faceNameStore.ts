@@ -7,47 +7,17 @@ import type {
   RoundSubmissionResult,
 } from "../types";
 import {
-  fetchLevels,
+  fetchFaceNameSetup,
+  startFaceNameRecall,
   startLevelRound,
   startFreeRound,
   submitFaceNameRound,
 } from "../api/faceNameApi";
 import { preloadImages } from "../utils/preloadImages";
+import { synchronizeRoundCompletion } from "../../shared-game/completion.ts";
 
-const STATS_STORAGE_KEY = "facename_trainer_stats_v1";
-
-const getStoredStats = (): GameStats => {
-  try {
-    const raw = localStorage.getItem(STATS_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        unlockedLevel: parsed.unlockedLevel || 1,
-        bestScores: parsed.bestScores || {},
-        totalRounds: parsed.totalRounds || 0,
-        totalAccuracies: parsed.totalAccuracies || [],
-        completedLevels: parsed.completedLevels || [],
-      };
-    }
-  } catch {
-    // Ignore storage parse errors
-  }
-  return {
-    unlockedLevel: 1,
-    bestScores: {},
-    totalRounds: 0,
-    totalAccuracies: [],
-    completedLevels: [],
-  };
-};
-
-const saveStats = (stats: GameStats): void => {
-  try {
-    localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
-  } catch {
-    // Ignore quota/storage errors
-  }
-};
+const emptyStats = (): GameStats => ({ unlockedLevel: 1, bestScores: {}, totalRounds: 0, totalAccuracies: [], completedLevels: [] });
+let requestGeneration = 0;
 
 const shuffleArray = <T>(array: T[]): T[] => {
   const copy = [...array];
@@ -104,7 +74,7 @@ interface FaceNameState {
     memorizeSeconds: number,
     recallSeconds: number,
   ) => Promise<void>;
-  finishMemorize: () => void;
+  finishMemorize: () => Promise<void>;
   updateAnswer: (personId: number, answer: string) => void;
   submitCurrentRound: () => Promise<void>;
   retryCurrentRound: () => Promise<void>;
@@ -116,7 +86,7 @@ interface FaceNameState {
 export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   phase: "home",
   levels: [],
-  stats: getStoredStats(),
+  stats: emptyStats(),
 
   currentRoundId: null,
   currentMode: "level",
@@ -159,11 +129,14 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   },
 
   initialize: async () => {
-    set({ isLoading: true, errorMessage: null });
+    const generation = ++requestGeneration;
+    set({ isLoading: true, errorMessage: null, stats: emptyStats() });
     try {
-      const levels = await fetchLevels();
-      set({ levels, stats: getStoredStats(), isLoading: false });
+      const { levels, stats } = await fetchFaceNameSetup();
+      if (generation !== requestGeneration) return;
+      set({ levels, stats, isLoading: false });
     } catch {
+      if (generation !== requestGeneration) return;
       set({ isLoading: false, errorMessage: "Không thể tải cấp độ. Kiểm tra kết nối rồi thử lại." });
     }
   },
@@ -173,6 +146,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   clearError: () => set({ errorMessage: null }),
 
   startLevelGame: async (levelId: number) => {
+    const generation = ++requestGeneration;
     set({ isLoading: true, phase: "loading-faces", errorMessage: null });
     try {
       const data = await startLevelRound(levelId);
@@ -180,6 +154,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
 
       const now = Date.now();
       await preloadImages(imageUrls);
+      if (generation !== requestGeneration) return;
 
       const memSec = data.settings.memorizeSeconds;
       set({
@@ -196,13 +171,14 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         recallPeople: [],
         userAnswers: {},
         roundStartTime: now,
-        memorizeDeadline: now + memSec * 1000,
+        memorizeDeadline: Date.parse(data.memorizeDeadline),
         recallDeadline: null,
         result: null,
         isSubmitting: false,
         phase: "memorize",
       });
     } catch (err: unknown) {
+      if (generation !== requestGeneration) return;
       set({
         isLoading: false,
         phase: "home",
@@ -216,6 +192,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
     memorizeSeconds: number,
     recallSeconds: number,
   ) => {
+    const generation = ++requestGeneration;
     set({ isLoading: true, phase: "loading-faces", errorMessage: null });
     try {
       const data = await startFreeRound(faceCount, memorizeSeconds, recallSeconds);
@@ -223,6 +200,7 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
 
       const now = Date.now();
       await preloadImages(imageUrls);
+      if (generation !== requestGeneration) return;
 
       set({
         isLoading: false,
@@ -234,13 +212,14 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         recallPeople: [],
         userAnswers: {},
         roundStartTime: now,
-        memorizeDeadline: now + data.settings.memorizeSeconds * 1000,
+        memorizeDeadline: Date.parse(data.memorizeDeadline),
         recallDeadline: null,
         result: null,
         isSubmitting: false,
         phase: "memorize",
       });
     } catch (err: unknown) {
+      if (generation !== requestGeneration) return;
       set({
         isLoading: false,
         phase: "home",
@@ -249,20 +228,20 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
     }
   },
 
-  finishMemorize: () => {
-    const { memorizePeople, settings, phase } = get();
-    if (phase !== "memorize") return;
+  finishMemorize: async () => {
+    const { memorizePeople, phase } = get();
+    if (phase !== "memorize" || get().isLoading) return;
 
-    // Shuffle the faces for recall phase, keeping each face's id and image
-    const shuffled = shuffleArray(memorizePeople);
-    const now = Date.now();
-
-    set({
-      recallPeople: shuffled,
-      memorizeDeadline: null,
-      recallDeadline: now + settings.recallSeconds * 1000,
-      phase: "recall",
-    });
+    const roundId = get().currentRoundId!;
+    set({ isLoading: true, errorMessage: null });
+    try {
+      const recalled = await startFaceNameRecall(roundId);
+      if (get().currentRoundId !== roundId) return;
+      set({ recallPeople: shuffleArray(memorizePeople), memorizeDeadline: null,
+        recallDeadline: Date.parse(recalled.recallDeadline), phase: "recall", isLoading: false });
+    } catch {
+      if (get().currentRoundId === roundId) set({ isLoading: false, errorMessage: "Không thể chuyển sang nhớ lại. Bấm Đã nhớ xong để thử lại." });
+    }
   },
 
   updateAnswer: (personId: number, answer: string) => {
@@ -291,11 +270,13 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
 
       const result = await submitFaceNameRound(currentRoundId, answersList, timeUsedSeconds);
 
-      // Update stats and localStorage
+      if (get().currentRoundId !== currentRoundId) return;
+      synchronizeRoundCompletion(currentRoundId);
+      // Display the result immediately; the next initialization reloads server progress.
       const prevStats = get().stats;
       const newAccuracies = [...prevStats.totalAccuracies, result.accuracy];
       const newTotalRounds = prevStats.totalRounds + 1;
-      let newUnlockedLevel = prevStats.unlockedLevel;
+      const newUnlockedLevel = result.unlockedLevel ?? prevStats.unlockedLevel;
       const newBestScores = { ...prevStats.bestScores };
       const newCompletedLevels = [...prevStats.completedLevels];
 
@@ -306,9 +287,6 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         if (result.isPassed) {
           if (!newCompletedLevels.includes(result.levelId)) {
             newCompletedLevels.push(result.levelId);
-          }
-          if (result.levelId >= newUnlockedLevel && result.levelId < 10) {
-            newUnlockedLevel = result.levelId + 1;
           }
         }
       }
@@ -321,15 +299,14 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
         completedLevels: newCompletedLevels,
       };
 
-      saveStats(updatedStats);
-
       set({
         result,
         stats: updatedStats,
         isSubmitting: false,
-        phase: "result",
+        phase: "result", errorMessage: null,
       });
     } catch (err: unknown) {
+      if (get().currentRoundId !== currentRoundId) return;
       set({
         isSubmitting: false,
         phase: "recall",
@@ -355,7 +332,10 @@ export const useFaceNameStore = create<FaceNameState>((set, get) => ({
   },
 
   goHome: () => {
+    requestGeneration++;
     set({
+      isLoading: false,
+      isSubmitting: false,
       phase: "home",
       result: null,
       memorizePeople: [],

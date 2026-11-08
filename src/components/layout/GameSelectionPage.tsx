@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Header } from "@/components/layout/Header";
@@ -12,7 +12,6 @@ import cake from "@/assets/memio/game/card-cake.svg";
 import bicycle from "@/assets/memio/game/card-bicycle.svg";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useNumbersProgress } from "@/features/numbers-game/hooks/useNumbersProgress";
-import { useFaceNameStore } from "@/features/facename-game/store/faceNameStore";
 import "@/features/shared-game/game.css";
 
 const FAN_CARDS: Card[] = [
@@ -28,7 +27,6 @@ const FAN_PICTURES = [cat, umbrella, cake, bicycle];
 const FAN_DIGITS = ["2", "0", "8", "5", "1"];
 
 const FAN_FACES = ["John", "Mary", "David", "Linh", "Mai"];
-const FACE_LEVEL_COUNTS = [6, 8, 10, 12, 14, 16, 18, 22, 26, 30];
 
 const spread = (i: number, count: number) => ({ "--o": i - (count - 1) / 2 }) as CSSProperties;
 
@@ -112,17 +110,8 @@ export const GameSelectionPage = () => {
     const { game: cardGame } = useGameCatalog("card");
     const { game: imageGame } = useGameCatalog("image");
     const numbers = useNumbersProgress();
-    const faceStats = useFaceNameStore((state) => state.stats);
-    const faceLevels = useFaceNameStore((state) => state.levels);
-    const initFace = useFaceNameStore((state) => state.initialize);
+    const { game: faceGame } = useGameCatalog("facename");
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
-    useEffect(() => {
-        initFace();
-    }, [initFace]);
-
-    const faceUnlocked = faceStats.unlockedLevel || 1;
-    const faceNextCount = faceLevels?.[faceUnlocked - 1]?.faceCount ?? FACE_LEVEL_COUNTS[faceUnlocked - 1] ?? 6;
 
     return (
         <>
@@ -140,12 +129,8 @@ export const GameSelectionPage = () => {
                         title="Gương mặt & Tên"
                         description="Gắn một tên gọi với một gương mặt, rồi nhớ lại khi vị trí được xáo trộn."
                         unit="người"
-                        progress={{
-                            unlocked: faceUnlocked,
-                            maxLevel: 10,
-                            nextCount: faceNextCount,
-                            played: faceStats.totalRounds,
-                        }}
+                        progress={fromCatalog(faceGame)}
+                        note={isAuthenticated ? undefined : "Đăng nhập để lưu lịch sử và nhận EXP."}
                         fan={FAN_FACES.map((name, i) => (
                             <span key={name} className="pfacetile" style={spread(i, FAN_FACES.length)}>
                                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} alt="" />
@@ -193,7 +178,7 @@ export const GameSelectionPage = () => {
                                   }
                                 : null
                         }
-                        note={isAuthenticated ? undefined : "Cần đăng nhập để chơi và lưu tiến độ."}
+                        note={isAuthenticated ? undefined : "Khách có thể chơi thử. Đăng nhập để lưu lịch sử và nhận EXP."}
                         fan={FAN_DIGITS.map((digit, i) => (
                             <span key={i} className="pick__digit" style={spread(i, FAN_DIGITS.length)}>
                                 {digit}

@@ -7,6 +7,8 @@ import type { GameSession } from '../types';
 const unlockRule = (game: GameCatalogItem, level: number) => {
     const { unit } = GAME_META[game.gameName];
     const items = game.levels[level - 1]?.itemCount ?? 0;
+    const requiredScore = game.levels[level - 1]?.requiredScore;
+    if (requiredScore !== undefined) return `Đạt từ ${requiredScore}/${items} điểm để mở cấp ${level + 1}.`;
     return game.unlockOn === 'perfect'
         ? `Nhớ đúng cả ${items} ${unit} để mở cấp ${level + 1}.`
         : `Nhớ đúng từ ${Math.round(game.passAccuracy * 100)}% để mở cấp ${level + 1}.`;

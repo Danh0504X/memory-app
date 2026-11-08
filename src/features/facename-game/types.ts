@@ -1,3 +1,5 @@
+import type { CompletedRound } from "@/features/shared-game/api/games.api";
+
 export interface Person {
   id: number;
   name: string;
@@ -23,6 +25,7 @@ export interface AnswerResultItem {
 }
 
 export interface RoundSubmissionResult {
+  round: CompletedRound;
   roundId: string;
   mode: "level" | "free";
   levelId?: number;
@@ -35,6 +38,7 @@ export interface RoundSubmissionResult {
   isPassed: boolean;
   timeUsedSeconds: number;
   nextLevelUnlocked: boolean;
+  unlockedLevel?: number;
   results: AnswerResultItem[];
 }
 

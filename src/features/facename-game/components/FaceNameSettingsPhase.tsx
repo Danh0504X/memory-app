@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, BookOpen, Check, Lock, Play, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { GameDialog } from "@/features/shared-game/components/GameDialog";
 import { formatSeconds } from "@/features/shared-game/utils/formatTime";
 import { useFaceNameStore } from "../store/faceNameStore";
@@ -10,6 +11,7 @@ import { FaceNameFreeConfigModal } from "./FaceNameFreeConfigModal";
 export const FaceNameSettingsPhase = () => {
     const { levels, stats, selectedLevel, setSelectedLevel, startLevelGame, isLoading, errorMessage, initialize } = useFaceNameStore();
     const [modal, setModal] = useState<"guide" | "free" | null>(null);
+    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const unlocked = Math.min(levels.length || 10, stats.unlockedLevel);
     const level = Math.min(selectedLevel ?? unlocked, unlocked);
     const config = levels.find((item) => item.levelId === level);
@@ -40,10 +42,10 @@ export const FaceNameSettingsPhase = () => {
                             </button>
                         </li>)}
                     </ol>
-                    <p className="levels__note">Tiến độ được lưu trên trình duyệt này, dùng chung cho các lần chơi tại đây.</p>
+                    <p className="levels__note">{isAuthenticated ? "Tiến độ và lịch sử được lưu theo tài khoản. Mỗi ván nhận EXP và góp vào chuỗi ngày luyện tập." : "Bạn đang chơi với tư cách khách. Tiến độ được giữ tạm theo phiên khách; đăng nhập để lưu lịch sử và nhận EXP."}</p>
                     <dl className="face-local-stats">
                         <div><dt>Đã luyện</dt><dd>{stats.totalRounds} ván</dd></div>
-                        <div><dt>Cấp đã đạt</dt><dd>{stats.completedLevels.length}/{levels.length || 10}</dd></div>
+                        <div><dt>Cấp đang mở</dt><dd>{stats.unlockedLevel}/{levels.length || 10}</dd></div>
                     </dl>
                 </section>
                 <section className="deal" aria-labelledby="face-round">

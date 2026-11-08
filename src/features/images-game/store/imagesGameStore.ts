@@ -5,8 +5,9 @@ import {
   type RoundRules,
   type StartedRound,
 } from "@/features/shared-game/api/games.api";
-import { notifyGameSessionRecorded } from "@/features/shared-game/events";
-import { reloadGameCatalog } from "@/features/shared-game/store/gameCatalogStore";
+import { synchronizeRoundCompletion } from "@/features/shared-game/completion";
+import { clientDeadline } from "@/features/shared-game/utils/deadline";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import {
   describeRoundError,
   isRoundClosed,
@@ -81,7 +82,7 @@ const EMPTY_ROUND = {
 };
 
 // Đếm ngược theo đồng hồ máy người chơi, tính từ lúc nhận phản hồi, để không lệch khi giờ máy khác giờ server
-const deadlineIn = (seconds: number) => Date.now() + seconds * 1000;
+let generation = 0;
 
 export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
   preferences: {
@@ -101,6 +102,7 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
 
   startGame: async (memorizeSec, gameLevel, customImageCount) => {
     if (get().pending) return;
+    const requestId = ++generation;
     set({ pending: "start", error: null });
     try {
       const { data } = await gamesApi.startRound({
@@ -110,16 +112,20 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
           ? { mode: "custom", itemCount: customImageCount }
           : { gameLevel }),
       });
-      await get().loadRound(data.session);
+      if (requestId === generation) await get().loadRound(data.session);
     } catch (error) {
+      if (requestId !== generation) return;
       set({ pending: null, error: describeRoundError(error, "start") });
     }
   },
 
   loadRound: async (session) => {
+    const requestId = generation;
+    const deadline = clientDeadline(session.memorizeDeadline, session.serverNow);
     const images = session.items.map(imageFromView);
     // Nút bắt đầu vẫn ở trạng thái chờ trong lúc tải ảnh; phần lệch giờ do tải ảnh nằm trong thời gian bù trễ của backend
     await preloadImages(images.map((image) => image.imageUrl));
+    if (requestId !== generation) return;
     set({
       ...EMPTY_ROUND,
       error: null,
@@ -129,7 +135,7 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
       level: session.rules.gameLevel,
       imagesToMemorize: images,
       userRecall: Array(images.length).fill(null),
-      phaseDeadline: deadlineIn(session.rules.memorizeLimitSec),
+      phaseDeadline: deadline,
     });
   },
 
@@ -154,14 +160,16 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
     set({ pending: "recall", error: null });
     try {
       const { data } = await gamesApi.startRecall(sessionId);
+      if (get().sessionId !== sessionId) return;
       set({
         phase: "recall",
         shuffledDeck: data.session.recallOptions.map(imageFromView),
         selectedSlotIndex: null,
-        phaseDeadline: deadlineIn(data.session.rules.recallLimitSec),
+        phaseDeadline: clientDeadline(data.session.recallDeadline, data.session.serverNow),
         pending: null,
       });
     } catch (error) {
+      if (get().sessionId !== sessionId) return;
       const message = describeRoundError(error, "recall");
       set(
         isRoundClosed(error)
@@ -203,6 +211,7 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
         sessionId,
         userRecall.map((image) => image?.id ?? null),
       );
+      if (get().sessionId !== sessionId) return;
       set({
         phase: "result",
         result: data.session,
@@ -210,9 +219,9 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
         pending: null,
       });
       // Trang hồ sơ và level đã mở cần số liệu mới sau mỗi ván
-      notifyGameSessionRecorded();
-      void reloadGameCatalog();
+      synchronizeRoundCompletion(data.session.sessionId);
     } catch (error) {
+      if (get().sessionId !== sessionId) return;
       const message = describeRoundError(error, "submit");
       set(
         isRoundClosed(error)
@@ -223,5 +232,9 @@ export const useImagesGameStore = create<ImagesGameState>((set, get) => ({
   },
 
   // Thoát ván: backend tự xoá ván chưa nộp sau một thời gian
-  resetGame: () => set({ ...EMPTY_ROUND, error: null }),
+  resetGame: () => { generation++; set({ ...EMPTY_ROUND, error: null }); },
 }));
+
+useAuthStore.subscribe((state, previous) => {
+  if (state.user?._id !== previous.user?._id) useImagesGameStore.getState().resetGame();
+});
