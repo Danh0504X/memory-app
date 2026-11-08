@@ -21,7 +21,6 @@ const PARTIAL_NOTICE =
 // Mở trang chỉ kiểm tra link (không đổi gì); chỉ khi gửi form backend mới đổi mật khẩu và huỷ link.
 export const ResetPasswordPage = (): ReactElement => {
     const navigate = useNavigate();
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     // Token chỉ giữ trong bộ nhớ của trang, không ghi vào localStorage/sessionStorage
     const [token] = useState(() => parseResetTokenFromHash(window.location.hash));
     const [status, setStatus] = useState<LinkStatus>(token ? 'checking' : 'invalid');
@@ -95,13 +94,15 @@ export const ResetPasswordPage = (): ReactElement => {
                 await finish(PARTIAL_NOTICE);
             } else if (error.status === 0) {
                 setServerError('Không kết nối được máy chủ. Mật khẩu chưa bị thay đổi, hãy thử lại.');
+            } else if (error.code === PASSWORD_RESET_ERROR_CODES.SAME_PASSWORD) {
+                setServerError('Mật khẩu mới không được trùng với mật khẩu hiện tại.');
             } else if (
                 error.code === PASSWORD_RESET_ERROR_CODES.INVALID_PASSWORD ||
                 error.code === PASSWORD_RESET_ERROR_CODES.PASSWORD_MISMATCH
             ) {
                 setServerError('Mật khẩu mới chưa hợp lệ. Hãy kiểm tra lại rồi gửi lại.');
             } else {
-                setServerError('Chưa đổi được mật khẩu. Vui lòng thử lại.');
+                setServerError(error.message || 'Chưa đổi được mật khẩu. Vui lòng thử lại.');
             }
         }
     };
@@ -126,12 +127,11 @@ export const ResetPasswordPage = (): ReactElement => {
                         Liên kết không hợp lệ, đã hết hạn hoặc đã được dùng.
                     </p>
                     <p className="auth-done">
-                        Để nhận liên kết mới, hãy {isAuthenticated ? 'vào Hồ sơ → Tài khoản → Mật khẩu' : 'đăng nhập, rồi vào Hồ sơ → Tài khoản → Mật khẩu'} và
-                        bấm gửi liên kết.
+                        Để nhận liên kết mới, bạn có thể gửi lại yêu cầu từ trang Khôi phục mật khẩu.
                     </p>
                     <div className="auth-form__actions">
-                        <Link to={isAuthenticated ? '/profile' : '/login'} className="auth-button">
-                            {isAuthenticated ? 'Về trang tài khoản' : 'Về trang đăng nhập'}
+                        <Link to="/forgot-password" className="auth-button">
+                            Yêu cầu liên kết mới
                         </Link>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import type {
     LoginRequest,
     AuthSuccessResponse,
     MessageResponse,
+    ChangePasswordRequest,
     PasswordResetRequestResponse,
     PasswordResetValidateResponse,
 } from '@/types/auth.types';
@@ -37,6 +38,26 @@ export const authApi = {
     logout: (): Promise<MessageResponse> => {
         return apiClient.post(
             '/auth/logout'
+        ) as unknown as Promise<MessageResponse>;
+    },
+
+    // Đổi mật khẩu khi đã đăng nhập (Flow A)
+    changePassword: (
+        data: ChangePasswordRequest
+    ): Promise<MessageResponse> => {
+        return apiClient.patch(
+            '/auth/change-password',
+            data
+        ) as unknown as Promise<MessageResponse>;
+    },
+
+    // Quên mật khẩu: gửi link email (Flow B)
+    forgotPassword: (
+        email: string
+    ): Promise<MessageResponse> => {
+        return apiClient.post(
+            '/password-reset/forgot',
+            { email }
         ) as unknown as Promise<MessageResponse>;
     },
 

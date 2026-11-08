@@ -6,7 +6,7 @@ import { LoaderCircle, LogOut } from 'lucide-react';
 import { z } from 'zod';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { profileApi, type UserProfile } from '../api/profile.api';
-import { PasswordResetRow } from './PasswordResetRow';
+import { ChangePasswordRow } from './ChangePasswordRow';
 
 // Khớp với kiểm tra ở backend (profile.service.ts): bỏ khoảng trắng hai đầu, 2–100 ký tự, có dấu và dấu cách đều được
 const nameSchema = z.object({
@@ -151,7 +151,7 @@ export const AccountSettings = ({ profile, startEditing = false, onSaved }: Acco
                 </div>
             )}
 
-            {user?.email && <PasswordResetRow email={user.email} />}
+            {user && <ChangePasswordRow />}
 
             <div className="settings__row">
                 <dt>Phiên đăng nhập</dt>

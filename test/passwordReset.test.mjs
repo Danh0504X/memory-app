@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { resetPasswordSchema } from '../src/features/auth/schemas/auth.schema.ts';
+import {
+    changePasswordSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
+} from '../src/features/auth/schemas/auth.schema.ts';
 import { maskEmail } from '../src/features/auth/utils/maskEmail.ts';
 import { parseResetTokenFromHash } from '../src/features/auth/utils/resetToken.ts';
 
@@ -39,4 +43,42 @@ test('reset password schema mirrors the backend rules', () => {
 
     const empty = resetPasswordSchema.safeParse({ newPassword: 'long-enough-1', confirmPassword: '' });
     assert.equal(empty.success, false);
+});
+
+test('change password schema validates current password, length, match, and non-identical new password', () => {
+    const ok = changePasswordSchema.safeParse({
+        currentPassword: 'old-password-1',
+        newPassword: 'new-password-1',
+        confirmPassword: 'new-password-1',
+    });
+    assert.equal(ok.success, true);
+
+    const missingCurrent = changePasswordSchema.safeParse({
+        currentPassword: '',
+        newPassword: 'new-password-1',
+        confirmPassword: 'new-password-1',
+    });
+    assert.equal(missingCurrent.success, false);
+
+    const sameAsOld = changePasswordSchema.safeParse({
+        currentPassword: 'same-password-1',
+        newPassword: 'same-password-1',
+        confirmPassword: 'same-password-1',
+    });
+    assert.equal(sameAsOld.success, false);
+    assert.deepEqual(sameAsOld.error?.issues[0]?.path, ['newPassword']);
+
+    const mismatch = changePasswordSchema.safeParse({
+        currentPassword: 'old-password-1',
+        newPassword: 'new-password-1',
+        confirmPassword: 'mismatch-pass-1',
+    });
+    assert.equal(mismatch.success, false);
+    assert.deepEqual(mismatch.error?.issues[0]?.path, ['confirmPassword']);
+});
+
+test('forgot password schema requires a valid email', () => {
+    assert.equal(forgotPasswordSchema.safeParse({ email: 'user@example.com' }).success, true);
+    assert.equal(forgotPasswordSchema.safeParse({ email: '' }).success, false);
+    assert.equal(forgotPasswordSchema.safeParse({ email: 'not-an-email' }).success, false);
 });

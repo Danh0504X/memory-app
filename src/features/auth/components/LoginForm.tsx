@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -100,9 +100,9 @@ export const LoginForm = (): ReactElement => {
                         <input type="checkbox" {...register('rememberMe')} />
                         Duy trì đăng nhập trên thiết bị này
                     </label>
-                    <a href="#forgot-password" className="auth__link">
+                    <Link to="/forgot-password" className="auth__link">
                         Quên mật khẩu?
-                    </a>
+                    </Link>
                 </div>
 
                 <div className="auth-form__actions">

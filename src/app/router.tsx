@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
+import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
 import GameSelectionPage from "@/components/layout/GameSelectionPage";
 import { CardsGame } from "@/features/cards-game/components/CardsGame";
 import { ImagesGame } from "@/features/images-game/components/ImagesGame";
@@ -118,6 +119,10 @@ export const router = createBrowserRouter([
   {
     path: "/reset-password",
     element: <ResetPasswordPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
   },
   // Route chỉ dành cho khách chưa login
   {
