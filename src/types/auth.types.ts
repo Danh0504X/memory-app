@@ -31,12 +31,6 @@ export interface GoogleLoginRequest {
     accessToken: string;
 }
 
-// Payload gửi lên API Đặt / Đổi mật khẩu
-export interface SetPasswordRequest {
-    currentPassword?: string;
-    newPassword: string;
-}
-
 // Khung response thành công chung của backend
 export interface ApiSuccessResponse<T = undefined> {
     status: 'success';
@@ -56,8 +50,9 @@ export interface MessageResponse {
     message: string;
 }
 
+// Tài khoản chưa có mật khẩu (đăng nhập Google) bỏ currentPassword
 export interface ChangePasswordRequest {
-    currentPassword: string;
+    currentPassword?: string;
     newPassword: string;
     confirmPassword: string;
 }
@@ -67,13 +62,6 @@ export interface ForgotPasswordRequest {
 }
 
 // Đổi mật khẩu bằng link gửi qua email - khớp /api/password-reset của backend (controller/passwordReset.controller.ts)
-export interface PasswordResetRequestData {
-    maskedEmail: string;
-    expiresInMinutes: number;
-    resendAfterSeconds: number;
-}
-
-export type PasswordResetRequestResponse = ApiSuccessResponse<PasswordResetRequestData>;
 export type PasswordResetValidateResponse = ApiSuccessResponse<{ maskedEmail: string }>;
 
 // Mã lỗi của luồng đổi mật khẩu (config/passwordReset.ts ở backend)

@@ -5,12 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
 
 import { authApi } from '@/features/auth/api/auth.api';
-import { changePasswordSchema, type ChangePasswordFormData } from '@/features/auth/schemas/auth.schema';
+import { changePasswordSchema, setPasswordSchema, type ChangePasswordFormData } from '@/features/auth/schemas/auth.schema';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { PASSWORD_RESET_ERROR_CODES, type ApiErrorResponse } from '@/types/auth.types';
 
 export const ChangePasswordRow = () => {
     const navigate = useNavigate();
+    // Tài khoản đăng nhập Google chưa có mật khẩu: đặt mật khẩu lần đầu, không hỏi mật khẩu hiện tại.
+    // Phiên cũ có thể chưa có trường này thì coi như đã có mật khẩu.
+    const hasPassword = useAuthStore((state) => state.user?.hasPassword !== false);
     const [isEditing, setIsEditing] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
     const [showCurrent, setShowCurrent] = useState(false);
@@ -24,7 +27,7 @@ export const ChangePasswordRow = () => {
         reset,
         formState: { errors, isSubmitting },
     } = useForm<ChangePasswordFormData>({
-        resolver: zodResolver(changePasswordSchema),
+        resolver: zodResolver(hasPassword ? changePasswordSchema : setPasswordSchema),
         defaultValues: {
             currentPassword: '',
             newPassword: '',
@@ -56,7 +59,7 @@ export const ChangePasswordRow = () => {
         setServerError(null);
         try {
             await authApi.changePassword({
-                currentPassword: data.currentPassword,
+                ...(hasPassword && { currentPassword: data.currentPassword }),
                 newPassword: data.newPassword,
                 confirmPassword: data.confirmPassword,
             });
@@ -67,7 +70,11 @@ export const ChangePasswordRow = () => {
             useAuthStore.getState().clearSession();
             navigate('/login', {
                 replace: true,
-                state: { notice: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.' },
+                state: {
+                    notice: hasPassword
+                        ? 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.'
+                        : 'Đặt mật khẩu thành công. Vui lòng đăng nhập lại bằng Google hoặc mật khẩu mới.',
+                },
             });
         } catch (err) {
             const error = err as ApiErrorResponse;
@@ -97,37 +104,39 @@ export const ChangePasswordRow = () => {
                             </p>
                         )}
 
-                        <div className="settings__password-field">
-                            <label htmlFor="currentPassword" className="settings__password-label">
-                                Mật khẩu hiện tại
-                            </label>
-                            <div className="settings__password-control">
-                                <input
-                                    id="currentPassword"
-                                    type={showCurrent ? 'text' : 'password'}
-                                    autoComplete="current-password"
-                                    aria-invalid={Boolean(errors.currentPassword)}
-                                    aria-describedby={errors.currentPassword ? 'current-password-error' : undefined}
-                                    className="settings__input"
-                                    disabled={isSubmitting}
-                                    {...register('currentPassword')}
-                                />
-                                <button
-                                    type="button"
-                                    className="settings__reveal-btn"
-                                    onClick={() => setShowCurrent((prev) => !prev)}
-                                    aria-label={showCurrent ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'}
-                                    tabIndex={-1}
-                                >
-                                    {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
+                        {hasPassword && (
+                            <div className="settings__password-field">
+                                <label htmlFor="currentPassword" className="settings__password-label">
+                                    Mật khẩu hiện tại
+                                </label>
+                                <div className="settings__password-control">
+                                    <input
+                                        id="currentPassword"
+                                        type={showCurrent ? 'text' : 'password'}
+                                        autoComplete="current-password"
+                                        aria-invalid={Boolean(errors.currentPassword)}
+                                        aria-describedby={errors.currentPassword ? 'current-password-error' : undefined}
+                                        className="settings__input"
+                                        disabled={isSubmitting}
+                                        {...register('currentPassword')}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="settings__reveal-btn"
+                                        onClick={() => setShowCurrent((prev) => !prev)}
+                                        aria-label={showCurrent ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'}
+                                        tabIndex={-1}
+                                    >
+                                        {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                                {errors.currentPassword && (
+                                    <p id="current-password-error" className="settings__error" role="alert">
+                                        {errors.currentPassword.message}
+                                    </p>
+                                )}
                             </div>
-                            {errors.currentPassword && (
-                                <p id="current-password-error" className="settings__error" role="alert">
-                                    {errors.currentPassword.message}
-                                </p>
-                            )}
-                        </div>
+                        )}
 
                         <div className="settings__password-field">
                             <label htmlFor="newPassword" className="settings__password-label">
@@ -203,21 +212,23 @@ export const ChangePasswordRow = () => {
                                     Huỷ
                                 </button>
                             </div>
-                            <Link to="/forgot-password" className="auth__link" style={{ fontSize: '13px' }}>
-                                Quên mật khẩu?
-                            </Link>
+                            {hasPassword && (
+                                <Link to="/forgot-password" className="auth__link" style={{ fontSize: '13px' }}>
+                                    Quên mật khẩu?
+                                </Link>
+                            )}
                         </div>
                     </form>
                 ) : (
                     <>
-                        <span className="settings__value">••••••••</span>
+                        <span className="settings__value">{hasPassword ? '••••••••' : 'Chưa đặt'}</span>
                         <button
                             ref={editButtonRef}
                             type="button"
                             className="settings__action"
                             onClick={openForm}
                         >
-                            Đổi mật khẩu
+                            {hasPassword ? 'Đổi mật khẩu' : 'Đặt mật khẩu'}
                         </button>
                     </>
                 )}

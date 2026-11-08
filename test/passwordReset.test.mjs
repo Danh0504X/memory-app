@@ -4,6 +4,7 @@ import {
     changePasswordSchema,
     forgotPasswordSchema,
     resetPasswordSchema,
+    setPasswordSchema,
 } from '../src/features/auth/schemas/auth.schema.ts';
 import { maskEmail } from '../src/features/auth/utils/maskEmail.ts';
 import { parseResetTokenFromHash } from '../src/features/auth/utils/resetToken.ts';
@@ -74,6 +75,17 @@ test('change password schema validates current password, length, match, and non-
         confirmPassword: 'mismatch-pass-1',
     });
     assert.equal(mismatch.success, false);
+    assert.deepEqual(mismatch.error?.issues[0]?.path, ['confirmPassword']);
+});
+
+test('set password schema (Google account without a password) needs no current password', () => {
+    const ok = setPasswordSchema.safeParse({ currentPassword: '', newPassword: 'new-password-1', confirmPassword: 'new-password-1' });
+    assert.equal(ok.success, true);
+
+    const short = setPasswordSchema.safeParse({ currentPassword: '', newPassword: 'short', confirmPassword: 'short' });
+    assert.equal(short.success, false);
+
+    const mismatch = setPasswordSchema.safeParse({ currentPassword: '', newPassword: 'new-password-1', confirmPassword: 'other-pass-1' });
     assert.deepEqual(mismatch.error?.issues[0]?.path, ['confirmPassword']);
 });
 

@@ -49,23 +49,29 @@ export const resetPasswordSchema = z
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại."),
-    newPassword: z
-      .string()
-      .min(8, "Mật khẩu mới cần ít nhất 8 ký tự.")
-      .refine((value) => new TextEncoder().encode(value).length <= 72, "Mật khẩu quá dài (tối đa 72 byte)."),
-    confirmPassword: z.string().min(1, "Vui lòng nhập lại mật khẩu mới."),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Mật khẩu nhập lại không khớp.",
-    path: ["confirmPassword"],
-  })
-  .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "Mật khẩu mới không được trùng với mật khẩu hiện tại.",
-    path: ["newPassword"],
-  });
+// hasPassword = false: tài khoản Google chưa có mật khẩu đặt lần đầu nên không có ô mật khẩu hiện tại
+// (khớp changePassword ở backend services/user.service.ts)
+const buildChangePasswordSchema = (hasPassword: boolean) =>
+  z
+    .object({
+      currentPassword: hasPassword ? z.string().min(1, "Vui lòng nhập mật khẩu hiện tại.") : z.string(),
+      newPassword: z
+        .string()
+        .min(8, "Mật khẩu mới cần ít nhất 8 ký tự.")
+        .refine((value) => new TextEncoder().encode(value).length <= 72, "Mật khẩu quá dài (tối đa 72 byte)."),
+      confirmPassword: z.string().min(1, "Vui lòng nhập lại mật khẩu mới."),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: "Mật khẩu nhập lại không khớp.",
+      path: ["confirmPassword"],
+    })
+    .refine((data) => !hasPassword || data.currentPassword !== data.newPassword, {
+      message: "Mật khẩu mới không được trùng với mật khẩu hiện tại.",
+      path: ["newPassword"],
+    });
+
+export const changePasswordSchema = buildChangePasswordSchema(true);
+export const setPasswordSchema = buildChangePasswordSchema(false);
 
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
