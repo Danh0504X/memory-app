@@ -90,7 +90,7 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
 ### 4.5 Trước khi lên store
 - **Đăng nhập Google native:** `@react-native-google-signin/google-signin`, cần development build. Backend đã nhận `idToken` và kiểm tra `aud`.
 - **Sign in with Apple:** bắt buộc nếu có đăng nhập Google trên iOS.
-- **Cấu hình phát hành:** biểu tượng app và màn khởi động Memio đã có (11/2026, tạo từ path của `MemioMark`). Còn cấu hình EAS Build và trang chính sách quyền riêng tư.
+- **Cấu hình phát hành:** biểu tượng app, màn khởi động, `eas.json` (profile preview/production, đọc `EXPO_PUBLIC_API_BASE_URL` từ môi trường EAS, xem README) và màn `/privacy` đã có (11/2026). Còn: chạy `eas init` bằng tài khoản Expo của nhóm, khai báo địa chỉ backend thật, đăng chính sách lên một URL công khai (store đòi URL, có thể lấy nội dung từ `PrivacyScreen.tsx`), nhờ người phụ trách duyệt nội dung chính sách.
   `app.json` hiện có `scheme: memio` và bundle/package là `com.memio.app`.
 
 ## 5. Bẫy đã gặp (đừng lặp lại)
@@ -103,6 +103,7 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
 - **Gói native:** cài bằng `npx expo install <gói>`, không dùng `npm install`.
 - **SVG có thẻ `<ns0:path>`** (file do công cụ Python sinh): trình duyệt vẽ được nhưng `react-native-svg-transformer` bỏ qua, hình trống. Đã chuẩn hoá 24 file (11/2026); `test/svg-assets.test.mjs` chặn lỗi quay lại khi chép ảnh từ web.
 - **`ScrollView` mặc định có `flexGrow: 1`:** đặt dải cuộn ngang trong khối `flex` thì nó giãn chiếm chỗ và kéo dài các ô con (lỗi dải thẻ ở màn ghi nhớ, 11/2026). Thêm `style={{ flexGrow: 0 }}` và `contentContainerStyle={{ alignItems: 'center' }}`.
+- **Đổi tài khoản mà tab vẫn mở:** các tab không bị huỷ khi đăng xuất/đăng nhập (màn đăng nhập là modal). Dữ liệu tải qua `useRequest`/`queryCache` gắn theo tài khoản (`setQueryOwner`, gọi từ `authStore.subscribe`); `useRequest` tự tải lại khi `user._id` đổi. Dữ liệu theo người dùng lưu trên máy thì đặt khoá kèm id tài khoản (11/2026, lỗi thử thách hiện của tài khoản cũ ở tab Luyện tập).
 - **Máy chủ Expo cũ chạy ngầm:** phục vụ bundle cũ và chặn máy chủ mới; tắt tiến trình node cũ trước khi dò lỗi.
 
 ## 6. Quy ước làm việc với chủ dự án

@@ -14,6 +14,22 @@ npm start                 # rồi bấm a (Android) / i (iOS), hoặc quét QR b
 
 Backend phải đang chạy (`npm run dev` trong memory-be).
 
+## Build bản cài (EAS)
+
+`eas.json` có hai profile: `preview` (APK cài thử nội bộ) và `production` (bản lên store, tự tăng số build).
+`.env` không được đưa lên máy build (nằm trong `.gitignore`), nên phải khai báo địa chỉ backend trên EAS trước:
+
+```bash
+npm install -g eas-cli
+eas login
+eas init                                   # gắn app với project EAS (ghi projectId vào app.json)
+eas env:create --environment preview --name EXPO_PUBLIC_API_BASE_URL --value https://<backend>/api --visibility plaintext
+eas env:create --environment production --name EXPO_PUBLIC_API_BASE_URL --value https://<backend>/api --visibility plaintext
+eas build --profile preview --platform android
+```
+
+Thiếu biến này thì bản build gọi `http://localhost:5001/api` và không đăng nhập được.
+
 ## Lệnh
 
 | Lệnh | Việc |
