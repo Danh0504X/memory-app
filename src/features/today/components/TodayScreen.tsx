@@ -47,12 +47,9 @@ function MemberToday() {
     const { reload: reloadCatalog } = catalog;
     const { reload: reloadRecent } = recent;
     const { reload: reloadDaily } = daily;
-    const reloadAll = () => {
-        reloadProfile();
-        reloadCatalog();
-        reloadRecent();
-        reloadDaily();
-    };
+    const requests = [profile, catalog, recent, daily];
+    const reloadAll = () => requests.forEach((request) => request.refresh());
+    const refreshing = requests.some((request) => request.refreshing);
     // Nộp xong một ván: EXP, chuỗi ngày, mục tiêu và thử thách đều đổi
     useEffect(
         () =>
@@ -96,7 +93,7 @@ function MemberToday() {
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={false} onRefresh={reloadAll} tintColor={colors.brand} />}>
+            <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={reloadAll} tintColor={colors.brand} />}>
                 <Animated.View entering={enterUp(0)} style={styles.header}>
                     <View style={{ flex: 1, gap: 2 }}>
                         <AppText variant="small" style={styles.date}>{date.charAt(0).toUpperCase() + date.slice(1)}</AppText>

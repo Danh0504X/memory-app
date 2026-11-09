@@ -42,8 +42,8 @@ export function ProgressScreen() {
     const catalog = useCatalog();
     const { reload: reloadTimeline } = timeline;
     const reloadAll = () => {
-        reloadTimeline();
-        catalog.reload();
+        timeline.refresh();
+        catalog.refresh();
         setHistoryKey((key) => key + 1);
     };
 
@@ -57,7 +57,7 @@ export function ProgressScreen() {
     );
 
     return (
-        <ScrollView style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={false} onRefresh={reloadAll} tintColor={colors.brand} />}>
+        <ScrollView style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={timeline.refreshing || catalog.refreshing} onRefresh={reloadAll} tintColor={colors.brand} />}>
             <Chips accessibilityLabel="Khoảng thời gian" options={PERIODS} value={period} onChange={setPeriod} />
 
             <BlockState request={timeline.state} onRetry={reloadTimeline}>

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { EDGE, colors, radius, spacing } from '@/constants/theme';
 import type { Request } from '@/features/dashboard/hooks/useOverview';
 import { AppText } from './AppText';
 import { Button } from './Button';
+import { Skeleton } from './Skeleton';
 
 // Khối nội dung có tiêu đề (bản web: .panel)
 export function Panel({ title, action, children, style }: { title?: string; action?: ReactNode; children: ReactNode; style?: StyleProp<ViewStyle> }) {
@@ -23,13 +24,7 @@ export function Panel({ title, action, children, style }: { title?: string; acti
 // Mỗi khối tự tải và tự báo lỗi (bản web: BlockState): một API hỏng không làm trắng cả màn
 export function BlockState<T>({ request, onRetry, children }: { request: Request<T>; onRetry: () => void; children: (data: T) => ReactNode }) {
     if (request.status === 'ready') return <>{children(request.data)}</>;
-    if (request.status === 'loading') {
-        return (
-            <View style={styles.state}>
-                <ActivityIndicator color={colors.brand} />
-            </View>
-        );
-    }
+    if (request.status === 'loading') return <Skeleton />;
     return (
         <View style={styles.state} accessibilityRole="alert">
             <AppText variant="small" style={{ color: colors.danger }}>{request.message}</AppText>

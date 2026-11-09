@@ -29,7 +29,7 @@ export function DailyScreen() {
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={false} onRefresh={reload} tintColor={colors.brand} />}>
+            <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={daily.refreshing} onRefresh={daily.refresh} tintColor={colors.brand} />}>
                 <BlockState request={daily.state} onRetry={reload}>
                     {(view) => (
                         <>

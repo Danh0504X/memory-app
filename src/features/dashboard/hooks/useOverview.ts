@@ -22,6 +22,8 @@ export const useRequest = <T>(key: string, loader: () => Promise<T>, fallbackErr
         return cached === undefined ? { status: 'loading' } : { status: 'ready', data: cached };
     });
     const [reloadKey, setReloadKey] = useState(0);
+    // Người dùng kéo để làm mới: hiện vòng quay tới khi tải xong (tải lại sau mỗi ván thì không hiện)
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         let isCurrent = true;
@@ -30,7 +32,8 @@ export const useRequest = <T>(key: string, loader: () => Promise<T>, fallbackErr
             .catch((error) => {
                 // Đang hiện dữ liệu cũ thì giữ nguyên, chỉ báo lỗi khi chưa có gì để hiện
                 if (isCurrent) setState((current) => (current.status === 'ready' ? current : { status: 'error', message: toMessage(error, fallbackError) }));
-            });
+            })
+            .finally(() => isCurrent && setRefreshing(false));
         return () => {
             isCurrent = false;
         };
@@ -40,8 +43,12 @@ export const useRequest = <T>(key: string, loader: () => Promise<T>, fallbackErr
         setState((current) => (current.status === 'ready' ? current : { status: 'loading' }));
         setReloadKey((count) => count + 1);
     }, []);
+    const refresh = useCallback(() => {
+        setRefreshing(true);
+        reload();
+    }, [reload]);
 
-    return { state, reload };
+    return { state, reload, refresh, refreshing };
 };
 
 const loadProfile = async (): Promise<UserProfile> => (await profileApi.getProfile()).data.profile;
