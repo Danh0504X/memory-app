@@ -1,82 +1,80 @@
 import { router, type Href } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChevronRight, Play } from 'lucide-react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { LiveShape } from '@/components/ui/LiveShape';
 import { AppText } from '@/components/ui/AppText';
-import { Button } from '@/components/ui/Button';
-import { Panel } from '@/components/ui/Panel';
+import { LiveShape } from '@/components/ui/LiveShape';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { Screen } from '@/components/ui/Screen';
 import { enterUp } from '@/constants/motion';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { GUIDES } from '../guide/content';
 import { TONES } from '../guide/GuideScreen';
 import { METHODS } from '../methodsData';
 
-// Trang Phương pháp: ba cách nhớ, mỗi cách một thẻ màu dẫn tới hướng dẫn có trò thử, rồi bảng so sánh nhanh
+const EDGES = { mint: '#a5d6b3', sun: colors.sunDeep, sky: '#a9d3ea' } as const;
+
+// Trang Phương pháp: ba thẻ màu, chạm thẻ để đọc hướng dẫn có trò thử, nút nhỏ để chơi thử ngay
 export function MethodsScreen() {
     return (
-        <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content}>
+        <Screen>
             <AppText variant="title">Ba cách để nhớ</AppText>
-            <AppText variant="lead">Mỗi cách hợp với một kiểu thông tin. Chọn cách hợp với điều bạn hay phải nhớ, đọc hướng dẫn rồi chơi thử ngay.</AppText>
+            <AppText variant="body">Mỗi cách hợp với một kiểu thông tin. Chọn một cách, đọc 2 phút rồi chơi thử.</AppText>
 
             {METHODS.map((method, i) => {
                 const picture = GUIDES[method.id].hero.picture;
                 return (
-                    <Animated.View entering={enterUp(i + 1)} key={method.id} style={[styles.chapter, { backgroundColor: TONES[method.tone] }]}>
-                        <View style={styles.chapterHead}>
-                            <View style={styles.disc}>
-                                <LiveShape art={picture.src} motion={picture.motion} size={44} label={picture.name} tappable />
+                    <Animated.View entering={enterUp(i + 1)} key={method.id}>
+                        <PressableScale
+                            onPress={() => router.push(method.guide as Href)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${method.name}. ${method.summary}`}
+                            style={[styles.card, { backgroundColor: TONES[method.tone], borderBottomColor: EDGES[method.tone] }]}
+                        >
+                            <View style={styles.head}>
+                                <View style={styles.disc}>
+                                    <LiveShape art={picture.src} motion={picture.motion} size={48} label={picture.name} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <AppText style={styles.step}>Cách {i + 1}</AppText>
+                                    <AppText style={styles.name}>{method.name}</AppText>
+                                </View>
+                                <ChevronRight color={colors.ink} size={24} />
                             </View>
-                            <View style={{ flex: 1 }}>
-                                <AppText variant="small" style={styles.island}>{method.island}</AppText>
-                                <AppText variant="heading">{method.name}</AppText>
+                            <AppText variant="body" style={{ color: colors.ink }}>{method.summary}</AppText>
+                            <View style={styles.chips}>
+                                <AppText style={styles.chip}>{method.goodFor}</AppText>
+                                <AppText style={styles.chip}>{method.level}</AppText>
                             </View>
-                        </View>
-                        <AppText variant="body">{method.lead}</AppText>
-                        {method.steps.map((step, i) => (
-                            <AppText key={step} variant="small" style={styles.step}>
-                                {i + 1}. {step}
-                            </AppText>
-                        ))}
-                        <AppText variant="small" style={styles.example}>Ví dụ: {method.example}</AppText>
-                        <Button title="Hướng dẫn và chơi thử" onPress={() => router.push(method.guide as Href)} />
-                        <Button title={method.practice.label} variant="secondary" onPress={() => router.push(method.practice.to as Href)} />
+                        </PressableScale>
+                        <PressableScale onPress={() => router.push(method.practice.to as Href)} accessibilityRole="button" style={styles.try}>
+                            <Play color={colors.brand} size={16} fill={colors.brand} />
+                            <AppText style={styles.tryText}>{method.practice.label}</AppText>
+                        </PressableScale>
                     </Animated.View>
                 );
             })}
-
-            <Panel title="So sánh nhanh">
-                {METHODS.map((method) => (
-                    <View key={method.id} style={styles.compareRow}>
-                        <View style={[styles.dot, { backgroundColor: TONES[method.tone] }]} />
-                        <View style={{ flex: 1, gap: 2 }}>
-                            <AppText style={styles.strong}>{method.name}</AppText>
-                            <AppText variant="small">Hợp để nhớ: {method.goodFor}</AppText>
-                            <AppText variant="small">Bắt đầu với: {method.startWith}</AppText>
-                            <AppText variant="small">Độ khó: {method.level}</AppText>
-                        </View>
-                    </View>
-                ))}
-            </Panel>
-
-            <AppText variant="body">Đã chọn được cách? Thử dùng nó trong một ván chơi.</AppText>
-            <Button title="Chọn trò chơi" variant="secondary" onPress={() => router.navigate('/games')} />
-        </ScrollView>
-        </SafeAreaView>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: colors.wall },
-    content: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
-    chapter: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5 },
-    chapterHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    card: { gap: spacing.sm, padding: spacing.md, borderRadius: radius * 1.5, borderBottomWidth: EDGE + 2 },
+    head: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     disc: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
-    island: { fontFamily: fonts.bold, color: colors.brandDeep, textTransform: 'uppercase' },
-    step: { color: colors.ink },
-    example: { fontStyle: 'italic' },
-    compareRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: 1, borderColor: colors.step },
-    dot: { width: 14, height: 14, borderRadius: 7, marginTop: 4 },
-    strong: { fontFamily: fonts.bold, color: colors.ink },
+    step: { fontFamily: fonts.bold, fontSize: 12, color: colors.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 },
+    name: { fontFamily: fonts.extrabold, fontSize: 19, lineHeight: 24, color: colors.ink },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    chip: {
+        fontFamily: fonts.semibold,
+        fontSize: 12,
+        color: colors.ink,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 999,
+        overflow: 'hidden',
+        backgroundColor: 'rgba(255,255,255,0.7)',
+    },
+    try: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 10, paddingHorizontal: 4, minHeight: 44 },
+    tryText: { fontFamily: fonts.bold, color: colors.brand },
 });
