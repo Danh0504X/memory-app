@@ -90,3 +90,13 @@ export const examLine = (days: number | null, rounds: number): { text: string; u
     }
     return { text: `Còn ${days} ngày tới kỳ thi.`, urgent: false };
 };
+
+// Cách nhớ hợp với từng trò, để "Cách ôn hôm nay" khớp với ván được gợi ý:
+// dãy hình/từ/tên nối thành câu chuyện, lá bài (số + chất) đặt vào căn phòng, dãy số đổi thành hình.
+export const METHOD_FOR_GAME: Record<GameId, 'story' | 'numbers' | 'loci'> = {
+    image: 'story',
+    word: 'story',
+    facename: 'story',
+    card: 'loci',
+    number: 'numbers',
+};

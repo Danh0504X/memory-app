@@ -66,3 +66,11 @@ test('exam countdown only for the exam goal, urgent in the last two weeks', () =
     assert.match(examLine(0, 3).text, /Hôm nay là ngày thi/);
     assert.equal(examLine(null, 3), null);
 });
+
+test('cách ôn hôm nay khớp với trò được gợi ý', async () => {
+    const { METHOD_FOR_GAME } = await import('../src/features/today/utils/personalize.ts');
+    assert.deepEqual(Object.keys(METHOD_FOR_GAME).sort(), [...ALL].sort());
+    assert.equal(METHOD_FOR_GAME.card, 'loci');
+    assert.equal(METHOD_FOR_GAME.number, 'numbers');
+    assert.equal(METHOD_FOR_GAME.image, 'story');
+});

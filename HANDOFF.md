@@ -26,7 +26,7 @@ Tài liệu cho người làm tiếp app React Native `memory-app`. Đọc cùng
 **Chức năng:** đủ mọi trang của web:
 
 - **5 trò:** Thẻ bài, Hình ảnh, Gương mặt & Tên, Ghi nhớ từ, Ghi nhớ số.
-- **Hôm nay:** khi chưa đăng nhập, tab này là trang chủ cho khách.
+- **Hôm nay:** khi chưa đăng nhập là trang chủ cho khách; khi đã đăng nhập (11/2026) gồm lộ trình hôm nay (khởi động → các mục tiêu → thử thách → đích, linh vật đứng ở việc đang làm), "Cách ôn hôm nay" chọn theo trò gợi ý (`METHOD_FOR_GAME`) kèm mẹo, thẻ "Tuần này" (7 ngày + EXP). Đã bỏ khối "Chơi tiếp" và lưới trò (có ở tab Luyện tập). "Khởi động" chỉ đánh dấu trên máy (`memio.warmupDay`), backend không ghi.
 - **Thử thách ngày, Phương pháp:** ba trang hướng dẫn có trò thử, cùng ba bài thực hành.
 - **Hồ sơ, Mục tiêu, Tiến độ:** Tiến độ có toàn bộ lịch sử ván, lọc theo trò và tải thêm từng trang.
 - **Tài khoản:** đăng nhập, đăng ký, quên/đặt/đổi mật khẩu.
@@ -68,7 +68,7 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
 - **Thanh trạng thái:** `PlayLayout` đặt `<StatusBar style="light" />`. Cần kiểm tra khi thoát ván, thanh trạng thái có trở lại chữ tối không.
 - **Bàn phím trên Android (edge-to-edge của SDK 58):** `Screen` và `PlayLayout` dùng `KeyboardAvoidingView` với `behavior` undefined trên Android. Cần xem bàn phím có che ô nhập tên/từ khi chơi Gương mặt & Tên, Ghi nhớ từ, nút "Nộp bài", nút ở màn Mục tiêu không. Nếu che: thử `behavior="padding"` cho cả Android, nhưng kiểm tra kỹ vì có thể bị đẩy hai lần (khoảng trống thừa).
 - **Rung:** `PressableScale` rung **mỗi lần bấm**, kể cả khi chọn bài ở bàn nhớ lại. Nếu thấy quá nhiều, tắt rung cho khay bài trong `RecallBoard`.
-- **Chữ to (Accessibility):** chữ có thể tràn ở `GameTile`, ô số liệu Hồ sơ/Tiến độ, dải 14 ngày (màn Hôm nay) và viên phần thưởng.
+- **Chữ to (Accessibility):** chữ có thể tràn ở `GameTile`, ô số liệu Hồ sơ/Tiến độ, lộ trình và dải 7 ngày (màn Hôm nay) và viên phần thưởng.
 - **Pháo giấy:** `Confetti` nằm trong dải kết quả có `overflow: 'hidden'`; cần xem pháo giấy có bị cắt xấu không.
 - **Dải chip cuộn ngang:** lọc lịch sử Tiến độ dùng `Chips` (có `flexWrap`) đặt trong `ScrollView` ngang; cần xem có xuống dòng không.
 
@@ -80,7 +80,7 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
 ### 4.3 Việc nhỏ đã nêu nhưng chưa làm
 - Đã xong (11/2026): kéo để làm mới có vòng quay (`useRequest().refresh`), khung chờ `Skeleton` trong `BlockState`, ngày thi trong Hồ sơ.
 - **Âm thanh** đúng/sai/hoàn hảo (tuỳ chọn, chưa quyết định).
-- **Test giao diện:** chưa có. Logic mới chưa có test: dải 14 ngày nằm trong `TodayScreen.tsx`, chưa tách thành hàm.
+- **Test giao diện:** chưa có. Logic mới chưa có test: cách dựng lộ trình nằm trong `TodayScreen.tsx`, chưa tách thành hàm (`METHOD_FOR_GAME` đã có test).
 
 ### 4.4 Cần sửa backend (memory-be)
 - **Xoá tài khoản:** đã xong (`DELETE /api/profile`, màn `/delete-account`).
