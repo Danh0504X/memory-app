@@ -127,7 +127,7 @@ function SettingsPhase() {
             {panel === 'guide' ? (
                 <SetupPanel>
                     <GuideItem title="Quan sát">Xem từng gương mặt và tên. Tìm một nét riêng để liên kết với tên gọi; thứ tự không cần nhớ.</GuideItem>
-                    <GuideItem title="Nhớ lại">Gương mặt được xáo trộn. Gõ tên dưới mỗi người, bấm "Tiếp" trên bàn phím để sang ô sau. Hết giờ, bài được nộp tự động.</GuideItem>
+                    <GuideItem title="Nhớ lại">Gương mặt được xáo trộn. Gõ tên dưới mỗi người, bấm “Tiếp” trên bàn phím để sang ô sau. Hết giờ, bài được nộp tự động.</GuideItem>
                     <GuideItem title="Tính điểm">
                         Đúng +1, sai −0,5, bỏ trống 0. Không phân biệt chữ hoa và khoảng trắng ở hai đầu; cần giữ đúng dấu tiếng Việt.
                     </GuideItem>
@@ -290,7 +290,7 @@ function RecallPhase() {
     const { timeLeft } = usePhaseTimer(recallDeadline, submitCurrentRound);
     const { width } = useWindowDimensions();
     const total = recallPeople.length;
-    const chain = useFocusChain(total);
+    const { scrollRef, onContainerLayout, onItemLayout, register, next, reveal, keyProps } = useFocusChain(total);
     const filled = Object.values(userAnswers).filter((value) => value.trim() !== '').length;
     const cardWidth = Math.floor((width - spacing.md * 2 - RECALL_GAP * (RECALL_COLUMNS - 1)) / RECALL_COLUMNS);
     const locked = isSubmitting || timeLeft <= 0;
@@ -309,15 +309,18 @@ function RecallPhase() {
             pendingText={isSubmitting ? 'Đang chấm bài...' : null}
             error={errorMessage ? `${errorMessage} Bấm Nộp bài để thử lại.` : null}
         >
-            <ScrollView ref={chain.scrollRef} contentContainerStyle={styles.recallList} keyboardShouldPersistTaps="handled">
+            <ScrollView ref={scrollRef} contentContainerStyle={styles.recallList} keyboardShouldPersistTaps="handled">
                 <AppText variant="small" style={styles.recallHint}>Gương mặt đã đổi chỗ. Bạn còn nhớ tên ai?</AppText>
-                <View style={styles.recallGrid} {...chain.containerProps}>
+                <View style={styles.recallGrid} onLayout={onContainerLayout}>
                     {recallPeople.map((person, index) => (
-                            <View key={person.id} style={[styles.recallCard, { width: cardWidth }]} {...chain.itemProps(index)}>
+                            <View key={person.id} style={[styles.recallCard, { width: cardWidth }]} onLayout={(event) => onItemLayout(index, event)}>
                                 <AppText variant="small" style={styles.badge}>Người {index + 1}</AppText>
                                 <PhotoTile uri={person.imageUrl} width={cardWidth - 16} label={`Người ${index + 1}`} />
                                 <TextInput
-                                    {...chain.inputProps(index)}
+                                    {...keyProps(index)}
+                                    ref={(input) => register(index, input)}
+                                    onSubmitEditing={() => next(index)}
+                                    onFocus={() => reveal(index)}
                                     value={userAnswers[person.id] ?? ''}
                                     onChangeText={(text) => updateAnswer(person.id, text)}
                                     editable={!locked}

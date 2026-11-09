@@ -181,7 +181,7 @@ function RecallPhase() {
     const { width } = useWindowDimensions();
 
     const total = wordsToMemorize.length;
-    const chain = useFocusChain(total);
+    const { scrollRef, onContainerLayout, onItemLayout, register, next, reveal, keyProps } = useFocusChain(total);
     const filled = Object.values(userAnswers).filter((answer) => answer && answer.trim().length > 0).length;
     const cellWidth = Math.floor((width - spacing.md * 2 - RECALL_GAP * (RECALL_COLUMNS - 1)) / RECALL_COLUMNS);
     const locked = pending === 'submit' || timeLeft <= 0;
@@ -201,22 +201,25 @@ function RecallPhase() {
             pendingText={pending === 'submit' ? 'Đang gửi bài và tính điểm...' : null}
             error={error}
         >
-            <ScrollView ref={chain.scrollRef} contentContainerStyle={styles.recallList} keyboardShouldPersistTaps="handled">
+            <ScrollView ref={scrollRef} contentContainerStyle={styles.recallList} keyboardShouldPersistTaps="handled">
                 <AppText variant="small" style={styles.hint}>
                     Gõ lại các từ theo đúng thứ tự. Bấm &quot;Tiếp&quot; trên bàn phím để sang ô sau.
                 </AppText>
-                <View style={styles.recallGrid} {...chain.containerProps}>
+                <View style={styles.recallGrid} onLayout={onContainerLayout}>
                     {wordsToMemorize.map((_, index) => {
                         const value = userAnswers[index] ?? '';
                         return (
                             <View
                                 key={index}
                                 style={[styles.slot, { width: cellWidth }, value.trim() ? styles.slotFilled : null]}
-                                {...chain.itemProps(index)}
+                                onLayout={(event) => onItemLayout(index, event)}
                             >
                                 <AppText variant="small" style={styles.slotNo}>{index + 1}</AppText>
                                 <TextInput
-                                    {...chain.inputProps(index)}
+                                    {...keyProps(index)}
+                                    ref={(input) => register(index, input)}
+                                    onSubmitEditing={() => next(index)}
+                                    onFocus={() => reveal(index)}
                                     value={value}
                                     onChangeText={(text) => setAnswer(index, text)}
                                     editable={!locked}

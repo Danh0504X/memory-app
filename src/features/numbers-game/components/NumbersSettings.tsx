@@ -188,8 +188,8 @@ export function NumbersSettings() {
 function Guide() {
     return (
         <SetupPanel>
-            <GuideItem title="Ghi nhớ">Dãy số hiện theo từng nhóm. Chạm vào nhóm hoặc nút › để xem tiếp. Nhớ xong thì bấm "Đã nhớ xong": thời gian ghi nhớ dừng ngay lúc đó.</GuideItem>
-            <GuideItem title="Gõ lại">Chạm một ô rồi gõ bằng bàn phím số bên dưới. Lỡ thiếu một số: "Chèn ô"; lỡ thừa: "Xoá ô". Đáp án được tự lưu khi bạn gõ.</GuideItem>
+            <GuideItem title="Ghi nhớ">Dãy số hiện theo từng nhóm. Chạm vào nhóm hoặc nút › để xem tiếp. Nhớ xong thì bấm “Đã nhớ xong”: thời gian ghi nhớ dừng ngay lúc đó.</GuideItem>
+            <GuideItem title="Gõ lại">Chạm một ô rồi gõ bằng bàn phím số bên dưới. Lỡ thiếu một số: “Chèn ô”; lỡ thừa: “Xoá ô”. Đáp án được tự lưu khi bạn gõ.</GuideItem>
             <GuideItem title="Tính điểm">Mỗi chữ số đúng vị trí được một điểm. Đúng hết thì mở cấp tiếp theo. Bằng điểm thì ai ghi nhớ nhanh hơn giỏi hơn.</GuideItem>
             <AppText variant="small">Mẹo: đổi mỗi chữ số thành một hình (2 là thiên nga, 8 là người tuyết) rồi nối các hình thành câu chuyện.</AppText>
         </SetupPanel>
