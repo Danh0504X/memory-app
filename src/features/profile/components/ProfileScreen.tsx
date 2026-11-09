@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { BarChart3, ChevronDown, ChevronRight, Flame, KeyRound, LogOut, Mail, Medal, Pencil, Sparkles, Target } from 'lucide-react-native';
+import { BarChart3, Bell, CalendarDays, ChevronDown, ChevronRight, Flame, KeyRound, LogOut, Mail, Medal, Pencil, Sparkles, Target } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
@@ -18,11 +18,13 @@ import { PROFILE_KEY, useCatalog, useProfile } from '@/features/dashboard/hooks/
 import type { GameCatalogItem } from '@/features/shared-game/api/games.api';
 import { onGameSessionRecorded } from '@/features/shared-game/events';
 import { GAME_ICONS } from '@/features/shared-game/gameIcons';
+import { Chips } from '@/features/shared-game/components/Chips';
+import { REMINDER_HOURS, getReminderHour, setReminder } from '@/features/reminder/reminder';
 import { setQuery } from '@/lib/queryCache';
 import type { ApiErrorResponse } from '@/types/auth.types';
 import { profileApi, type UserProfile } from '../api/profile.api';
 import { buildBadges, isEarned, type Badge } from '../utils/badges';
-import { GOAL_LABELS, formatMinutes } from '../utils/preferences';
+import { GOAL_LABELS, describeTargetDate, formatMinutes } from '../utils/preferences';
 import { formatNumber, getLevelProgress } from '../utils/profileProgress';
 
 // Khớp với EXP_RULES ở backend (memory-be/src/config/progression.ts); đổi ở đó thì sửa cả ở đây
@@ -80,10 +82,10 @@ function MemberProfile() {
                 keyboardShouldPersistTaps="handled"
                 refreshControl={
                     <RefreshControl
-                        refreshing={false}
+                        refreshing={profile.refreshing || catalog.refreshing}
                         onRefresh={() => {
-                            reloadProfile();
-                            reloadCatalog();
+                            profile.refresh();
+                            catalog.refresh();
                         }}
                         tintColor={colors.brand}
                     />
@@ -238,7 +240,7 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
-    const { goals, dailyMinutes, status } = profile.preferences;
+    const { goals, dailyMinutes, targetDate, status } = profile.preferences;
     const goalLine =
         status === 'answered' && goals.length > 0
             ? [goals.map((goal) => GOAL_LABELS[goal]).join(', '), dailyMinutes ? formatMinutes(dailyMinutes) + '/ngày' : null].filter(Boolean).join(' · ')
@@ -278,7 +280,11 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
             <AppText style={styles.section}>Cài đặt</AppText>
             <View style={styles.group}>
                 <SettingRow icon={<Target color={colors.brand} size={18} />} tint={colors.mint} title="Mục tiêu luyện tập" value={goalLine} onPress={() => router.push('/goals')} />
+                {targetDate && status === 'answered' ? (
+                    <SettingRow icon={<CalendarDays color="#e8590c" size={18} />} tint="#fff0e6" title="Ngày thi" value={describeTargetDate(targetDate)} onPress={() => router.push('/goals')} divider />
+                ) : null}
                 <SettingRow icon={<BarChart3 color="#1c7ed6" size={18} />} tint={colors.sky} title="Tiến độ chi tiết" value="Biểu đồ, lịch và lịch sử ván chơi" onPress={() => router.push('/progress')} divider />
+                <ReminderRow />
             </View>
             <View style={styles.group}>
                 {editing ? (
@@ -316,7 +322,60 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
                 <LogOut color={colors.danger} size={20} />
                 <AppText style={styles.logoutText}>{loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}</AppText>
             </Pressable>
+            <Pressable onPress={() => router.push('/delete-account')} accessibilityRole="link" hitSlop={8} style={styles.deleteLink}>
+                <AppText variant="small" style={styles.deleteText}>Xoá tài khoản</AppText>
+            </Pressable>
         </Animated.View>
+    );
+}
+
+// Nhắc giữ chuỗi ngày: công tắc bật/tắt, bật thì chọn giờ nhắc
+function ReminderRow() {
+    const [hour, setHour] = useState(getReminderHour);
+    const [busy, setBusy] = useState(false);
+
+    const change = async (next: number | null) => {
+        setBusy(true);
+        try {
+            const ok = await setReminder(next);
+            setHour(ok ? next : null);
+            if (!ok) Alert.alert('Chưa bật được nhắc nhở', 'Hãy cho phép Memio gửi thông báo trong Cài đặt của máy.');
+        } catch {
+            Alert.alert('Chưa bật được nhắc nhở', 'Vui lòng thử lại.');
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <View style={styles.divider}>
+            <View style={styles.groupRow}>
+                <View style={[styles.rowIcon, { backgroundColor: '#fff3cf' }]}>
+                    <Bell color={colors.sunDeep} size={18} />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <AppText style={styles.rowTitle}>Nhắc luyện tập mỗi ngày</AppText>
+                    <AppText variant="small">{hour === null ? 'Đang tắt' : `Lúc ${hour}:00 để giữ chuỗi ngày`}</AppText>
+                </View>
+                <Switch
+                    value={hour !== null}
+                    disabled={busy}
+                    onValueChange={(on) => void change(on ? 19 : null)}
+                    trackColor={{ true: colors.brand }}
+                    accessibilityLabel="Nhắc luyện tập mỗi ngày"
+                />
+            </View>
+            {hour !== null ? (
+                <View style={styles.hours}>
+                    <Chips
+                        accessibilityLabel="Giờ nhắc"
+                        options={REMINDER_HOURS.map((value) => ({ value, label: `${value}:00` }))}
+                        value={hour}
+                        onChange={(value) => void change(value)}
+                    />
+                </View>
+            ) : null}
+        </View>
     );
 }
 
@@ -375,4 +434,7 @@ const styles = StyleSheet.create({
     inline: { flexDirection: 'row', gap: spacing.sm },
     logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, minHeight: 54 },
     logoutText: { fontFamily: fonts.extrabold, color: colors.danger },
+    deleteLink: { alignSelf: 'center', minHeight: 44, justifyContent: 'center' },
+    hours: { paddingHorizontal: spacing.md, paddingBottom: spacing.md },
+    deleteText: { fontFamily: fonts.semibold, color: colors.inkSoft, textDecorationLine: 'underline' },
 });

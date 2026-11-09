@@ -64,6 +64,11 @@ export const authApi = {
         ) as unknown as Promise<MessageResponse>;
     },
 
+    // Xoá tài khoản và mọi dữ liệu; tài khoản có mật khẩu phải gửi lại mật khẩu
+    deleteAccount: (password?: string): Promise<MessageResponse> => {
+        return apiClient.delete('/profile', { data: { password } }) as unknown as Promise<MessageResponse>;
+    },
+
     // Quên mật khẩu: gửi link email (Flow B)
     forgotPassword: (
         email: string
