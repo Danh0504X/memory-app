@@ -1,5 +1,11 @@
 # Giao ca: Memio App (cập nhật 09/11/2026)
 
+## Bổ sung phiên Parent mobile (09/11/2026)
+
+- Đọc `docs/plans/parent-features-mobile.md` và `docs/journal/parent-features-mobile.md` trước khi tiếp tục. Đã có adapter API Parent/phòng gia đình/recovery và test; **chưa triển khai UI, auth guard hoặc phòng chơi native**.
+- Người dùng chọn dừng giao diện để bổ sung `ponytail` và `design-taste-frontend` (CLAUDE.md yêu cầu, môi trường chưa có). Không tự tiếp tục UI khi chưa giải quyết điều kiện này.
+- `package-lock.json` đã có thay đổi trước phiên; không stage cùng tính năng. Kiểm tra Git thực tế thay vì dựa vào trạng thái sạch được ghi ở các mục cũ bên dưới.
+
 Tài liệu cho người làm tiếp app React Native `memory-app`. Đọc cùng `README.md` (cách chạy, cấu trúc) và
 `CLAUDE.md` (quy ước khi code).
 

@@ -71,6 +71,8 @@ màn tài khoản dùng `AuthParts`. Chạm nút có rung nhẹ (`expo-haptics` 
 
 ## Việc còn lại
 
+- Parent và “Chơi cùng ba mẹ”: đã khảo sát web/backend, thêm API adapter và kiểm thử hợp đồng; **chưa có màn hình hoặc entry sử dụng**. Kế hoạch: [docs/plans/parent-features-mobile.md](docs/plans/parent-features-mobile.md); nhật ký: [docs/journal/parent-features-mobile.md](docs/journal/parent-features-mobile.md). Người dùng yêu cầu dừng UI để bổ sung hai skill được CLAUDE.md yêu cầu.
+
 - Email đặt lại mật khẩu hiện chỉ có link web: thêm link `memio://reset-password?token=...` ở backend, hoặc universal link / app link (cần xác minh tên miền), để mở thẳng trong app.
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build) và Sign in with Apple (bắt buộc trên iOS khi có Google).
 - Nhắc chuỗi ngày hiện nhắc cả khi hôm nay đã chơi; muốn bỏ thì cần push từ backend.
