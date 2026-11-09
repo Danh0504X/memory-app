@@ -28,7 +28,7 @@ Backend phải đang chạy (`npm run dev` trong memory-be).
 
 ```
 src/
-  app/            Route (expo-router): (tabs)/ Hôm nay · Luyện tập · Thử thách · Phương pháp · Hồ sơ; games/, methods/, practice/, login, register…
+  app/            Route (expo-router): (tabs)/ Hôm nay · Luyện tập · Tiến độ · Phương pháp · Hồ sơ; daily (thử thách, mở từ Luyện tập), games/, methods/, practice/, login, register…
   components/ui/  Thành phần giao diện dùng chung (AppText, Button, Panel, NavRow, ProgressRing, TextField, Screen)
   constants/      Màu, font, khoảng cách, gờ nút (theme.ts) và chuyển động (motion.ts)
   features/       Logic theo tính năng, mang từ bản web: api, store (zustand), utils, types

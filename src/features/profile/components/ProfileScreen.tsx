@@ -283,7 +283,7 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
                 {targetDate && status === 'answered' ? (
                     <SettingRow icon={<CalendarDays color="#e8590c" size={18} />} tint="#fff0e6" title="Ngày thi" value={describeTargetDate(targetDate)} onPress={() => router.push('/goals')} divider />
                 ) : null}
-                <SettingRow icon={<BarChart3 color="#1c7ed6" size={18} />} tint={colors.sky} title="Tiến độ chi tiết" value="Biểu đồ, lịch và lịch sử ván chơi" onPress={() => router.push('/progress')} divider />
+                <SettingRow icon={<BarChart3 color="#1c7ed6" size={18} />} tint={colors.sky} title="Tiến độ chi tiết" value="Biểu đồ, lịch và lịch sử ván chơi" onPress={() => router.navigate('/progress')} divider />
                 <ReminderRow />
             </View>
             <View style={styles.group}>

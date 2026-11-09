@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
-import { CalendarClock, Clock, ListOrdered, Trophy, Zap } from 'lucide-react-native';
+import { CalendarClock, ChevronRight, Clock, ListOrdered, Trophy, Zap } from 'lucide-react-native';
 import { useEffect, type ReactNode } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import Animated, { ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { BlockState, Panel } from '@/components/ui/Panel';
 import { enterUp } from '@/constants/motion';
 import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
@@ -28,12 +29,12 @@ export function DailyScreen() {
     useEffect(() => onGameSessionRecorded(reload), [reload]);
 
     return (
-        <SafeAreaView style={styles.safe} edges={['top']}>
+        <SafeAreaView style={styles.safe} edges={['bottom']}>
             <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={daily.refreshing} onRefresh={daily.refresh} tintColor={colors.brand} />}>
                 <BlockState request={daily.state} onRetry={reload}>
                     {(view) => (
                         <>
-                            <Hero view={view} onChanged={reload} />
+                            <DailyHero view={view} onChanged={reload} />
                             <MyResult view={view} />
                             <Animated.View entering={enterUp(2)}>
                                 <Panel title="Bảng xếp hạng" action={<AppText variant="small">{view.challenge.players} người chơi</AppText>}>
@@ -49,7 +50,9 @@ export function DailyScreen() {
     );
 }
 
-function Hero({ view, onChanged }: { view: DailyChallengeView; onChanged: () => void }) {
+// Thẻ cúp của thử thách hôm nay. onLeaderboard: dùng ngoài màn Thử thách (tab Luyện tập), hiện thêm hạng,
+// top 3 và link sang bảng xếp hạng.
+export function DailyHero({ view, onChanged, onLeaderboard }: { view: DailyChallengeView; onChanged: () => void; onLeaderboard?: () => void }) {
     const { start, starting, error } = useStartDaily(onChanged);
     const countdown = useCountdown(view.challenge.endsAt, onChanged);
     const { challenge, me } = view;
@@ -58,7 +61,15 @@ function Hero({ view, onChanged }: { view: DailyChallengeView; onChanged: () => 
 
     let action;
     if (!me) action = <Button title="Đăng nhập để tham gia" onPress={() => router.push('/login')} />;
-    else if (me.status === 'completed' && me.entry) action = null; // hạng đã hiện ở thẻ kết quả ngay dưới
+    else if (me.status === 'completed' && me.entry) {
+        // Trên màn Thử thách, hạng đã hiện ở thẻ kết quả ngay dưới
+        action = onLeaderboard ? (
+            <View style={styles.rankLine}>
+                <AppText style={styles.rankBig}>#{me.entry.rank}</AppText>
+                <AppText style={styles.note}>Hạng của bạn hôm nay · đúng {me.entry.correctItems}/{me.entry.totalItems}</AppText>
+            </View>
+        ) : null;
+    }
     else if (me.status === 'missed') action = <AppText style={styles.note}>Bạn đã dùng lượt hôm nay. Hẹn bạn ngày mai nhé.</AppText>;
     else action = <Button title={starting ? 'Đang chia bài...' : me.status === 'playing' ? 'Chơi tiếp' : 'Tham gia ngay'} loading={starting} onPress={() => void start()} />;
 
@@ -73,7 +84,7 @@ function Hero({ view, onChanged }: { view: DailyChallengeView; onChanged: () => 
             </View>
             <View style={styles.heroHead}>
                 <Animated.View entering={ZoomIn.delay(150).springify()} style={styles.trophy}>
-                    <Trophy color={colors.sunDeep} size={34} strokeWidth={2.4} />
+                    <WobblingTrophy />
                 </Animated.View>
                 <View style={{ flex: 1 }}>
                     <AppText style={styles.heroTitle}>Thử thách hôm nay</AppText>
@@ -91,7 +102,55 @@ function Hero({ view, onChanged }: { view: DailyChallengeView; onChanged: () => 
             {action}
             {me?.status === 'not-played' ? <AppText style={styles.note}>Bấm tham gia là ván được tính, kể cả khi bỏ dở.</AppText> : null}
             {error ? <AppText variant="small" style={{ color: colors.danger }} accessibilityRole="alert">{error}</AppText> : null}
+            {onLeaderboard ? <TopThree view={view} onPress={onLeaderboard} /> : null}
         </Animated.View>
+    );
+}
+
+// Cúp lắc nhẹ liên tục cho thẻ nổi bật; giảm chuyển động thì đứng yên
+function WobblingTrophy() {
+    const reduceMotion = useReducedMotion();
+    const tilt = useSharedValue(0);
+    useEffect(() => {
+        if (!reduceMotion) {
+            tilt.value = withRepeat(
+                withSequence(withTiming(-8, { duration: 260 }), withTiming(8, { duration: 520 }), withTiming(0, { duration: 260 }), withDelay(1400, withTiming(0, { duration: 0 }))),
+                -1,
+            );
+        }
+    }, [tilt, reduceMotion]);
+    const wobble = useAnimatedStyle(() => ({ transform: [{ rotate: `${tilt.value}deg` }] }));
+    return (
+        <Animated.View style={wobble}>
+            <Trophy color={colors.sunDeep} size={34} strokeWidth={2.4} />
+        </Animated.View>
+    );
+}
+
+// Ba người dẫn đầu hôm nay + link sang bảng xếp hạng đầy đủ
+function TopThree({ view, onPress }: { view: DailyChallengeView; onPress: () => void }) {
+    const top = view.leaderboard.slice(0, 3);
+    return (
+        <PressableScale onPress={onPress} accessibilityRole="button" accessibilityLabel={`Xem bảng xếp hạng, ${view.challenge.players} người đã chơi`} style={styles.board}>
+            {top.length > 0 ? (
+                <View style={styles.topRow}>
+                    {top.map((entry) => (
+                        <View key={entry.rank} style={styles.topItem}>
+                            <View style={[styles.topBadge, { backgroundColor: MEDALS[entry.rank - 1].bg, borderBottomColor: MEDALS[entry.rank - 1].edge }]}>
+                                <AppText style={styles.topRank}>{entry.rank}</AppText>
+                            </View>
+                            <AppText style={styles.topName} numberOfLines={1}>{entry.isMe ? 'Bạn' : entry.username}</AppText>
+                        </View>
+                    ))}
+                </View>
+            ) : (
+                <AppText style={styles.note}>Chưa ai hoàn thành hôm nay. Hãy là người đầu tiên!</AppText>
+            )}
+            <View style={styles.boardLink}>
+                <AppText style={styles.boardText}>Bảng xếp hạng · {view.challenge.players} người đã chơi</AppText>
+                <ChevronRight color={colors.ink} size={18} />
+            </View>
+        </PressableScale>
     );
 }
 
@@ -259,6 +318,16 @@ const styles = StyleSheet.create({
     chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: colors.white },
     chipText: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink },
     note: { fontFamily: fonts.medium, fontSize: 13, color: '#6b5200' },
+    rankLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    rankBig: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 38, color: colors.sunDeep },
+    board: { gap: spacing.sm, padding: spacing.sm, borderRadius: radius, backgroundColor: 'rgba(255,255,255,0.75)' },
+    topRow: { flexDirection: 'row', gap: spacing.sm },
+    topItem: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+    topBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2 },
+    topRank: { fontFamily: fonts.extrabold, fontSize: 12, color: colors.ink },
+    topName: { flex: 1, fontFamily: fonts.bold, fontSize: 13, color: colors.ink },
+    boardLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    boardText: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink },
     tip: { gap: 4, padding: spacing.md, borderRadius: radius * 1.25, backgroundColor: colors.mint, borderBottomWidth: EDGE, borderBottomColor: '#a5d6b3' },
     tipTitle: { fontFamily: fonts.extrabold, color: colors.brandDeep },
     rankRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

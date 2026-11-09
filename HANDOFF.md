@@ -37,7 +37,7 @@ Tài liệu cho người làm tiếp app React Native `memory-app`. Đọc cùng
 1. **Nền tảng:**
    - `theme.ts` (token màu, `EDGE`), `GAME_META` (`color` / `edge` / `tint` cho từng trò), `gameIcons.ts`.
    - `Button` và `Panel` dày; thêm `ProgressRing`, `GameTile`, `NavRow`.
-2. **Các tab:** Hôm nay, Luyện tập, Thử thách, Phương pháp, Hồ sơ, Tiến độ.
+2. **Các tab:** Hôm nay, Luyện tập (thẻ Thử thách hôm nay nổi bật ở đầu, dùng `DailyHero` với `onLeaderboard`), Tiến độ, Phương pháp, Hồ sơ. Thử thách (`/daily`) là màn trong Stack, không còn là tab (11/2026).
 3. **Màn chơi:**
    - `SetupParts`, dùng chung cho 3 màn cài đặt ván.
    - `LevelGrid` đổi thành dải cuộn ngang.

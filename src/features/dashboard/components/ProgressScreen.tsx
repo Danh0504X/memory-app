@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { BlockState, Panel } from '@/components/ui/Panel';
@@ -57,7 +58,10 @@ export function ProgressScreen() {
     );
 
     return (
-        <ScrollView style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={timeline.refreshing || catalog.refreshing} onRefresh={reloadAll} tintColor={colors.brand} />}>
+        // Là một tab: tự tránh tai thỏ và có tiêu đề riêng (không còn header của Stack)
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.wall }} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={timeline.refreshing || catalog.refreshing} onRefresh={reloadAll} tintColor={colors.brand} />}>
+            <AppText variant="title">Tiến độ</AppText>
             <Chips accessibilityLabel="Khoảng thời gian" options={PERIODS} value={period} onChange={setPeriod} />
 
             <BlockState request={timeline.state} onRetry={reloadTimeline}>
@@ -96,6 +100,7 @@ export function ProgressScreen() {
                 <History key={`${historyGame}-${historyKey}`} game={historyGame} />
             </View>
         </ScrollView>
+        </SafeAreaView>
     );
 }
 

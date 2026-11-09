@@ -195,7 +195,7 @@ function MemberToday() {
                     tint={colors.mint}
                     title="Xem tiến độ"
                     subtitle="Biểu đồ, lịch luyện tập và các ván đã chơi"
-                    onPress={() => router.push('/progress')}
+                    onPress={() => router.navigate('/progress')}
                 />
             </ScrollView>
         </SafeAreaView>
