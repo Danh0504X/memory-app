@@ -47,7 +47,6 @@ function SettingsPhase() {
 
     return (
         <RoundSetup
-            gameTitle={GAME_NAME}
             itemUnit="hình ảnh"
             shortUnit="hình"
             game={game}
@@ -110,7 +109,7 @@ function MemorizePhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="image"
             level={level}
             daily={rules?.mode === 'daily'}
             status={`Ghi nhớ thứ tự · hình ${shownTo}/${total}`}
@@ -154,7 +153,7 @@ function RecallPhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="image"
             level={level}
             daily={rules?.mode === 'daily'}
             status={`Nhớ lại · đã xếp ${filled}/${total} hình`}
@@ -204,7 +203,7 @@ function ResultPhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="image"
             level={level}
             daily={result.rules.mode === 'daily'}
             status={`Kết quả · đúng ${result.result.correctItems}/${result.result.totalItems} hình`}

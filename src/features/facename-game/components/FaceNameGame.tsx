@@ -1,19 +1,20 @@
 import { Stack } from 'expo-router';
 import { BarChart3, BookOpen, Check, Minus, SlidersHorizontal, X } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { Stepper } from '@/components/ui/Stepper';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { LevelGrid } from '@/features/shared-game/components/LevelGrid';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
 import { PhotoBack, PhotoTile } from '@/features/shared-game/components/PhotoTile';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RoundResult } from '@/features/shared-game/components/RoundResult';
+import { DealBand, GuestNote, SectionTitle, SetupPanel, ToolButton, ToolRow, setupStyles, toneOf } from '@/features/shared-game/components/SetupParts';
 import { useFocusChain } from '@/features/shared-game/hooks/useFocusChain';
 import { usePhaseTimer } from '@/features/shared-game/hooks/usePhaseTimer';
 import { formatSeconds } from '@/features/shared-game/utils/formatTime';
@@ -67,6 +68,7 @@ function SettingsPhase() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const [panel, setPanel] = useState<'guide' | 'free' | 'stats' | null>(null);
     const [free, setFree] = useState({ faceCount: 10, memorizeSeconds: 60, recallSeconds: 120 });
+    const tone = toneOf('facename');
 
     const maxLevel = levels.length || 10;
     const unlocked = Math.min(maxLevel, stats.unlockedLevel);
@@ -75,65 +77,67 @@ function SettingsPhase() {
     const toggle = (name: 'guide' | 'free' | 'stats') => setPanel((open) => (open === name ? null : name));
 
     return (
-        <Screen edges={['bottom']}>
-            <AppText variant="lead">Nhớ gương mặt, gắn tên gọi. Gặp lại, bạn có nhận ra?</AppText>
+        <Screen
+            edges={['bottom']}
+            footer={
+                <>
+                    {errorMessage ? <AppText variant="small" style={setupStyles.error} accessibilityRole="alert">{errorMessage}</AppText> : null}
+                    {config ? (
+                        <Button title="Bắt đầu" tone={tone} loading={isLoading} onPress={() => void startLevelGame(level)} />
+                    ) : (
+                        <Button title={isLoading ? 'Đang tải cấp độ...' : 'Tải lại cấp độ'} variant="secondary" disabled={isLoading} onPress={() => void initialize()} />
+                    )}
+                </>
+            }
+        >
+            <DealBand
+                game="facename"
+                overline={`Cấp ${level}${config ? ` · ${config.nameType}` : ''}`}
+                count={config?.faceCount ?? '–'}
+                unit="gương mặt cần nhớ"
+                line={
+                    config
+                        ? `Ghi nhớ ${formatSeconds(config.memorizeSeconds)} · Nhớ lại ${formatSeconds(config.recallSeconds)} · Đạt ${config.requiredScore}/${config.faceCount} điểm`
+                        : isLoading ? 'Đang tải cấp độ...' : 'Chưa tải được cấp độ.'
+                }
+            />
 
-            <View style={styles.deal}>
-                <AppText variant="small" style={styles.overline}>
-                    Cấp {level}
-                    {config ? ` · ${config.nameType}` : ''}
-                </AppText>
-                {config ? (
-                    <>
-                        <AppText style={styles.count}>
-                            {config.faceCount} <AppText variant="lead">gương mặt cần nhớ</AppText>
-                        </AppText>
-                        <AppText variant="small" style={styles.center}>
-                            Ghi nhớ {formatSeconds(config.memorizeSeconds)} · Nhớ lại {formatSeconds(config.recallSeconds)} · Đạt từ{' '}
-                            {config.requiredScore}/{config.faceCount} điểm
-                        </AppText>
-                    </>
-                ) : (
-                    <AppText variant="small">{isLoading ? 'Đang tải cấp độ...' : 'Chưa tải được cấp độ.'}</AppText>
-                )}
-            </View>
+            <AppText style={setupStyles.goal}>Đúng +1, sai −0,5, bỏ trống 0. Đủ điểm để mở cấp tiếp theo.</AppText>
 
             {levels.length > 0 ? (
                 <View style={styles.section}>
-                    <AppText variant="heading">Cấp độ</AppText>
-                    <AppText variant="small">
-                        Đã mở {unlocked}/{maxLevel} cấp · Đã luyện {stats.totalRounds} ván. Chọn lại cấp đã mở để luyện tập.
-                    </AppText>
+                    <SectionTitle title="Cấp độ" note={`Đã mở ${unlocked}/${maxLevel} · Đã luyện ${stats.totalRounds} ván`} />
                     <LevelGrid
                         levels={levels.map((item) => ({ level: item.levelId, count: item.faceCount }))}
                         unlockedLevel={unlocked}
                         selectedLevel={level}
                         shortUnit="người"
+                        tone={tone}
                         onSelect={setSelectedLevel}
                     />
                 </View>
             ) : null}
 
-            <View style={styles.tools}>
-                <ToolButton icon={<BookOpen color={colors.brandDeep} size={18} />} label="Cách chơi" open={panel === 'guide'} onPress={() => toggle('guide')} />
-                <ToolButton icon={<SlidersHorizontal color={colors.brandDeep} size={18} />} label="Ván tự chọn" open={panel === 'free'} onPress={() => toggle('free')} />
-                <ToolButton icon={<BarChart3 color={colors.brandDeep} size={18} />} label="Thống kê" open={panel === 'stats'} onPress={() => toggle('stats')} />
-            </View>
+            <ToolRow>
+                <ToolButton icon={<BookOpen color={colors.brandDeep} size={20} />} label="Cách chơi" open={panel === 'guide'} onPress={() => toggle('guide')} />
+                <ToolButton icon={<SlidersHorizontal color={colors.brandDeep} size={20} />} label="Tự chọn" open={panel === 'free'} onPress={() => toggle('free')} />
+                <ToolButton icon={<BarChart3 color={colors.brandDeep} size={20} />} label="Thống kê" open={panel === 'stats'} onPress={() => toggle('stats')} />
+            </ToolRow>
 
             {panel === 'guide' ? (
-                <View style={styles.panel}>
+                <SetupPanel>
                     <GuideItem title="Quan sát">Xem từng gương mặt và tên. Tìm một nét riêng để liên kết với tên gọi; thứ tự không cần nhớ.</GuideItem>
                     <GuideItem title="Nhớ lại">Gương mặt được xáo trộn. Gõ tên dưới mỗi người, bấm "Tiếp" trên bàn phím để sang ô sau. Hết giờ, bài được nộp tự động.</GuideItem>
                     <GuideItem title="Tính điểm">
                         Đúng +1, sai −0,5, bỏ trống 0. Không phân biệt chữ hoa và khoảng trắng ở hai đầu; cần giữ đúng dấu tiếng Việt.
                     </GuideItem>
-                </View>
+                </SetupPanel>
             ) : null}
 
             {panel === 'stats' ? <StatsPanel /> : null}
 
             {panel === 'free' ? (
-                <View style={styles.panel}>
+                <SetupPanel>
                     <AppText variant="small">Luyện theo nhịp của bạn. Ván tự chọn không mở cấp.</AppText>
                     <AppText variant="small" style={styles.optionTitle}>Số gương mặt</AppText>
                     <Stepper
@@ -170,23 +174,10 @@ function SettingsPhase() {
                         disabled={isLoading}
                         onPress={() => void startFreeGame(free.faceCount, free.memorizeSeconds, free.recallSeconds)}
                     />
-                </View>
+                </SetupPanel>
             ) : null}
 
-            <AppText variant="body" style={styles.goal}>Đúng +1 điểm, sai −0,5 điểm, bỏ trống 0 điểm. Đạt điểm yêu cầu để mở cấp tiếp theo.</AppText>
-            <AppText variant="small">
-                {isAuthenticated
-                    ? 'Tiến độ và lịch sử được lưu theo tài khoản. Mỗi ván nhận EXP và góp vào chuỗi ngày luyện tập.'
-                    : 'Bạn đang chơi với tư cách khách: tiến độ chỉ giữ tạm trên máy này. Đăng nhập để lưu lịch sử và nhận EXP.'}
-            </AppText>
-
-            {errorMessage ? <AppText variant="small" style={styles.error} accessibilityRole="alert">{errorMessage}</AppText> : null}
-
-            {config ? (
-                <Button title="Bắt đầu" loading={isLoading} onPress={() => void startLevelGame(level)} />
-            ) : (
-                <Button title={isLoading ? 'Đang tải cấp độ...' : 'Tải lại cấp độ'} variant="secondary" disabled={isLoading} onPress={() => void initialize()} />
-            )}
+            {isAuthenticated ? null : <GuestNote />}
         </Screen>
     );
 }
@@ -200,7 +191,7 @@ function StatsPanel() {
         : null;
     const best = levels.filter((level) => stats.bestScores[level.levelId] !== undefined);
     return (
-        <View style={styles.panel}>
+        <SetupPanel>
             <View style={styles.statRow}>
                 <Stat label="Tổng ván" value={String(stats.totalRounds)} />
                 <Stat label="Chính xác TB" value={average === null ? '—' : `${average}%`} />
@@ -222,7 +213,7 @@ function StatsPanel() {
                 </>
             ) : null}
             <AppText variant="small">Độ chính xác trung bình và điểm cao nhất tính các ván bạn chơi từ khi mở app.</AppText>
-        </View>
+        </SetupPanel>
     );
 }
 
@@ -232,15 +223,6 @@ function Stat({ label, value }: { label: string; value: string }) {
             <AppText variant="small">{label}</AppText>
             <AppText style={styles.statValue}>{value}</AppText>
         </View>
-    );
-}
-
-function ToolButton({ icon, label, open, onPress }: { icon: ReactNode; label: string; open: boolean; onPress: () => void }) {
-    return (
-        <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ expanded: open }} style={[styles.tool, open && styles.toolOpen]}>
-            {icon}
-            <AppText style={styles.toolLabel}>{label}</AppText>
-        </Pressable>
     );
 }
 
@@ -266,7 +248,7 @@ function MemorizePhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="facename"
             level={currentMode === 'level' ? currentLevelId : null}
             status={`Ghi nhớ tên · người ${currentMemorizeIndex + 1}/${total}`}
             progress={(currentMemorizeIndex + 1) / total}
@@ -315,7 +297,7 @@ function RecallPhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="facename"
             level={currentMode === 'level' ? currentLevelId : null}
             status={`Nhớ lại · đã điền ${filled}/${total} người`}
             progress={total ? filled / total : 0}
@@ -364,7 +346,7 @@ function ResultPhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="facename"
             level={result.mode === 'level' ? currentLevelId : null}
             status="Kết quả lượt chơi"
             progress={result.round.result.accuracy}
@@ -412,36 +394,25 @@ function ResultPhase() {
 
 const styles = StyleSheet.create({
     loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, backgroundColor: colors.wall },
-    deal: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg, backgroundColor: colors.mint, borderRadius: radius * 1.5 },
-    overline: { fontFamily: fonts.bold, color: colors.brandDeep },
-    count: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 40 },
-    center: { textAlign: 'center' },
     section: { gap: spacing.sm },
     statRow: { flexDirection: 'row', gap: spacing.sm },
-    stat: { flex: 1, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.wall, gap: 2 },
+    stat: { flex: 1, padding: spacing.sm, borderRadius: radius, backgroundColor: '#ffe8f0', gap: 2 },
     statValue: { fontFamily: fonts.extrabold, fontSize: 20 },
     bestRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6, borderBottomWidth: 1, borderColor: colors.step },
-    tools: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    tool: { flexGrow: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
-    toolOpen: { borderColor: colors.brand, backgroundColor: colors.mint },
-    toolLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
-    panel: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
     optionTitle: { fontFamily: fonts.semibold, color: colors.ink },
-    goal: { fontFamily: fonts.semibold },
-    error: { color: colors.danger },
     faceCard: { alignItems: 'center', gap: spacing.sm },
     faceName: { fontFamily: fonts.extrabold, fontSize: 26, lineHeight: 32, textAlign: 'center' },
     recallList: { padding: spacing.md, gap: spacing.sm },
     recallHint: { color: colors.ink },
     recallGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: RECALL_GAP },
-    recallCard: { alignItems: 'center', gap: 6, padding: 8, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    recallCard: { alignItems: 'center', gap: 6, padding: 8, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     badge: { alignSelf: 'flex-start', fontFamily: fonts.semibold },
     input: {
         alignSelf: 'stretch',
         minHeight: 44,
         borderRadius: 10,
-        borderWidth: 1.5,
-        borderColor: colors.step,
+        borderWidth: 2,
+        borderColor: colors.line,
         paddingHorizontal: 10,
         fontFamily: fonts.regular,
         fontSize: 16,
@@ -449,7 +420,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.wall,
     },
     reviewHead: { gap: 4, marginTop: spacing.sm },
-    reviewRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    reviewRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line },
     rowCorrect: { backgroundColor: '#eef8f0', borderColor: colors.mint },
     rowWrong: { backgroundColor: '#fdecea', borderColor: '#f5c2bd' },
     reviewIndex: { width: 20, textAlign: 'center', fontFamily: fonts.bold },

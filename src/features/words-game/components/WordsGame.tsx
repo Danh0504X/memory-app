@@ -6,7 +6,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { Chips } from '@/features/shared-game/components/Chips';
 import { GameOptions, MAX_GROUP } from '@/features/shared-game/components/GameOptions';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
@@ -56,7 +56,6 @@ function SettingsPhase() {
 
     return (
         <RoundSetup
-            gameTitle={GAME_NAME}
             typing
             itemUnit="từ"
             shortUnit="từ"
@@ -143,7 +142,7 @@ function MemorizePhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="word"
             level={level}
             daily={rules?.mode === 'daily'}
             status={`Ghi nhớ thứ tự · từ ${shownTo}/${total}`}
@@ -189,7 +188,7 @@ function RecallPhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="word"
             level={level}
             daily={rules?.mode === 'daily'}
             status={`Nhớ lại · đã điền ${filled}/${total} từ`}
@@ -253,7 +252,7 @@ function ResultPhase() {
 
     return (
         <PlayLayout
-            gameName={GAME_NAME}
+            game="word"
             level={level}
             daily={rules.mode === 'daily'}
             status={`Kết quả · đúng ${roundResult.correctItems}/${roundResult.totalItems} từ`}
@@ -312,9 +311,9 @@ function ResultPhase() {
 const styles = StyleSheet.create({
     optionTitle: { fontFamily: fonts.semibold, color: colors.ink },
     prep: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.lg, backgroundColor: colors.wall },
-    overline: { fontFamily: fonts.bold, color: colors.brandDeep, textTransform: 'uppercase' },
-    countdown: { width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderColor: colors.brand, backgroundColor: colors.mint, alignItems: 'center', justifyContent: 'center' },
-    countdownText: { fontFamily: fonts.extrabold, fontSize: 56, lineHeight: 64, color: colors.brandDeep },
+    overline: { fontFamily: fonts.bold, color: '#0b7285', textTransform: 'uppercase' },
+    countdown: { width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderBottomWidth: 8, borderColor: '#0c8599', borderBottomColor: '#0b7285', backgroundColor: '#e3f6f8', alignItems: 'center', justifyContent: 'center' },
+    countdownText: { fontFamily: fonts.extrabold, fontSize: 56, lineHeight: 64, color: '#0b7285' },
     center: { textAlign: 'center', maxWidth: 280 },
     cancel: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.md },
     cancelLabel: { fontFamily: fonts.semibold, color: colors.inkSoft },
@@ -327,15 +326,17 @@ const styles = StyleSheet.create({
         gap: 6,
         paddingLeft: 10,
         borderRadius: radius,
-        borderWidth: 1.5,
-        borderColor: colors.step,
+        borderWidth: 2,
+        borderColor: colors.line,
+        borderBottomWidth: EDGE,
+        borderBottomColor: colors.edge,
         backgroundColor: colors.white,
     },
-    slotFilled: { borderColor: colors.brand, backgroundColor: '#eef8f0' },
+    slotFilled: { borderColor: '#0c8599', borderBottomColor: '#0b7285', backgroundColor: '#e3f6f8' },
     slotNo: { fontFamily: fonts.bold, minWidth: 18 },
     input: { flex: 1, minHeight: 48, paddingRight: 10, fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
     reviewHead: { gap: 4, marginTop: spacing.sm },
-    reviewRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radius, borderWidth: 1 },
+    reviewRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radius, borderWidth: 2 },
     rowCorrect: { backgroundColor: '#eef8f0', borderColor: colors.mint },
     rowWrong: { backgroundColor: '#fdecea', borderColor: '#f5c2bd' },
     reviewIndex: { width: 24, textAlign: 'center', fontFamily: fonts.bold },

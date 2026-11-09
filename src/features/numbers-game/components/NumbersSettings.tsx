@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { BookOpen, Info, SlidersHorizontal } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { StyleSheet, Switch, TextInput, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
@@ -11,6 +11,7 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { Chips } from '@/features/shared-game/components/Chips';
 import { LevelGrid } from '@/features/shared-game/components/LevelGrid';
 import { LevelTableSheet } from '@/features/shared-game/components/LevelTableSheet';
+import { DealBand, GuestNote, SectionTitle, SetupPanel, ToolButton, ToolRow, levelLabel, setupStyles, toneOf } from '@/features/shared-game/components/SetupParts';
 import { useGameCatalog } from '@/features/shared-game/store/gameCatalogStore';
 import { formatSeconds } from '@/features/shared-game/utils/formatTime';
 import { useNumbersGameStore } from '../store/numbersGameStore';
@@ -29,7 +30,7 @@ const MODES: { value: Mode; label: string }[] = [
     { value: 'custom', label: 'Tùy chỉnh' },
     { value: 'challenge', label: 'Thử thách' },
 ];
-const levelLabel = (level: number) => (level <= 3 ? 'Mức căn bản' : level <= 6 ? 'Mức trung cấp' : 'Mức nâng cao');
+const tone = toneOf('number');
 
 export function NumbersSettings() {
     const { progress, busy, prepare } = useNumbersGameStore();
@@ -83,47 +84,50 @@ export function NumbersSettings() {
     const toggle = (name: 'guide' | 'options') => setPanel((open) => (open === name ? null : name));
 
     return (
-        <Screen edges={['bottom']}>
-            <AppText variant="lead">Nhớ một dãy chữ số theo đúng thứ tự, rồi gõ lại.</AppText>
-            <Chips accessibilityLabel="Chế độ chơi" options={MODES} value={mode} onChange={setMode} />
+        <Screen
+            edges={['bottom']}
+            footer={<Button title="Bắt đầu" tone={tone} loading={busy} disabled={challengeDone || challengeNeedsLogin} onPress={start} />}
+        >
+            <Chips accessibilityLabel="Chế độ chơi" options={MODES} value={mode} onChange={setMode} tone={tone.color} />
 
-            <View style={styles.deal}>
-                <AppText variant="small" style={styles.overline}>
-                    {mode === 'standard' ? `Cấp ${selectedLevel} · ${levelLabel(selectedLevel)}` : mode === 'custom' ? 'Ván tự chọn' : 'Thử thách hôm nay'}
-                </AppText>
-                <AppText style={styles.count}>
-                    {digitCount} <AppText variant="lead">chữ số cần nhớ</AppText>
-                </AppText>
-                <AppText variant="small">Ghi nhớ {formatSeconds(memorizeSec)} · Gõ lại {formatSeconds(recallSec)}</AppText>
-            </View>
+            <DealBand
+                game="number"
+                overline={mode === 'standard' ? `Cấp ${selectedLevel} · ${levelLabel(selectedLevel)}` : mode === 'custom' ? 'Ván tự chọn' : 'Thử thách hôm nay'}
+                count={digitCount}
+                unit="chữ số cần nhớ"
+                line={`Ghi nhớ ${formatSeconds(memorizeSec)} · Gõ lại ${formatSeconds(recallSec)}`}
+            />
+
+            <AppText style={setupStyles.goal}>{goal}</AppText>
 
             {mode === 'standard' ? (
                 <>
                     <View style={styles.section}>
-                        <AppText variant="heading">Cấp độ</AppText>
-                        <AppText variant="small">Đã mở {unlocked}/{maxLevel} cấp. Chọn lại cấp đã mở để luyện tập.</AppText>
+                        <SectionTitle title="Cấp độ" note={`Đã mở ${unlocked}/${maxLevel}`} />
                         <LevelGrid
                             levels={digitCounts.map((count, index) => ({ level: index + 1, count }))}
                             unlockedLevel={unlocked}
                             selectedLevel={selectedLevel}
                             shortUnit="số"
+                            tone={tone}
                             onSelect={setLevel}
                         />
                     </View>
                     <View style={styles.section}>
-                        <AppText variant="heading">Thời gian ghi nhớ</AppText>
+                        <SectionTitle title="Thời gian ghi nhớ" />
                         <Chips
                             accessibilityLabel="Thời gian ghi nhớ"
                             options={timeOptions.map((seconds) => ({ value: seconds, label: formatSeconds(seconds) }))}
                             value={selectedMemorize}
                             onChange={setStandardMemorize}
+                            tone={tone.color}
                         />
                     </View>
                 </>
             ) : null}
 
             {mode === 'custom' ? (
-                <View style={styles.panel}>
+                <SetupPanel>
                     <AppText variant="small" style={styles.title}>Số chữ số</AppText>
                     <Stepper value={custom.count} min={4} max={80} onChange={(count) => setCustom({ ...custom, count })} format={(value) => `${value} số`} label="số chữ số" />
                     <AppText variant="small" style={styles.title}>Thời gian ghi nhớ</AppText>
@@ -138,11 +142,11 @@ export function NumbersSettings() {
                     />
                     <AppText variant="small" style={styles.title}>Thời gian gõ lại</AppText>
                     <Stepper value={custom.recall} min={10} max={600} step={10} onChange={(recall) => setCustom({ ...custom, recall })} format={(value) => `${value} giây`} label="thời gian gõ lại" />
-                </View>
+                </SetupPanel>
             ) : null}
 
             {mode === 'challenge' ? (
-                <View style={styles.panel}>
+                <SetupPanel>
                     <AppText variant="small">
                         Cố định {CHALLENGE.digits} chữ số, ghi nhớ {CHALLENGE.memorizeSec} giây, gõ lại {formatSeconds(CHALLENGE.recallSec)} (luật Memory League).
                     </AppText>
@@ -156,14 +160,14 @@ export function NumbersSettings() {
                             Hôm nay bạn đã chơi{today.correctCount !== undefined ? `: đúng ${today.correctCount}/${today.digitCount ?? CHALLENGE.digits}` : ''}. Quay lại vào ngày mai nhé.
                         </AppText>
                     ) : null}
-                </View>
+                </SetupPanel>
             ) : null}
 
-            <View style={styles.tools}>
-                <ToolButton icon={<BookOpen color={colors.brandDeep} size={18} />} label="Cách chơi" open={panel === 'guide'} onPress={() => toggle('guide')} />
-                <ToolButton icon={<Info color={colors.brandDeep} size={18} />} label="Bảng cấp độ" open={false} onPress={() => setShowLevels(true)} />
-                <ToolButton icon={<SlidersHorizontal color={colors.brandDeep} size={18} />} label="Tùy chọn" open={panel === 'options'} onPress={() => toggle('options')} />
-            </View>
+            <ToolRow>
+                <ToolButton icon={<BookOpen color={colors.brandDeep} size={20} />} label="Cách chơi" open={panel === 'guide'} onPress={() => toggle('guide')} />
+                <ToolButton icon={<Info color={colors.brandDeep} size={20} />} label="Bảng cấp độ" onPress={() => setShowLevels(true)} />
+                <ToolButton icon={<SlidersHorizontal color={colors.brandDeep} size={20} />} label="Tùy chọn" open={panel === 'options'} onPress={() => toggle('options')} />
+            </ToolRow>
             {panel === 'guide' ? <Guide /> : null}
             {panel === 'options' ? <Options /> : null}
             <LevelTableSheet
@@ -176,27 +180,19 @@ export function NumbersSettings() {
                 unlockOn={game?.unlockOn ?? 'perfect'}
             />
 
-            <AppText variant="body" style={styles.goal}>{goal}</AppText>
-            {!isAuthenticated && mode !== 'challenge' ? (
-                <AppText variant="small">
-                    Bạn đang chơi với tư cách khách: cấp đã mở chỉ giữ tạm, không nhận EXP.{' '}
-                    <AppText variant="small" style={styles.link} onPress={() => router.push('/login')}>Đăng nhập</AppText> để lưu tiến độ.
-                </AppText>
-            ) : null}
-
-            <Button title="Bắt đầu" loading={busy} disabled={challengeDone || challengeNeedsLogin} onPress={start} />
+            {!isAuthenticated && mode !== 'challenge' ? <GuestNote /> : null}
         </Screen>
     );
 }
 
 function Guide() {
     return (
-        <View style={styles.panel}>
+        <SetupPanel>
             <GuideItem title="Ghi nhớ">Dãy số hiện theo từng nhóm. Chạm vào nhóm hoặc nút › để xem tiếp. Nhớ xong thì bấm "Đã nhớ xong": thời gian ghi nhớ dừng ngay lúc đó.</GuideItem>
             <GuideItem title="Gõ lại">Chạm một ô rồi gõ bằng bàn phím số bên dưới. Lỡ thiếu một số: "Chèn ô"; lỡ thừa: "Xoá ô". Đáp án được tự lưu khi bạn gõ.</GuideItem>
             <GuideItem title="Tính điểm">Mỗi chữ số đúng vị trí được một điểm. Đúng hết thì mở cấp tiếp theo. Bằng điểm thì ai ghi nhớ nhanh hơn giỏi hơn.</GuideItem>
             <AppText variant="small">Mẹo: đổi mỗi chữ số thành một hình (2 là thiên nga, 8 là người tuyết) rồi nối các hình thành câu chuyện.</AppText>
-        </View>
+        </SetupPanel>
     );
 }
 
@@ -207,7 +203,7 @@ function Options() {
     const valid = isValidGroups(groups);
 
     return (
-        <View style={styles.panel}>
+        <SetupPanel>
             <AppText variant="small" style={styles.title}>Nhóm chữ số</AppText>
             <TextInput
                 value={groups}
@@ -229,26 +225,18 @@ function Options() {
                 options={PREP_OPTIONS.map((seconds) => ({ value: seconds, label: seconds === 0 ? 'Không' : `${seconds} giây` }))}
                 value={preferences.prepTime}
                 onChange={(prepTime) => setPreferences({ ...preferences, prepTime })}
+                tone={tone.color}
             />
             <View style={styles.switchRow}>
                 <AppText variant="small" style={[styles.title, { flex: 1 }]}>Ẩn đồng hồ khi ghi nhớ</AppText>
                 <Switch
                     value={preferences.hideTimer}
                     onValueChange={(hideTimer) => setPreferences({ ...preferences, hideTimer })}
-                    trackColor={{ true: colors.brand }}
+                    trackColor={{ true: tone.color }}
                     accessibilityLabel="Ẩn đồng hồ khi ghi nhớ"
                 />
             </View>
-        </View>
-    );
-}
-
-function ToolButton({ icon, label, open, onPress }: { icon: ReactNode; label: string; open: boolean; onPress: () => void }) {
-    return (
-        <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ expanded: open }} style={[styles.tool, open && styles.toolOpen]}>
-            {icon}
-            <AppText style={styles.toolLabel}>{label}</AppText>
-        </Pressable>
+        </SetupPanel>
     );
 }
 
@@ -262,19 +250,10 @@ function GuideItem({ title, children }: { title: string; children: ReactNode }) 
 }
 
 const styles = StyleSheet.create({
-    deal: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg, backgroundColor: colors.mint, borderRadius: radius * 1.5 },
-    overline: { fontFamily: fonts.bold, color: colors.brandDeep },
-    count: { fontFamily: fonts.extrabold, fontSize: 32, lineHeight: 40 },
     section: { gap: spacing.sm },
-    panel: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
     title: { fontFamily: fonts.semibold, color: colors.ink },
-    tools: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    tool: { flexGrow: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
-    toolOpen: { borderColor: colors.brand, backgroundColor: colors.mint },
-    toolLabel: { fontFamily: fonts.bold, color: colors.brandDeep },
-    goal: { fontFamily: fonts.semibold },
     link: { fontFamily: fonts.bold, color: colors.brand, textDecorationLine: 'underline' },
     switchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44 },
-    input: { minHeight: 48, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, paddingHorizontal: 14, fontFamily: fonts.semibold, fontSize: 16, color: colors.ink, backgroundColor: colors.wall },
+    input: { minHeight: 48, borderRadius: radius, borderWidth: 2, borderColor: colors.line, paddingHorizontal: 14, fontFamily: fonts.semibold, fontSize: 16, color: colors.ink, backgroundColor: colors.wall },
     inputError: { borderColor: colors.danger },
 });

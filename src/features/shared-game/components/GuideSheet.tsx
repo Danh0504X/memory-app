@@ -69,7 +69,7 @@ export function GuideSheet({ visible, onClose, itemUnit, recallSec, passPercent,
 }
 
 const styles = StyleSheet.create({
-    step: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    step: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line },
     no: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.mint, alignItems: 'center', justifyContent: 'center' },
     noText: { fontFamily: fonts.extrabold, fontSize: 14 },
     title: { fontFamily: fonts.bold, color: colors.ink },

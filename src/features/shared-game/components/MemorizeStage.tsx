@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from
 import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { STAGGER, duration, ease } from '@/constants/motion';
-import { colors, spacing } from '@/constants/theme';
+import { EDGE, colors, spacing } from '@/constants/theme';
 
 interface MemorizeStageProps<T> {
     items: T[];
@@ -140,11 +140,11 @@ export function MemorizeStage<T>({
 const styles = StyleSheet.create({
     root: { flex: 1 },
     stage: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.sm },
-    arrow: { width: 48, height: 96, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
+    arrow: { width: 48, height: 96, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     arrowDisabled: { opacity: 0.3 },
     group: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, alignSelf: 'stretch' },
     item: { alignItems: 'center', gap: spacing.sm },
     strip: { gap: MINI_GAP, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     mini: { borderRadius: 6, borderWidth: MINI_BORDER, borderColor: 'transparent' },
-    miniCurrent: { borderColor: colors.brand },
+    miniCurrent: { borderColor: colors.sunDeep },
 });

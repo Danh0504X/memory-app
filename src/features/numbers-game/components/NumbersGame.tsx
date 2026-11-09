@@ -7,7 +7,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
@@ -109,7 +109,7 @@ export function NumbersGame() {
     } else {
         content = (
             <PlayLayout
-                gameName={GAME_NAME}
+                game="number"
                 level={session?.level ?? null}
                 daily={session?.mode === 'challenge'}
                 status={status}
@@ -455,11 +455,11 @@ const styles = StyleSheet.create({
     errorActions: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
     errorButton: { minHeight: 44, flexGrow: 1 },
     wait: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.lg },
-    countdown: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: colors.brand, backgroundColor: colors.mint, alignItems: 'center', justifyContent: 'center' },
-    countdownText: { fontFamily: fonts.extrabold, fontSize: 52, lineHeight: 60, color: colors.brandDeep },
+    countdown: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderBottomWidth: 8, borderColor: '#e8590c', borderBottomColor: '#c2410c', backgroundColor: '#fff0e6', alignItems: 'center', justifyContent: 'center' },
+    countdownText: { fontFamily: fonts.extrabold, fontSize: 52, lineHeight: 60, color: '#c2410c' },
     center: { textAlign: 'center', maxWidth: 300 },
     bigGroup: { flexDirection: 'row', gap: 6 },
-    bigDigit: { width: 56, height: 76, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step, alignItems: 'center', justifyContent: 'center' },
+    bigDigit: { width: 56, height: 76, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
     bigDigitText: { fontFamily: fonts.extrabold, fontSize: 44, lineHeight: 52, fontVariant: ['tabular-nums'] },
     chip: { width: 48, height: 32, borderRadius: 6, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
     chipBack: { backgroundColor: colors.sun, borderColor: '#e2b13c' },
@@ -469,17 +469,17 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', alignItems: 'center', gap: CELL_GAP },
     rowNo: { width: ROW_LABEL - CELL_GAP, textAlign: 'right', fontSize: 11, lineHeight: 14 },
     cell: { height: 40, borderRadius: 6, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
-    cellFilled: { backgroundColor: '#eef8f0', borderColor: colors.mint },
-    cellCurrent: { borderColor: colors.sun, borderWidth: 2.5, backgroundColor: '#fff8e1' },
+    cellFilled: { backgroundColor: '#fff0e6', borderColor: '#ffc9a3' },
+    cellCurrent: { borderColor: colors.sunDeep, borderWidth: 3, backgroundColor: '#fff8e1' },
     cellText: { fontFamily: fonts.bold, fontSize: 18, fontVariant: ['tabular-nums'] },
-    keypad: { gap: 6, paddingHorizontal: spacing.md, paddingTop: spacing.sm, borderTopWidth: 1, borderColor: colors.step, backgroundColor: colors.white },
+    keypad: { gap: 6, paddingHorizontal: spacing.md, paddingTop: spacing.sm, borderTopWidth: 2, borderColor: colors.line, backgroundColor: colors.white },
     keyRow: { flexDirection: 'row', gap: 6 },
-    key: { flex: 1, height: 48, borderRadius: radius, backgroundColor: colors.wall, borderWidth: 1, borderColor: colors.step, alignItems: 'center', justifyContent: 'center' },
-    keyText: { fontFamily: fonts.bold, fontSize: 22 },
-    tool: { flex: 1, height: 44, borderRadius: radius, borderWidth: 1, borderColor: colors.step, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
+    key: { flex: 1, height: 50, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
+    keyText: { fontFamily: fonts.extrabold, fontSize: 22, color: colors.ink },
+    tool: { flex: 1, height: 44, borderRadius: radius, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
     toolText: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, color: colors.brandDeep },
     disabled: { opacity: 0.4 },
-    pendingCard: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    pendingCard: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     pendingCount: { fontFamily: fonts.extrabold, fontSize: 40, lineHeight: 46 },
     compare: { flexDirection: 'row', flexWrap: 'wrap', gap: CELL_GAP },
     compareCell: { alignItems: 'center', paddingVertical: 4, borderRadius: 6, backgroundColor: '#eef8f0', borderWidth: 1, borderColor: colors.mint },

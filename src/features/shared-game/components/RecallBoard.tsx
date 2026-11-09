@@ -5,7 +5,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { ease } from '@/constants/motion';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 
 interface RecallBoardProps<T> {
     slots: (T | null)[];
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     root: { flex: 1 },
     head: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
     hint: { flex: 1, color: colors.ink },
-    undo: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40, paddingHorizontal: 10, borderRadius: radius, backgroundColor: colors.white },
+    undo: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40, paddingHorizontal: 10, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     undoLabel: { fontFamily: fonts.semibold, color: colors.brandDeep },
     disabled: { opacity: 0.4 },
     slotsScroll: { flex: 1 },
@@ -164,15 +164,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    slotTarget: { borderColor: colors.sun, borderStyle: 'solid', backgroundColor: '#fff8e1' },
+    slotTarget: { borderColor: colors.sunDeep, borderStyle: 'solid', borderWidth: 3, backgroundColor: '#fff8e1' },
     slotFilled: { borderWidth: 0, backgroundColor: 'transparent' },
     clear: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.inkSoft, alignItems: 'center', justifyContent: 'center' },
     deck: {
         backgroundColor: colors.white,
         borderTopLeftRadius: radius * 1.5,
         borderTopRightRadius: radius * 1.5,
-        borderTopWidth: 1,
-        borderColor: colors.step,
+        borderTopWidth: 2,
+        borderColor: colors.line,
         paddingTop: spacing.sm,
     },
     deckTitle: { paddingHorizontal: spacing.md, fontFamily: fonts.semibold },

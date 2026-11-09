@@ -62,7 +62,7 @@ export function LevelTableSheet({ visible, onClose, gameTitle, itemUnit, levels,
 }
 
 const styles = StyleSheet.create({
-    table: { borderRadius: radius, borderWidth: 1, borderColor: colors.step, backgroundColor: colors.white, overflow: 'hidden' },
+    table: { borderRadius: radius, borderWidth: 2, borderColor: colors.line, backgroundColor: colors.white, overflow: 'hidden' },
     row: { flexDirection: 'row', alignItems: 'center', minHeight: 44, paddingHorizontal: spacing.sm, borderTopWidth: 1, borderColor: colors.step },
     headRow: { borderTopWidth: 0, backgroundColor: colors.wall },
     headText: { fontFamily: fonts.bold, color: colors.ink },

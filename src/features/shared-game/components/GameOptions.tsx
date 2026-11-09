@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Stepper } from '@/components/ui/Stepper';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { Chips } from './Chips';
 
 // Màn hình điện thoại hẹp: xem tối đa 3 lá/hình một lần (bản web cho tới 5)
@@ -73,7 +73,7 @@ export function GameOptions({ unit, groups, onGroupsChange, hideTimer, onHideTim
 }
 
 const styles = StyleSheet.create({
-    options: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    options: { gap: spacing.sm, padding: spacing.md, borderRadius: radius * 1.25, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     title: { fontFamily: fonts.semibold, color: colors.ink, flex: 1 },
     switchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44 },
 });
