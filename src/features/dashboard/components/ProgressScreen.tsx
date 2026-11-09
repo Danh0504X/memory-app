@@ -1,18 +1,21 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ease, enterUp } from '@/constants/motion';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
+import { Button } from '@/components/ui/Button';
 import { BlockState, Panel } from '@/components/ui/Panel';
+import { ease, enterUp } from '@/constants/motion';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { Chips } from '@/features/shared-game/components/Chips';
 import { onGameSessionRecorded } from '@/features/shared-game/events';
+import { GAME_ICONS } from '@/features/shared-game/gameIcons';
 import { GAME_IDS, GAME_META } from '../constants';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { useGameHistory } from '../hooks/useGameHistory';
 import { useMonthSessions } from '../hooks/useMonthSessions';
-import { useCatalog, useRecentSessions } from '../hooks/useOverview';
-import type { DashboardSummary, GameId, GameSession, Period, PeriodBucket } from '../types';
+import { useCatalog } from '../hooks/useOverview';
+import type { DashboardSummary, GameFilter, GameId, GameSession, Period, PeriodBucket } from '../types';
 import { intensity, monthGrid, monthOf, sameMonth, shiftMonth, summarizeDay, type CalendarDay, type MonthRef } from '../utils/calendar';
 import { PROGRESS_TIME_ZONE, dayKey, describePeriod, formatPercent, formatTotalDuration, formatWhen } from '../utils/format';
 
@@ -20,47 +23,41 @@ const PERIODS: { value: Period; label: string }[] = [
     { value: 'week', label: 'Theo tuần' },
     { value: 'month', label: 'Theo tháng' },
 ];
-const GRADE_LABELS = { perfect: 'Hoàn hảo', pass: 'Đạt', fail: 'Chưa đạt' } as const;
-const GRADE_COLORS = { perfect: colors.brand, pass: colors.brandDeep, fail: colors.danger } as const;
+const GAME_FILTERS: { value: GameFilter; label: string }[] = [{ value: 'all', label: 'Tất cả' }, ...GAME_IDS.map((id) => ({ value: id, label: GAME_META[id].label }))];
+const GRADES = {
+    perfect: { label: 'Hoàn hảo', color: colors.brandDeep, bg: colors.mint },
+    pass: { label: 'Đạt', color: '#1864ab', bg: colors.sky },
+    fail: { label: 'Chưa đạt', color: colors.danger, bg: colors.dangerTint },
+} as const;
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const HEAT = [colors.white, '#cdebd6', '#7fc68f', colors.brand];
 const CHART_HEIGHT = 140;
-const HISTORY_LIMIT = 20;
 
-// Trang Tiến độ: số liệu theo kỳ (backend tính), biểu đồ độ chính xác từng trò, lịch luyện tập và các ván gần đây
+// Trang Tiến độ: số liệu theo kỳ (backend tính), biểu đồ độ chính xác từng trò, lịch luyện tập và toàn bộ lịch sử
 export function ProgressScreen() {
     const [period, setPeriod] = useState<Period>('week');
+    const [historyGame, setHistoryGame] = useState<GameFilter>('all');
+    const [historyKey, setHistoryKey] = useState(0);
     const timeline = useDashboardData(period, 'all');
     const catalog = useCatalog();
-    const recent = useRecentSessions();
     const { reload: reloadTimeline } = timeline;
-    const { reload: reloadRecent } = recent;
+    const reloadAll = () => {
+        reloadTimeline();
+        catalog.reload();
+        setHistoryKey((key) => key + 1);
+    };
 
     useEffect(
         () =>
             onGameSessionRecorded(() => {
                 reloadTimeline();
-                reloadRecent();
+                setHistoryKey((key) => key + 1);
             }),
-        [reloadTimeline, reloadRecent],
+        [reloadTimeline],
     );
 
     return (
-        <ScrollView
-            style={{ backgroundColor: colors.wall }}
-            contentContainerStyle={styles.content}
-            refreshControl={
-                <RefreshControl
-                    refreshing={false}
-                    onRefresh={() => {
-                        reloadTimeline();
-                        reloadRecent();
-                        catalog.reload();
-                    }}
-                    tintColor={colors.brand}
-                />
-            }
-        >
+        <ScrollView style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={false} onRefresh={reloadAll} tintColor={colors.brand} />}>
             <Chips accessibilityLabel="Khoảng thời gian" options={PERIODS} value={period} onChange={setPeriod} />
 
             <BlockState request={timeline.state} onRetry={reloadTimeline}>
@@ -68,19 +65,20 @@ export function ProgressScreen() {
                     const { label, compareLabel } = describePeriod(period, data.buckets.length);
                     return (
                         <>
-                            <Animated.View entering={enterUp(0)}>
-                                <Panel title={label}>
-                                    <SummaryTiles summary={data.summary} previous={data.previousSummary} compareLabel={compareLabel} />
+                            <Animated.View entering={enterUp(0)} style={{ gap: spacing.sm }}>
+                                <AppText style={styles.section}>{label}</AppText>
+                                <SummaryTiles summary={data.summary} previous={data.previousSummary} compareLabel={compareLabel} />
+                            </Animated.View>
+                            <Animated.View entering={enterUp(1)}>
+                                <Panel title="Độ chính xác">
+                                    <AccuracyChart
+                                        buckets={data.buckets}
+                                        passAccuracyOf={(game) =>
+                                            catalog.state.status === 'ready' ? (catalog.state.data.find((item) => item.gameName === game)?.passAccuracy ?? 0.7) : 0.7
+                                        }
+                                    />
                                 </Panel>
                             </Animated.View>
-                            <Panel title="Độ chính xác theo kỳ">
-                                <AccuracyChart
-                                    buckets={data.buckets}
-                                    passAccuracyOf={(game) =>
-                                        catalog.state.status === 'ready' ? (catalog.state.data.find((item) => item.gameName === game)?.passAccuracy ?? 0.7) : 0.7
-                                    }
-                                />
-                            </Panel>
                         </>
                     );
                 }}
@@ -90,11 +88,13 @@ export function ProgressScreen() {
                 <PracticeCalendar />
             </Panel>
 
-            <Panel title="Các ván gần đây">
-                <BlockState request={recent.state} onRetry={reloadRecent}>
-                    {(sessions) => <History sessions={sessions.slice(0, HISTORY_LIMIT)} />}
-                </BlockState>
-            </Panel>
+            <View style={{ gap: spacing.sm }}>
+                <AppText style={styles.section}>Lịch sử ván chơi</AppText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.bleedContent}>
+                    <Chips accessibilityLabel="Lọc theo trò" options={GAME_FILTERS} value={historyGame} onChange={setHistoryGame} />
+                </ScrollView>
+                <History key={`${historyGame}-${historyKey}`} game={historyGame} />
+            </View>
         </ScrollView>
     );
 }
@@ -115,26 +115,25 @@ function SummaryTiles({ summary, previous, compareLabel }: { summary: DashboardS
     const accuracyDelta = summary.accuracy !== null && previous.accuracy !== null ? Math.round((summary.accuracy - previous.accuracy) * 100) : null;
     return (
         <View style={styles.tiles}>
-            <Tile label="Ván đã chơi" value={String(summary.played)} note={playedDelta === 0 ? `bằng kỳ trước` : `${playedDelta > 0 ? '+' : ''}${playedDelta} ${compareLabel}`} />
-            <Tile label="Chính xác" value={formatPercent(summary.accuracy)} note={accuracyDelta === null ? undefined : `${accuracyDelta >= 0 ? '+' : ''}${accuracyDelta} điểm % ${compareLabel}`} />
-            <Tile label="Cấp cao nhất" value={summary.bestLevel ? `Cấp ${summary.bestLevel}` : '–'} />
-            <Tile label="Ván hoàn hảo" value={String(summary.perfectCount)} />
-            <Tile label="Thời gian luyện" value={formatTotalDuration(summary.durationSec)} />
+            <Tile tint="#e3f4e6" label="Ván đã chơi" value={String(summary.played)} note={playedDelta === 0 ? 'bằng kỳ trước' : `${playedDelta > 0 ? '+' : ''}${playedDelta} ${compareLabel}`} />
+            <Tile tint={colors.sky} label="Chính xác" value={formatPercent(summary.accuracy)} note={accuracyDelta === null ? undefined : `${accuracyDelta >= 0 ? '+' : ''}${accuracyDelta} điểm % ${compareLabel}`} />
+            <Tile tint="#fff3cf" label="Ván hoàn hảo" value={String(summary.perfectCount)} note={summary.bestLevel ? `cấp cao nhất ${summary.bestLevel}` : undefined} />
+            <Tile tint="#fff0e6" label="Thời gian luyện" value={formatTotalDuration(summary.durationSec)} />
         </View>
     );
 }
 
-function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
+function Tile({ tint, label, value, note }: { tint: string; label: string; value: string; note?: string }) {
     return (
-        <View style={styles.tile}>
-            <AppText variant="small">{label}</AppText>
+        <View style={[styles.tile, { backgroundColor: tint }]}>
             <AppText style={styles.tileValue}>{value}</AppText>
-            {note ? <AppText variant="small" style={styles.tileNote}>{note}</AppText> : null}
+            <AppText style={styles.tileLabel}>{label}</AppText>
+            {note ? <AppText style={styles.tileNote}>{note}</AppText> : null}
         </View>
     );
 }
 
-// Một trò, một chuỗi cột: kỳ hiện tại màu thương hiệu, các kỳ trước màu nhạt.
+// Một trò, một chuỗi cột: kỳ hiện tại màu của trò, các kỳ trước màu nhạt.
 // Kỳ không chơi để trống (–) thay vì cột 0%, vì 0% nghĩa là có chơi nhưng nhớ sai hết.
 function AccuracyChart({ buckets, passAccuracyOf }: { buckets: PeriodBucket[]; passAccuracyOf: (game: GameId) => number }) {
     // Mặc định trò chơi nhiều nhất trong các kỳ đang xem
@@ -147,10 +146,26 @@ function AccuracyChart({ buckets, passAccuracyOf }: { buckets: PeriodBucket[]; p
     const current = buckets.length - 1;
 
     return (
-        <View style={{ gap: spacing.sm }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <Chips accessibilityLabel="Trò chơi" options={GAME_IDS.map((id) => ({ value: id, label: GAME_META[id].label }))} value={game} onChange={setChosen} />
-            </ScrollView>
+        <View style={{ gap: spacing.md }}>
+            <View style={styles.gameSwitch}>
+                {GAME_IDS.map((id) => {
+                    const Icon = GAME_ICONS[id];
+                    const active = id === game;
+                    return (
+                        <Pressable
+                            key={id}
+                            onPress={() => setChosen(id)}
+                            accessibilityRole="button"
+                            accessibilityLabel={GAME_META[id].label}
+                            accessibilityState={{ selected: active }}
+                            style={[styles.gameDot, { backgroundColor: active ? GAME_META[id].color : GAME_META[id].tint }]}
+                        >
+                            <Icon color={active ? colors.white : GAME_META[id].color} size={20} strokeWidth={2.4} />
+                        </Pressable>
+                    );
+                })}
+            </View>
+            <AppText style={styles.chartTitle}>{GAME_META[game].label}</AppText>
             <View style={[styles.chart, { height: CHART_HEIGHT + 40 }]}>
                 <View style={[styles.passLine, { bottom: 40 + CHART_HEIGHT * passAccuracy }]}>
                     <AppText style={styles.passLabel}>Đạt {Math.round(passAccuracy * 100)}%</AppText>
@@ -169,12 +184,7 @@ function AccuracyChart({ buckets, passAccuracyOf }: { buckets: PeriodBucket[]; p
                                 {accuracy !== null ? (
                                     <>
                                         <AppText style={styles.barValue}>{formatPercent(accuracy)}</AppText>
-                                        <GrowBar
-                                            key={game}
-                                            index={index}
-                                            height={Math.max(2, CHART_HEIGHT * accuracy - 16)}
-                                            color={index === current ? GAME_META[game].color : '#c9d6cc'}
-                                        />
+                                        <GrowBar key={game} index={index} height={Math.max(2, CHART_HEIGHT * accuracy - 16)} color={index === current ? GAME_META[game].color : GAME_META[game].tint} />
                                     </>
                                 ) : (
                                     <AppText style={styles.none}>–</AppText>
@@ -228,12 +238,14 @@ function PracticeCalendar() {
                                     onPress={() => setSelected(cell)}
                                     accessibilityRole="button"
                                     accessibilityLabel={`Ngày ${cell.day}: ${cell.sessions.length} ván`}
-                                    style={[styles.day, { backgroundColor: HEAT[intensity(cell.sessions.length)] }, selected?.key === cell.key && styles.daySelected]}
+                                    style={styles.dayCell}
                                 >
-                                    <AppText style={[styles.dayText, intensity(cell.sessions.length) >= 2 && { color: colors.white }]}>{cell.day}</AppText>
+                                    <View style={[styles.day, { backgroundColor: HEAT[intensity(cell.sessions.length)] }, selected?.key === cell.key && styles.daySelected]}>
+                                        <AppText style={[styles.dayText, intensity(cell.sessions.length) >= 2 && { color: colors.white }]}>{cell.day}</AppText>
+                                    </View>
                                 </Pressable>
                             ) : (
-                                <View key={`empty-${index}`} style={styles.dayEmpty} />
+                                <View key={`empty-${index}`} style={styles.dayCell} />
                             ),
                         )}
                     </View>
@@ -248,70 +260,100 @@ function DaySummary({ day }: { day: CalendarDay }) {
     const { played, accuracy, minutes } = summarizeDay(day.sessions);
     const date = `${day.key.slice(8, 10)}/${day.key.slice(5, 7)}`;
     return (
-        <AppText variant="small" style={{ color: colors.ink }}>
+        <AppText variant="small" style={{ color: colors.ink, fontFamily: fonts.semibold }}>
             {played === 0 ? `${date}: không chơi ván nào.` : `${date}: ${played} ván · chính xác ${formatPercent(accuracy)} · ${minutes} phút`}
         </AppText>
     );
 }
 
-function History({ sessions }: { sessions: GameSession[] }) {
-    if (sessions.length === 0) return <AppText variant="body">Chưa có ván nào. Chơi một ván để bắt đầu theo dõi tiến độ.</AppText>;
+// Toàn bộ lịch sử, mới nhất trước, 10 ván mỗi lần tải (GET /api/game-sessions có cursor)
+function History({ game }: { game: GameFilter }) {
+    const { sessions, nextCursor, status, error, loadMore } = useGameHistory(game);
+
+    if (status === 'loading' && sessions.length === 0) return <ActivityIndicator color={colors.brand} />;
+    if (sessions.length === 0 && status !== 'error') return <AppText variant="body">Chưa có ván nào. Chơi một ván để bắt đầu theo dõi tiến độ.</AppText>;
+
     return (
-        <View>
-            {sessions.map((session) => {
-                const meta = GAME_META[session.game];
-                return (
-                    <View
-                        key={session.id}
-                        style={styles.historyRow}
-                        accessibilityLabel={`${meta.label}, ${formatWhen(session.playedAt, PROGRESS_TIME_ZONE)}, đúng ${session.correctItems}/${session.totalItems}, ${GRADE_LABELS[session.grade]}`}
-                    >
-                        <View style={[styles.dot, { backgroundColor: meta.color }]} />
-                        <View style={{ flex: 1 }}>
-                            <AppText style={styles.historyTitle}>
-                                {meta.label}
-                                {session.daily ? ' · Thử thách' : session.level !== null ? ` · Cấp ${session.level}` : ' · Tự chọn'}
-                            </AppText>
-                            <AppText variant="small">{formatWhen(session.playedAt, PROGRESS_TIME_ZONE)} · đúng {session.correctItems}/{session.totalItems}</AppText>
-                        </View>
-                        <View style={{ alignItems: 'flex-end' }}>
-                            <AppText variant="small" style={[styles.grade, { color: GRADE_COLORS[session.grade] }]}>{GRADE_LABELS[session.grade]}</AppText>
-                            {session.expEarned > 0 ? <AppText variant="small">+{session.expEarned} EXP</AppText> : null}
-                        </View>
-                    </View>
-                );
-            })}
+        <View style={{ gap: spacing.sm }}>
+            {sessions.length > 0 ? (
+                <View style={styles.group}>
+                    {sessions.map((session, i) => (
+                        <HistoryRow key={session.id} session={session} divider={i > 0} />
+                    ))}
+                </View>
+            ) : null}
+            {error ? <AppText variant="small" style={{ color: colors.danger }} accessibilityRole="alert">{error}</AppText> : null}
+            {nextCursor || error ? (
+                <Button title={error ? 'Thử lại' : 'Xem thêm'} variant="secondary" loading={status === 'loading'} onPress={() => void loadMore()} />
+            ) : null}
+        </View>
+    );
+}
+
+function HistoryRow({ session, divider }: { session: GameSession; divider: boolean }) {
+    const meta = GAME_META[session.game];
+    const Icon = GAME_ICONS[session.game];
+    const grade = GRADES[session.grade];
+    return (
+        <View
+            style={[styles.historyRow, divider && styles.divider]}
+            accessibilityLabel={`${meta.label}, ${formatWhen(session.playedAt, PROGRESS_TIME_ZONE)}, đúng ${session.correctItems}/${session.totalItems}, ${grade.label}`}
+        >
+            <View style={[styles.historyIcon, { backgroundColor: meta.color }]}>
+                <Icon color={colors.white} size={16} strokeWidth={2.4} />
+            </View>
+            <View style={{ flex: 1 }}>
+                <AppText style={styles.historyTitle} numberOfLines={1}>
+                    {meta.label}
+                    <AppText variant="small">{session.daily ? ' · Thử thách' : session.level !== null ? ` · Cấp ${session.level}` : ' · Tự chọn'}</AppText>
+                </AppText>
+                <AppText variant="small">{formatWhen(session.playedAt, PROGRESS_TIME_ZONE)} · {session.correctItems}/{session.totalItems}</AppText>
+            </View>
+            <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                <AppText style={[styles.grade, { color: grade.color, backgroundColor: grade.bg }]}>{grade.label}</AppText>
+                {session.expEarned > 0 ? <AppText style={styles.exp}>+{session.expEarned} EXP</AppText> : null}
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    content: { padding: spacing.md, gap: spacing.md },
+    content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xl },
+    section: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink },
     tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    tile: { width: '48%', flexGrow: 1, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.wall, gap: 2 },
-    tileValue: { fontFamily: fonts.extrabold, fontSize: 20 },
-    tileNote: { fontSize: 12, lineHeight: 16 },
+    tile: { width: '48%', flexGrow: 1, padding: spacing.md, borderRadius: radius * 1.25, gap: 2 },
+    tileValue: { fontFamily: fonts.extrabold, fontSize: 24, lineHeight: 30, color: colors.ink, fontVariant: ['tabular-nums'] },
+    tileLabel: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink },
+    tileNote: { fontFamily: fonts.medium, fontSize: 12, lineHeight: 16, color: colors.inkSoft },
+    gameSwitch: { flexDirection: 'row', justifyContent: 'space-between' },
+    gameDot: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+    chartTitle: { fontFamily: fonts.bold, color: colors.ink },
     chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
     passLine: { position: 'absolute', left: 0, right: 0, borderTopWidth: 1, borderStyle: 'dashed', borderColor: colors.danger },
     passLabel: { position: 'absolute', right: 0, top: -16, fontSize: 10, lineHeight: 14, color: colors.danger, fontFamily: fonts.semibold },
     column: { flex: 1, alignItems: 'center', gap: 4 },
     track: { width: '100%', alignItems: 'center', justifyContent: 'flex-end' },
-    bar: { width: '70%', borderTopLeftRadius: 4, borderTopRightRadius: 4 },
+    bar: { width: '70%', borderTopLeftRadius: 6, borderTopRightRadius: 6 },
     barValue: { fontSize: 10, lineHeight: 14, fontFamily: fonts.semibold, color: colors.inkSoft },
     none: { color: colors.inkSoft },
     axis: { fontSize: 10, lineHeight: 14, color: colors.inkSoft, height: 16 },
     monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     navButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.wall },
-    monthLabel: { fontFamily: fonts.bold, fontSize: 16 },
+    monthLabel: { fontFamily: fonts.extrabold, fontSize: 16, color: colors.ink },
     weekRow: { flexDirection: 'row' },
     weekday: { width: `${100 / 7}%`, textAlign: 'center', fontSize: 12, color: colors.inkSoft, fontFamily: fonts.semibold },
     grid: { flexDirection: 'row', flexWrap: 'wrap' },
-    day: { width: `${100 / 7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.wall, borderRadius: 8 },
-    daySelected: { borderColor: colors.sun },
-    dayEmpty: { width: `${100 / 7}%`, aspectRatio: 1 },
-    dayText: { fontFamily: fonts.semibold, fontSize: 13 },
-    historyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 10, borderBottomWidth: 1, borderColor: colors.step },
-    dot: { width: 10, height: 10, borderRadius: 5 },
-    historyTitle: { fontFamily: fonts.semibold, color: colors.ink },
-    grade: { fontFamily: fonts.bold },
+    dayCell: { width: `${100 / 7}%`, aspectRatio: 1, padding: 2 },
+    day: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 10, borderWidth: 2, borderColor: colors.step },
+    daySelected: { borderColor: colors.sunDeep },
+    dayText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
+    bleed: { marginHorizontal: -spacing.lg },
+    bleedContent: { paddingHorizontal: spacing.lg },
+    group: { borderRadius: radius * 1.25, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: 4, borderBottomColor: colors.edge, overflow: 'hidden' },
+    historyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: 12 },
+    divider: { borderTopWidth: 1, borderTopColor: colors.step },
+    historyIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    historyTitle: { fontFamily: fonts.bold, color: colors.ink },
+    grade: { fontFamily: fonts.bold, fontSize: 12, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden' },
+    exp: { fontFamily: fonts.bold, fontSize: 12, color: colors.sunDeep },
 });

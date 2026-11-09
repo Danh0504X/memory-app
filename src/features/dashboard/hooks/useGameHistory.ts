@@ -28,8 +28,8 @@ interface HistoryState {
 const toErrorMessage = (error: unknown) =>
     (error as { message?: string }).message ?? 'Không thể tải lịch sử ván chơi. Vui lòng thử lại.';
 
-// Lịch sử ván trong khoảng [from, to), tải từng trang khi người dùng bấm "Xem thêm"
-export const useGameHistory = (from: string, to: string, game: GameFilter) => {
+// Lịch sử ván trong khoảng [from, to) (bỏ trống: mọi ván), tải từng trang khi người dùng bấm "Xem thêm"
+export const useGameHistory = (game: GameFilter, from?: string, to?: string) => {
     const [state, setState] = useState<HistoryState>({
         sessions: [],
         nextCursor: null,
