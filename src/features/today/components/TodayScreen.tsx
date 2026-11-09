@@ -30,6 +30,7 @@ import { TONES, TONE_EDGES } from '@/features/methods/guide/GuideScreen';
 import { METHODS, type Method, type MethodId } from '@/features/methods/methodsData';
 import { profileApi, type UserProfile } from '@/features/profile/api/profile.api';
 import { formatNumber, getLevelProgress } from '@/features/profile/utils/profileProgress';
+import { refreshReminder } from '@/features/reminder/reminder';
 import { onGameSessionRecorded } from '@/features/shared-game/events';
 import { setQuery } from '@/lib/queryCache';
 import { appStorage } from '@/lib/storage';
@@ -95,6 +96,11 @@ function MemberToday() {
     const exam = examLine(daysUntilExam(preferences, todayKey), roundsPerDay(preferences));
     // Chưa trả lời cũng chưa bỏ qua câu hỏi mục tiêu thì hỏi một lần ở đây
     const askGoals = preferences?.status === 'unset';
+    // Hôm nay đã chơi thì dời lời nhắc giữ chuỗi sang ngày mai (mở app, chơi xong ván đều tải lại hồ sơ)
+    const playedToday = profileData?.playedToday;
+    useEffect(() => {
+        if (playedToday !== undefined) void refreshReminder(playedToday).catch(() => undefined);
+    }, [playedToday]);
 
     const warmUp = () => {
         appStorage.setItem(WARM_KEY, todayKey);

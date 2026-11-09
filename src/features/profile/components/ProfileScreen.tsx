@@ -284,7 +284,7 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
                     <SettingRow icon={<CalendarDays color="#e8590c" size={18} />} tint="#fff0e6" title="Ngày thi" value={describeTargetDate(targetDate)} onPress={() => router.push('/goals')} divider />
                 ) : null}
                 <SettingRow icon={<BarChart3 color="#1c7ed6" size={18} />} tint={colors.sky} title="Tiến độ chi tiết" value="Biểu đồ, lịch và lịch sử ván chơi" onPress={() => router.navigate('/progress')} divider />
-                <ReminderRow />
+                <ReminderRow playedToday={profile.playedToday} />
             </View>
             <View style={styles.group}>
                 {editing ? (
@@ -330,14 +330,14 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
 }
 
 // Nhắc giữ chuỗi ngày: công tắc bật/tắt, bật thì chọn giờ nhắc
-function ReminderRow() {
+function ReminderRow({ playedToday }: { playedToday: boolean }) {
     const [hour, setHour] = useState(getReminderHour);
     const [busy, setBusy] = useState(false);
 
     const change = async (next: number | null) => {
         setBusy(true);
         try {
-            const ok = await setReminder(next);
+            const ok = await setReminder(next, playedToday);
             setHour(ok ? next : null);
             if (!ok) Alert.alert('Chưa bật được nhắc nhở', 'Hãy cho phép Memio gửi thông báo trong Cài đặt của máy.');
         } catch {
