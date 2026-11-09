@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
-import { colors, fonts, radius } from '@/constants/theme';
+import { colors, fonts } from '@/constants/theme';
 
 interface ChipsProps<T extends string | number> {
     options: { value: T; label: string }[];
@@ -38,14 +38,14 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
         minHeight: 44,
-        paddingHorizontal: 14,
-        borderRadius: radius,
-        borderWidth: 1.5,
-        borderColor: colors.step,
+        paddingHorizontal: 16,
+        borderRadius: 999,
+        borderWidth: 2,
+        borderColor: colors.line,
         backgroundColor: colors.white,
         justifyContent: 'center',
     },
-    selected: { borderColor: colors.brand, backgroundColor: colors.mint },
-    label: { fontFamily: fonts.semibold, color: colors.ink },
-    selectedLabel: { color: colors.brandDeep },
+    selected: { borderColor: colors.brand, backgroundColor: colors.brand },
+    label: { fontFamily: fonts.bold, color: colors.ink },
+    selectedLabel: { color: colors.white },
 });

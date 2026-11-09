@@ -2,7 +2,7 @@ import { Check, Lock } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
-import { colors, fonts, radius } from '@/constants/theme';
+import { EDGE, colors, fonts, radius } from '@/constants/theme';
 
 interface LevelGridProps {
     levels: { level: number; count: number }[];
@@ -32,10 +32,10 @@ export function LevelGrid({ levels, unlockedLevel, selectedLevel, shortUnit, onS
                     >
                         <View style={styles.top}>
                             {locked ? <Lock color={colors.inkSoft} size={12} /> : null}
-                            {done ? <Check color={colors.brand} size={12} /> : null}
-                            <AppText style={styles.number}>{level}</AppText>
+                            {done ? <Check color={selected ? colors.white : colors.brand} size={12} /> : null}
+                            <AppText style={[styles.number, selected && styles.selectedText]}>{level}</AppText>
                         </View>
-                        <AppText variant="small" style={styles.count}>{count} {shortUnit}</AppText>
+                        <AppText variant="small" style={[styles.count, selected && styles.selectedText]}>{count} {shortUnit}</AppText>
                     </PressableScale>
                 );
             })}
@@ -49,13 +49,16 @@ const styles = StyleSheet.create({
         width: 62,
         minHeight: 56,
         borderRadius: radius,
-        borderWidth: 1.5,
-        borderColor: colors.step,
+        borderWidth: 2,
+        borderColor: colors.line,
+        borderBottomWidth: EDGE,
+        borderBottomColor: colors.edge,
         backgroundColor: colors.white,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    selected: { borderColor: colors.brand, backgroundColor: colors.mint },
+    selected: { borderColor: colors.brand, backgroundColor: colors.brand, borderBottomColor: colors.brandDeep },
+    selectedText: { color: colors.white },
     locked: { opacity: 0.45 },
     top: { flexDirection: 'row', alignItems: 'center', gap: 2 },
     number: { fontFamily: fonts.extrabold, fontSize: 18 },

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, radius, spacing } from '@/constants/theme';
 import type { Request } from '@/features/dashboard/hooks/useOverview';
 import { AppText } from './AppText';
 import { Button } from './Button';
@@ -39,7 +39,16 @@ export function BlockState<T>({ request, onRetry, children }: { request: Request
 }
 
 const styles = StyleSheet.create({
-    panel: { backgroundColor: colors.white, borderRadius: radius * 1.5, borderWidth: 1, borderColor: colors.step, padding: spacing.md, gap: spacing.sm },
+    panel: {
+        backgroundColor: colors.white,
+        borderRadius: radius * 1.5,
+        borderWidth: 2,
+        borderColor: colors.line,
+        borderBottomWidth: EDGE,
+        borderBottomColor: colors.edge,
+        padding: spacing.md,
+        gap: spacing.sm,
+    },
     head: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     state: { gap: spacing.sm, paddingVertical: spacing.sm },
 });

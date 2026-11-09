@@ -29,8 +29,8 @@ Backend phải đang chạy (`npm run dev` trong memory-be).
 ```
 src/
   app/            Route (expo-router): (tabs)/ Hôm nay · Luyện tập · Thử thách · Phương pháp · Hồ sơ; games/, methods/, practice/, login, register…
-  components/ui/  Thành phần giao diện dùng chung (AppText, Button, TextField, Screen)
-  constants/      Màu, font, khoảng cách (lấy từ hệ thống thiết kế của bản web)
+  components/ui/  Thành phần giao diện dùng chung (AppText, Button, Panel, NavRow, ProgressRing, TextField, Screen)
+  constants/      Màu, font, khoảng cách, gờ nút (theme.ts) và chuyển động (motion.ts)
   features/       Logic theo tính năng, mang từ bản web: api, store (zustand), utils, types
   lib/            api-client (axios), session (token trong SecureStore), storage (expo-sqlite kv-store)
   assets/memio/   Ảnh SVG/JPG của Memio (import SVG thành component qua metro.config.js)
@@ -48,10 +48,17 @@ test/             Test logic, chạy bằng Node (thay module native bằng bả
 - **Đồng hồ ván chơi:** `visibilitychange` → `AppState` (tính lại theo deadline khi app trở lại).
 - **Tải trước ảnh:** `new Image()` → `Image.prefetch` của expo-image.
 
+## Giao diện
+
+App không chép giao diện web mà theo phong cách riêng cho điện thoại, **"vui, nhiều màu"**:
+mỗi trò một màu (`GAME_META` trong `features/shared-game/registry.ts`: `color`, `edge`, `tint`),
+thẻ và nút "dày" có gờ dưới đậm hơn (`EDGE` trong `theme.ts`), ô trò chơi màu (`GameTile`),
+vòng tiến độ (`ProgressRing`), hàng dẫn (`NavRow`), ít chữ. Không dùng màu tím.
+
 ## Đã có
 
 - 5 trò chơi: Thẻ bài, Hình ảnh, Gương mặt & Tên, Ghi nhớ từ, Ghi nhớ số (`src/app/games/`).
-- Hôm nay, Thử thách ngày (`/daily`), Hồ sơ, Mục tiêu luyện tập (`/goals`), Đổi mật khẩu, Tiến độ (`/progress`).
+- Hôm nay, Thử thách ngày (`/daily`), Hồ sơ, Mục tiêu luyện tập (`/goals`), Đổi mật khẩu, Tiến độ (`/progress`, có toàn bộ lịch sử ván lọc theo trò, tải thêm từng trang).
 - Phương pháp (`/methods`) và ba trang hướng dẫn có trò chơi thử (`/methods/story-linking`, `/methods/number-shape`, `/methods/memory-palace`).
 - Quên mật khẩu (`/forgot-password`) và Đặt mật khẩu mới (`/reset-password?token=...`, mở bằng deep link `memio://`).
 - Trang chủ cho khách (tab Hôm nay khi chưa đăng nhập) và ba bài thực hành (`/practice/story`, `/practice/numbers`, `/practice/loci`).
@@ -61,4 +68,4 @@ test/             Test logic, chạy bằng Node (thay module native bằng bả
 - Email đặt lại mật khẩu hiện chỉ có link web: thêm link `memio://reset-password?token=...` ở backend, hoặc universal link / app link (cần xác minh tên miền), để mở thẳng trong app.
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build), Sign in with Apple, xoá tài khoản.
 - Thông báo nhắc giữ chuỗi ngày (push notification).
-- Hiệu ứng chuyển động của hình minh hoạ như bản web (Reanimated).
+- Thiết kế lại theo phong cách mới cho màn chơi (cài đặt ván, thanh trên, kết quả), trang chủ khách và các màn tài khoản.

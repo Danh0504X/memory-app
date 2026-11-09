@@ -9,8 +9,8 @@ export default function TabsLayout() {
                 headerShown: false,
                 tabBarActiveTintColor: colors.brand,
                 tabBarInactiveTintColor: colors.inkSoft,
-                tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 12 },
-                tabBarStyle: { backgroundColor: colors.white, borderTopColor: colors.step },
+                tabBarLabelStyle: { fontFamily: fonts.bold, fontSize: 11 },
+                tabBarStyle: { backgroundColor: colors.white, borderTopColor: colors.line, borderTopWidth: 2 },
             }}
         >
             <Tabs.Screen

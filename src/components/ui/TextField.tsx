@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     input: {
         minHeight: 52,
         borderRadius: radius,
-        borderWidth: 1.5,
+        borderWidth: 2,
         borderColor: colors.step,
         backgroundColor: colors.white,
         paddingHorizontal: 16,
