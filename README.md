@@ -59,6 +59,10 @@ màn tài khoản dùng `AuthParts`. Chạm nút có rung nhẹ (`expo-haptics` 
 
 ## Đã có
 
+- Parent: phân quyền theo tài khoản/xác minh email; từ Hồ sơ của con mở “Phụ huynh đồng hành” để đăng ký, gửi lại email, kiểm tra liên kết. Parent có tổng quan, hồ sơ con, báo cáo ngày/tuần, nhóm tuổi, điểm đồng hành và đổi/khôi phục mật khẩu.
+- “Chơi cùng ba mẹ” trong Hồ sơ sau đăng nhập: con nhập mã; Parent tạo phòng với cấu hình từ backend, chơi đủ 5 trò, xem kết quả từng vòng và toàn phiên. Nháp đáp án phục hồi theo account/phòng/vòng; đồng hồ theo server; đồng bộ lại khi foreground/focus. Phần này đã qua kiểm tra code/bundle, chưa nghiệm thu trên thiết bị.
+- Email xác minh/reset vẫn mở trang web. Có thể hoàn tất trên web rồi quay app; màn `/parent/verify` hỗ trợ dán link xác minh. Deep link có sẵn `memio://parent/verify?token=...` và `memio://parent/reset-password?token=...`; chưa có universal/app links từ email.
+
 - 5 trò chơi: Thẻ bài, Hình ảnh, Gương mặt & Tên, Ghi nhớ từ, Ghi nhớ số (`src/app/games/`).
 - Hôm nay, Thử thách ngày (`/daily`), Hồ sơ, Mục tiêu luyện tập (`/goals`), Đổi mật khẩu, Tiến độ (`/progress`, có toàn bộ lịch sử ván lọc theo trò, tải thêm từng trang).
 - Phương pháp (`/methods`) và ba trang hướng dẫn có trò chơi thử (`/methods/story-linking`, `/methods/number-shape`, `/methods/memory-palace`).
@@ -71,7 +75,7 @@ màn tài khoản dùng `AuthParts`. Chạm nút có rung nhẹ (`expo-haptics` 
 
 ## Việc còn lại
 
-- Parent và “Chơi cùng ba mẹ”: đã khảo sát web/backend, thêm API adapter và kiểm thử hợp đồng; **chưa có màn hình hoặc entry sử dụng**. Kế hoạch: [docs/plans/parent-features-mobile.md](docs/plans/parent-features-mobile.md); nhật ký: [docs/journal/parent-features-mobile.md](docs/journal/parent-features-mobile.md). Người dùng yêu cầu dừng UI để bổ sung hai skill được CLAUDE.md yêu cầu.
+- Kiểm thử Parent/phòng gia đình trên hai thiết bị thật (hoặc app + web) và SMTP thực tế: chưa thực hiện. Kế hoạch và checklist: [docs/plans/parent-features-mobile.md](docs/plans/parent-features-mobile.md); nhật ký: [docs/journal/parent-features-mobile.md](docs/journal/parent-features-mobile.md).
 
 - Email đặt lại mật khẩu hiện chỉ có link web: thêm link `memio://reset-password?token=...` ở backend, hoặc universal link / app link (cần xác minh tên miền), để mở thẳng trong app.
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build) và Sign in with Apple (bắt buộc trên iOS khi có Google).

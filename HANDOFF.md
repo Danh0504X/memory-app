@@ -1,10 +1,12 @@
 # Giao ca: Memio App (cập nhật 09/11/2026)
 
-## Bổ sung phiên Parent mobile (09/11/2026)
+## Bổ sung phiên Parent mobile (09/11/2026, phiên tiếp tục)
 
-- Đọc `docs/plans/parent-features-mobile.md` và `docs/journal/parent-features-mobile.md` trước khi tiếp tục. Đã có adapter API Parent/phòng gia đình/recovery và test; **chưa triển khai UI, auth guard hoặc phòng chơi native**.
-- Người dùng chọn dừng giao diện để bổ sung `ponytail` và `design-taste-frontend` (CLAUDE.md yêu cầu, môi trường chưa có). Không tự tiếp tục UI khi chưa giải quyết điều kiện này.
-- `package-lock.json` đã có thay đổi trước phiên; không stage cùng tính năng. Kiểm tra Git thực tế thay vì dựa vào trạng thái sạch được ghi ở các mục cũ bên dưới.
+- Đọc `docs/plans/parent-features-mobile.md` và `docs/journal/parent-features-mobile.md`. Đã triển khai guard/điều hướng, liên kết/xác minh, dashboard/hồ sơ/báo cáo, tài khoản Parent và phòng gia đình 5 trò. **Chưa nghiệm thu giao diện và hai thiết bị thật**.
+- Người dùng đã cho phép “Tiếp tục UI theo quy ước app hiện có” dù thiếu ponytail/design-taste-frontend. Dùng component/theme/motion sẵn có; không cần hỏi lại về hai skill cho tác vụ này.
+- Typecheck đạt; app test 87/87; export Android/iOS đạt; lint Hooks qua cấu hình tạm ngoài repo sạch. Backend Parent: 8/8 trên MongoDB cô lập tại `/tmp`, đã dừng database sau test. Bộ mobile-client: 13/14, lỗi có sẵn về chuỗi thông báo cấu hình Google; backend không bị sửa.
+- Expo Doctor 18/20: hai kiểm tra mạng thất bại. CUA báo browser host unavailable; xcrun không có simctl, adb không có. Không khẳng định đã thử trên điện thoại.
+- `package-lock.json` có thay đổi trước phiên; không stage cùng tính năng. Giữ nguyên thay đổi navbar trong repo web.
 
 Tài liệu cho người làm tiếp app React Native `memory-app`. Đọc cùng `README.md` (cách chạy, cấu trúc) và
 `CLAUDE.md` (quy ước khi code).
