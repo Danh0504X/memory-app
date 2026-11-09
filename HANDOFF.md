@@ -66,7 +66,7 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
   - Dùng `marginHorizontal: -spacing.lg` để tràn ra mép màn, nên giả định màn cha có lề `spacing.lg`. Đúng với `Screen`, sai nếu đặt chỗ khác.
   - Dải tự cuộn tới cấp đang chọn khi mở màn; cần xem có bị giật không.
 - **Thanh trạng thái:** `PlayLayout` đặt `<StatusBar style="light" />`. Cần kiểm tra khi thoát ván, thanh trạng thái có trở lại chữ tối không.
-- **Bàn phím trên Android (edge-to-edge của SDK 58):** `Screen` và `PlayLayout` dùng `KeyboardAvoidingView` với `behavior` undefined trên Android. Cần xem bàn phím có che ô nhập tên/từ khi chơi Gương mặt & Tên, Ghi nhớ từ, nút "Nộp bài", nút ở màn Mục tiêu không. Nếu che: thử `behavior="padding"` cho cả Android, nhưng kiểm tra kỹ vì có thể bị đẩy hai lần (khoảng trống thừa).
+- **Bàn phím:** `Screen` và `PlayLayout` dùng `KeyboardSafe` (11/2026): `behavior="padding"` cho cả Android (edge-to-edge), `keyboardVerticalOffset` đo bằng `measureInWindow` để màn dưới header/thanh trên của ván chơi không bị che thiếu. Vẫn cần thử trên máy: ô nhập Gương mặt & Tên, Ghi nhớ từ, nút "Nộp bài", màn Mục tiêu.
 - **Rung:** `PressableScale` rung **mỗi lần bấm**, kể cả khi chọn bài ở bàn nhớ lại. Nếu thấy quá nhiều, tắt rung cho khay bài trong `RecallBoard`.
 - **Chữ to (Accessibility):** chữ có thể tràn ở `GameTile`, ô số liệu Hồ sơ/Tiến độ, lộ trình và dải 7 ngày (màn Hôm nay) và viên phần thưởng.
 - **Pháo giấy:** `Confetti` nằm trong dải kết quả có `overflow: 'hidden'`; cần xem pháo giấy có bị cắt xấu không.
@@ -85,12 +85,12 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
 ### 4.4 Cần sửa backend (memory-be)
 - **Xoá tài khoản:** đã xong (`DELETE /api/profile`, màn `/delete-account`).
 - **Email đặt lại mật khẩu:** hiện chỉ có link web. Thêm `memio://reset-password?token=...`, hoặc universal link/app link. App đã có màn `/reset-password` nhận deep link `memio://`.
-- **Nhắc giữ chuỗi ngày:** đã có bản cục bộ (`features/reminder/reminder.ts`, hẹn giờ hằng ngày). Muốn chỉ nhắc khi hôm nay chưa chơi thì cần push từ backend (lưu push token, lịch gửi).
+- **Nhắc giữ chuỗi ngày:** bản cục bộ (`features/reminder`): hẹn sẵn từng ngày cho 14 ngày, bỏ qua hôm đã chơi (`reminderDates.ts`, có test); màn Hôm nay hẹn lại mỗi khi `playedToday` đổi. Bỏ app quá 14 ngày thì thôi nhắc.
 
 ### 4.5 Trước khi lên store
 - **Đăng nhập Google native:** `@react-native-google-signin/google-signin`, cần development build. Backend đã nhận `idToken` và kiểm tra `aud`.
 - **Sign in with Apple:** bắt buộc nếu có đăng nhập Google trên iOS.
-- **Cấu hình phát hành:** biểu tượng app, màn khởi động, cấu hình EAS Build, trang chính sách quyền riêng tư.
+- **Cấu hình phát hành:** biểu tượng app và màn khởi động Memio đã có (11/2026, tạo từ path của `MemioMark`). Còn cấu hình EAS Build và trang chính sách quyền riêng tư.
   `app.json` hiện có `scheme: memio` và bundle/package là `com.memio.app`.
 
 ## 5. Bẫy đã gặp (đừng lặp lại)

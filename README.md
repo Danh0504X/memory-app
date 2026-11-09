@@ -66,12 +66,11 @@ màn tài khoản dùng `AuthParts`. Chạm nút có rung nhẹ (`expo-haptics` 
 - Trang chủ cho khách (tab Hôm nay khi chưa đăng nhập) và ba bài thực hành (`/practice/story`, `/practice/numbers`, `/practice/loci`).
 - Duy trì đăng nhập: user lưu cùng token trong SecureStore, mở app là vào ngay rồi refresh ở nền; chỉ đăng xuất khi backend trả 401/403 (mất mạng thì giữ phiên). Backend gia hạn phiên mỗi lần refresh (phiên trượt 14 ngày).
 - Xoá tài khoản (`/delete-account`, backend `DELETE /api/profile`).
-- Nhắc giữ chuỗi ngày bằng thông báo cục bộ (`expo-notifications`, bật và chọn giờ trong Hồ sơ).
+- Nhắc giữ chuỗi ngày bằng thông báo cục bộ (`expo-notifications`, bật và chọn giờ trong Hồ sơ); hôm đã chơi thì không nhắc.
 - Kéo để làm mới có vòng quay; khung chờ (`Skeleton`) thay vòng quay khi tải.
 
 ## Việc còn lại
 
 - Email đặt lại mật khẩu hiện chỉ có link web: thêm link `memio://reset-password?token=...` ở backend, hoặc universal link / app link (cần xác minh tên miền), để mở thẳng trong app.
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build) và Sign in with Apple (bắt buộc trên iOS khi có Google).
-- Nhắc chuỗi ngày hiện nhắc cả khi hôm nay đã chơi; muốn bỏ thì cần push từ backend.
 - ESLint chưa cài (script `lint` có sẵn). Đã chạy thử: 0 lỗi, 4 cảnh báo cũ.
