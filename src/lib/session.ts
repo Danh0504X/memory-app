@@ -1,10 +1,12 @@
 import * as SecureStore from 'expo-secure-store';
+import type { User } from '@/types/auth.types';
 
 // Token đăng nhập và guestId của app. Bản web để trình duyệt giữ trong cookie httpOnly;
 // app mobile nhận chúng trong body (header X-Client: mobile) và tự giữ ở SecureStore (Keychain/Keystore).
 const ACCESS_TOKEN = 'memio.accessToken';
 const REFRESH_TOKEN = 'memio.refreshToken';
 const GUEST_ID = 'memio.guestId';
+const USER = 'memio.user';
 
 // Đọc đồng bộ một lần rồi giữ trong bộ nhớ: interceptor của axios cần token ngay, không chờ được.
 const values = new Map<string, string | null>();
@@ -45,4 +47,15 @@ export const sessionStore = {
     // Khách chơi không đăng nhập: backend cấp ở ván đầu, app gửi lại qua header X-Guest-Id
     getGuestId: () => read(GUEST_ID),
     setGuestId: (guestId: string) => write(GUEST_ID, guestId),
+    // Thông tin user lần gần nhất: mở app là vào ngay, không phải chờ (hay mất phiên vì) mạng chậm
+    getUser: (): User | null => {
+        const raw = read(USER);
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw) as User;
+        } catch {
+            return null;
+        }
+    },
+    setUser: (user: User | null) => write(USER, user ? JSON.stringify(user) : null),
 };

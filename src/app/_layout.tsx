@@ -10,8 +10,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { colors, fonts } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { sessionStore } from '@/lib/session';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +30,12 @@ export default function RootLayout() {
     // Khôi phục phiên đã lưu (refresh token trong SecureStore) ngay khi mở app
     useEffect(() => {
         void useAuthStore.getState().hydrate();
+        // Lần mở trước mất mạng nên chưa vào được phiên: quay lại app thì thử khôi phục lần nữa
+        const subscription = AppState.addEventListener('change', (state) => {
+            const auth = useAuthStore.getState();
+            if (state === 'active' && !auth.isAuthenticated && sessionStore.getRefreshToken()) void auth.hydrate();
+        });
+        return () => subscription.remove();
     }, []);
 
     // Giữ splash tới khi có font và biết đã đăng nhập hay chưa, tránh chớp màn "khách" rồi mới đổi

@@ -129,9 +129,14 @@ apiClient.interceptors.response.use(
       try {
         const user = await refreshSession();
         sessionHandlers?.onRefreshed(user);
-      } catch {
-        sessionHandlers?.onExpired();
-        return Promise.reject(normalizeError(error));
+      } catch (refreshError) {
+        // Chỉ đăng xuất khi backend từ chối phiên; refresh lỗi vì mất mạng thì giữ phiên, báo lỗi mạng
+        const status = (refreshError as ApiErrorResponse).status;
+        if (status === 401 || status === 403) {
+          sessionHandlers?.onExpired();
+          return Promise.reject(normalizeError(error));
+        }
+        return Promise.reject(refreshError);
       }
       return apiClient(originalRequest);
     }

@@ -16,37 +16,52 @@ interface AuthState {
     logout: () => Promise<void>;
 }
 
+// Backend từ chối phiên (hết hạn, bị thu hồi, tài khoản bị khoá); lỗi mạng có status 0
+export const isSessionRejected = (error: unknown): boolean => {
+    const status = (error as { status?: number } | null)?.status;
+    return status === 401 || status === 403;
+};
+
 // Token nằm ở SecureStore (src/lib/session.ts) và do api-client quản lý; store chỉ giữ thông tin user.
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     isAuthenticated: false,
     isLoading: true,
 
-    // Khôi phục phiên khi mở app: có refresh token đã lưu thì refresh để lấy access token mới và userInfo.
+    // Khôi phục phiên khi mở app. Có user đã lưu thì vào app ngay rồi refresh ở nền;
+    // chỉ đăng xuất khi backend từ chối phiên (401/403), mất mạng hay backend chưa chạy thì giữ phiên.
     hydrate: async () => {
         if (!sessionStore.getRefreshToken()) {
             set({ user: null, isAuthenticated: false, isLoading: false });
             return;
         }
+        const cached = sessionStore.getUser();
+        if (cached) set({ user: cached, isAuthenticated: true, isLoading: false });
         try {
-            const user = await authApi.refreshToken();
-            set({ user, isAuthenticated: true, isLoading: false });
-        } catch {
-            set({ user: null, isAuthenticated: false, isLoading: false });
+            useAuthStore.getState().saveSession(await authApi.refreshToken());
+        } catch (error) {
+            if (isSessionRejected(error)) useAuthStore.getState().clearSession();
+            else if (!cached) set({ user: null, isAuthenticated: false, isLoading: false });
         }
     },
 
     saveSession: (user) => {
+        sessionStore.setUser(user);
         set({ user, isAuthenticated: true, isLoading: false });
     },
 
     updateUser: (changes) => {
-        set((state) => (state.user ? { user: { ...state.user, ...changes } } : {}));
+        const { user } = useAuthStore.getState();
+        if (!user) return;
+        const next = { ...user, ...changes };
+        sessionStore.setUser(next);
+        set({ user: next });
     },
 
     // Xoá cả dữ liệu đã lưu đệm (hồ sơ, tiến độ) để người đăng nhập sau không thấy dữ liệu của người trước
     clearSession: () => {
         clearQueries();
+        sessionStore.setUser(null);
         set({ user: null, isAuthenticated: false, isLoading: false });
     },
 
