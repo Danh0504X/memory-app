@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { BarChart3, Bell, CalendarDays, ChevronDown, ChevronRight, Flame, KeyRound, LogOut, Mail, Medal, Pencil, Sparkles, Target } from 'lucide-react-native';
+import { BarChart3, Bell, ShieldCheck, CalendarDays, ChevronDown, ChevronRight, Flame, KeyRound, LogOut, Mail, Medal, Pencil, Sparkles, Target } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -317,6 +317,7 @@ function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => v
                     onPress={() => router.push('/change-password')}
                     divider
                 />
+                <SettingRow icon={<ShieldCheck color={colors.brand} size={18} />} tint={colors.mint} title="Quyền riêng tư" value="Memio lưu gì và ai nhìn thấy" onPress={() => router.push('/privacy')} divider />
             </View>
             <Pressable onPress={() => void onLogout()} disabled={loggingOut} accessibilityRole="button" style={[styles.group, styles.logout]}>
                 <LogOut color={colors.danger} size={20} />

@@ -61,6 +61,7 @@ export default function RegisterScreen() {
             ))}
             <FormError>{serverError}</FormError>
             <Button title="Tạo tài khoản" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
+            <TextLink lead="Tạo tài khoản là bạn đồng ý với" label="Chính sách quyền riêng tư" onPress={() => router.push('/privacy')} />
             <TextLink lead="Đã có tài khoản?" label="Đăng nhập" onPress={() => router.replace('/login')} />
         </Screen>
     );
