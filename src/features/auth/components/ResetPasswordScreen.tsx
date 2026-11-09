@@ -5,13 +5,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Alert, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
-import { Mascot } from '@/components/ui/Mascot';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
 import { colors, spacing } from '@/constants/theme';
 import { sessionStore } from '@/lib/session';
 import { PASSWORD_RESET_ERROR_CODES, type ApiErrorResponse } from '@/types/auth.types';
 import { authApi } from '../api/auth.api';
+import { AuthHeader, FormError } from './AuthParts';
 import { resetPasswordSchema, type ResetPasswordFormData } from '../schemas/auth.schema';
 import { useAuthStore } from '../store/authStore';
 import { parseResetTokenFromHash } from '../utils/resetToken';
@@ -81,8 +81,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
 
     return (
         <Screen edges={['bottom']}>
-            <Mascot />
-            <AppText variant="lead">Chọn mật khẩu mới cho tài khoản Memio của bạn.</AppText>
+            <AuthHeader title="Đặt mật khẩu mới" line="Chọn mật khẩu mới cho tài khoản Memio của bạn." tint={colors.sky} />
 
             {status === 'checking' ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }} accessibilityLiveRegion="polite">
@@ -93,7 +92,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
 
             {status === 'invalid' ? (
                 <>
-                    <AppText variant="body" style={{ color: colors.danger }}>Liên kết không hợp lệ, đã hết hạn hoặc đã được dùng.</AppText>
+                    <FormError>Liên kết không hợp lệ, đã hết hạn hoặc đã được dùng.</FormError>
                     <AppText variant="small">Để nhận liên kết mới, bạn có thể gửi lại yêu cầu khôi phục mật khẩu.</AppText>
                     <Button title="Yêu cầu liên kết mới" onPress={() => router.replace('/forgot-password')} />
                 </>
@@ -101,7 +100,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
 
             {status === 'network-error' ? (
                 <>
-                    <AppText variant="body" style={{ color: colors.danger }}>Không kiểm tra được liên kết. Hãy kiểm tra kết nối mạng.</AppText>
+                    <FormError>Không kiểm tra được liên kết. Hãy kiểm tra kết nối mạng.</FormError>
                     <Button
                         title="Thử lại"
                         variant="secondary"
@@ -136,7 +135,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
                         />
                     ))}
                     <AppText variant="small">Từ 8 ký tự trở lên.</AppText>
-                    {serverError ? <AppText variant="small" style={{ color: colors.danger }} accessibilityRole="alert">{serverError}</AppText> : null}
+                    <FormError>{serverError}</FormError>
                     <Button title="Đặt mật khẩu mới" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
                 </>
             ) : null}

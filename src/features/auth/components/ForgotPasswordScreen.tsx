@@ -3,15 +3,14 @@ import { router } from 'expo-router';
 import { MailCheck } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { Mascot } from '@/components/ui/Mascot';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
-import { colors, spacing } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { PASSWORD_RESET_ERROR_CODES, type ApiErrorResponse } from '@/types/auth.types';
 import { authApi } from '../api/auth.api';
+import { AuthHeader, FormError, TextLink } from './AuthParts';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '../schemas/auth.schema';
 
 // Gửi link đặt lại mật khẩu qua email. Link mở trang /reset-password của bản web (backend ghép từ CLIENT_URL),
@@ -41,26 +40,23 @@ export function ForgotPasswordScreen() {
     if (sentTo) {
         return (
             <Screen edges={['bottom']}>
-                <View style={{ alignItems: 'center', gap: spacing.sm }}>
-                    <MailCheck color={colors.brand} size={48} />
-                    <AppText variant="heading">Kiểm tra hộp thư của bạn</AppText>
-                </View>
-                <AppText variant="body">
-                    Nếu email {sentTo} có trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi tới hộp thư của bạn.
-                </AppText>
+                <AuthHeader
+                    title="Kiểm tra hộp thư"
+                    line={`Nếu ${sentTo} có trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi tới hộp thư của bạn.`}
+                    icon={<MailCheck color={colors.brand} size={52} />}
+                />
                 <AppText variant="small">
                     Mở liên kết trong email (có hiệu lực 15 phút) để đặt mật khẩu mới, rồi quay lại đây đăng nhập. Hãy kiểm tra cả hộp thư rác nếu không thấy email.
                 </AppText>
                 <Button title="Quay lại đăng nhập" onPress={() => router.replace('/login')} />
-                <Button title="Gửi lại" variant="secondary" onPress={() => setSentTo(null)} />
+                <TextLink lead="Không nhận được?" label="Gửi lại" onPress={() => setSentTo(null)} />
             </Screen>
         );
     }
 
     return (
         <Screen edges={['bottom']}>
-            <Mascot />
-            <AppText variant="lead">Nhập email của tài khoản để nhận liên kết đặt lại mật khẩu.</AppText>
+            <AuthHeader title="Quên mật khẩu?" line="Nhập email của tài khoản, Memio gửi liên kết để đặt mật khẩu mới." tint={colors.sky} />
             <Controller
                 control={control}
                 name="email"
@@ -79,7 +75,7 @@ export function ForgotPasswordScreen() {
                     />
                 )}
             />
-            {serverError ? <AppText variant="small" style={{ color: colors.danger }} accessibilityRole="alert">{serverError}</AppText> : null}
+            <FormError>{serverError}</FormError>
             <Button title="Gửi liên kết" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
         </Screen>
     );

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
+import { KeyRound } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert } from 'react-native';
@@ -7,8 +8,8 @@ import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
-import { colors } from '@/constants/theme';
 import { authApi } from '@/features/auth/api/auth.api';
+import { AuthHeader, FormError } from '@/features/auth/components/AuthParts';
 import { changePasswordSchema, setPasswordSchema, type ChangePasswordFormData } from '@/features/auth/schemas/auth.schema';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { sessionStore } from '@/lib/session';
@@ -50,11 +51,12 @@ export function ChangePasswordScreen() {
 
     return (
         <Screen edges={['bottom']}>
-            <AppText variant="lead">
-                {hasPassword
-                    ? 'Đổi mật khẩu sẽ đăng xuất bạn khỏi mọi thiết bị.'
-                    : 'Bạn đang đăng nhập bằng Google. Đặt mật khẩu để đăng nhập được bằng email nữa.'}
-            </AppText>
+            <AuthHeader
+                title={hasPassword ? 'Đổi mật khẩu' : 'Đặt mật khẩu'}
+                line={hasPassword ? 'Đổi mật khẩu sẽ đăng xuất bạn khỏi mọi thiết bị.' : 'Bạn đang đăng nhập bằng Google. Đặt mật khẩu để đăng nhập được bằng email nữa.'}
+                icon={<KeyRound color="#e8590c" size={48} />}
+                tint="#fff0e6"
+            />
             {fields.map(({ name, label, autoComplete }) => (
                 <Controller
                     key={name}
@@ -75,7 +77,7 @@ export function ChangePasswordScreen() {
                 />
             ))}
             <AppText variant="small">Từ 8 ký tự trở lên.</AppText>
-            {serverError ? <AppText variant="small" style={{ color: colors.danger }} accessibilityRole="alert">{serverError}</AppText> : null}
+            <FormError>{serverError}</FormError>
             <Button title={hasPassword ? 'Đổi mật khẩu' : 'Đặt mật khẩu'} loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
         </Screen>
     );

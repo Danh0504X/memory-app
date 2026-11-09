@@ -1,13 +1,15 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import { Check } from 'lucide-react-native';
+import { Check, Target } from 'lucide-react-native';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { BlockState } from '@/components/ui/Panel';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Screen } from '@/components/ui/Screen';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
+import { AuthHeader, FormError } from '@/features/auth/components/AuthParts';
 import { PROFILE_KEY, useProfile } from '@/features/dashboard/hooks/useOverview';
 import { setQuery } from '@/lib/queryCache';
 import type { ApiErrorResponse } from '@/types/auth.types';
@@ -31,10 +33,12 @@ const dateToKey = (date: Date) =>
 
 export function GoalsScreen() {
     const profile = useProfile();
+    // Có hồ sơ thì form tự dựng Screen (nút Lưu dính đáy cần trạng thái của form)
+    if (profile.state.status === 'ready') return <GoalsForm profile={profile.state.data} />;
     return (
         <Screen edges={['bottom']}>
             <BlockState request={profile.state} onRetry={profile.reload}>
-                {(data) => <GoalsForm profile={data} />}
+                {() => null}
             </BlockState>
         </Screen>
     );
@@ -87,8 +91,16 @@ function GoalsForm({ profile }: { profile: UserProfile }) {
     };
 
     return (
-        <>
-            <AppText variant="lead">Memio dùng mục tiêu để gợi ý trò nên chơi và số ván mỗi ngày.</AppText>
+        <Screen
+            edges={['bottom']}
+            footer={
+                <>
+                    <FormError>{error}</FormError>
+                    <Button title="Lưu mục tiêu" loading={saving} onPress={() => void save()} />
+                </>
+            }
+        >
+            <AuthHeader title="Mục tiêu của bạn" line="Memio dựa vào đây để gợi ý trò nên chơi và số ván mỗi ngày." icon={<Target color={colors.brand} size={48} />} />
 
             <AppText variant="heading">Bạn luyện trí nhớ để làm gì?</AppText>
             <AppText variant="small">Chọn một hoặc nhiều.</AppText>
@@ -96,19 +108,19 @@ function GoalsForm({ profile }: { profile: UserProfile }) {
                 {TRAINING_GOALS.map((goal) => {
                     const selected = draft.goals.includes(goal);
                     return (
-                        <Pressable
+                        <PressableScale
                             key={goal}
                             onPress={() => toggleGoal(goal)}
                             accessibilityRole="checkbox"
                             accessibilityState={{ checked: selected }}
                             style={[styles.option, selected && styles.optionSelected]}
                         >
-                            <View style={[styles.box, selected && styles.boxSelected]}>{selected ? <Check color={colors.white} size={14} /> : null}</View>
+                            <View style={[styles.box, selected && styles.boxSelected]}>{selected ? <Check color={colors.white} size={16} strokeWidth={3} /> : null}</View>
                             <View style={{ flex: 1 }}>
                                 <AppText style={styles.optionTitle}>{GOAL_LABELS[goal]}</AppText>
                                 <AppText variant="small">{GOAL_HINTS[goal]}</AppText>
                             </View>
-                        </Pressable>
+                        </PressableScale>
                     );
                 })}
             </View>
@@ -118,7 +130,7 @@ function GoalsForm({ profile }: { profile: UserProfile }) {
                 {DAILY_MINUTES_OPTIONS.map((minutes) => {
                     const selected = draft.dailyMinutes === minutes;
                     return (
-                        <Pressable
+                        <PressableScale
                             key={minutes}
                             onPress={() => setDraft((current) => ({ ...current, dailyMinutes: minutes }))}
                             accessibilityRole="radio"
@@ -127,7 +139,7 @@ function GoalsForm({ profile }: { profile: UserProfile }) {
                         >
                             <AppText style={styles.optionTitle}>{formatMinutes(minutes)}</AppText>
                             <AppText variant="small">{MINUTES_HINTS[minutes]}</AppText>
-                        </Pressable>
+                        </PressableScale>
                     );
                 })}
             </View>
@@ -156,18 +168,38 @@ function GoalsForm({ profile }: { profile: UserProfile }) {
                 </View>
             ) : null}
 
-            {error ? <AppText variant="small" style={{ color: colors.danger }} accessibilityRole="alert">{error}</AppText> : null}
-            <Button title="Lưu mục tiêu" loading={saving} onPress={() => void save()} />
-        </>
+        </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    option: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
-    optionSelected: { borderColor: colors.brand, backgroundColor: colors.mint },
-    box: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: colors.mint, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
+    option: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        padding: spacing.md,
+        borderRadius: radius * 1.25,
+        borderWidth: 2,
+        borderColor: colors.line,
+        borderBottomWidth: EDGE,
+        borderBottomColor: colors.edge,
+        backgroundColor: colors.white,
+    },
+    optionSelected: { borderColor: colors.brand, borderBottomColor: colors.brandDeep, backgroundColor: '#e3f4e6' },
+    box: { width: 28, height: 28, borderRadius: 8, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
     boxSelected: { backgroundColor: colors.brand, borderColor: colors.brand },
-    optionTitle: { fontFamily: fonts.semibold, color: colors.ink },
+    optionTitle: { fontFamily: fonts.bold, color: colors.ink },
     minutes: { flexDirection: 'row', gap: spacing.sm },
-    minute: { flex: 1, alignItems: 'center', gap: 2, padding: spacing.md, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
+    minute: {
+        flex: 1,
+        alignItems: 'center',
+        gap: 2,
+        padding: spacing.md,
+        borderRadius: radius * 1.25,
+        borderWidth: 2,
+        borderColor: colors.line,
+        borderBottomWidth: EDGE,
+        borderBottomColor: colors.edge,
+        backgroundColor: colors.white,
+    },
 });

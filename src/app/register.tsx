@@ -2,13 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { AppText } from '@/components/ui/AppText';
-import { Mascot } from '@/components/ui/Mascot';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
-import { colors } from '@/constants/theme';
 import { authApi } from '@/features/auth/api/auth.api';
+import { AuthHeader, FormError, TextLink } from '@/features/auth/components/AuthParts';
 import { registerSchema, type RegisterFormData } from '@/features/auth/schemas/auth.schema';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import type { ApiErrorResponse } from '@/types/auth.types';
@@ -43,8 +41,7 @@ export default function RegisterScreen() {
 
     return (
         <Screen edges={['bottom']}>
-            <Mascot />
-            <AppText variant="lead">Tài khoản giúp lưu tiến độ và mở thử thách mỗi ngày.</AppText>
+            <AuthHeader title="Tạo tài khoản" line="Miễn phí. Lưu tiến độ và mở thử thách mỗi ngày." tint="#fff3cf" />
             {FIELDS.map(({ name, label, props }) => (
                 <Controller
                     key={name}
@@ -62,9 +59,9 @@ export default function RegisterScreen() {
                     )}
                 />
             ))}
-            {serverError ? <AppText variant="small" style={{ color: colors.danger }}>{serverError}</AppText> : null}
+            <FormError>{serverError}</FormError>
             <Button title="Tạo tài khoản" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
-            <Button title="Đã có tài khoản? Đăng nhập" variant="secondary" onPress={() => router.replace('/login')} />
+            <TextLink lead="Đã có tài khoản?" label="Đăng nhập" onPress={() => router.replace('/login')} />
         </Screen>
     );
 }
