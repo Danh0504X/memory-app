@@ -54,6 +54,8 @@ App không chép giao diện web mà theo phong cách riêng cho điện thoại
 mỗi trò một màu (`GAME_META` trong `features/shared-game/registry.ts`: `color`, `edge`, `tint`),
 thẻ và nút "dày" có gờ dưới đậm hơn (`EDGE` trong `theme.ts`), ô trò chơi màu (`GameTile`),
 vòng tiến độ (`ProgressRing`), hàng dẫn (`NavRow`), ít chữ. Không dùng màu tím.
+Màn cài đặt ván dùng chung `SetupParts` (dải màu của trò, dải cấp cuộn ngang, nút Bắt đầu dính đáy qua `Screen footer`);
+màn tài khoản dùng `AuthParts`. Chạm nút có rung nhẹ (`expo-haptics` trong `PressableScale`), màn kết quả rung báo đạt/chưa đạt.
 
 ## Đã có
 
@@ -68,4 +70,4 @@ vòng tiến độ (`ProgressRing`), hàng dẫn (`NavRow`), ít chữ. Không d
 - Email đặt lại mật khẩu hiện chỉ có link web: thêm link `memio://reset-password?token=...` ở backend, hoặc universal link / app link (cần xác minh tên miền), để mở thẳng trong app.
 - Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build), Sign in with Apple, xoá tài khoản.
 - Thông báo nhắc giữ chuỗi ngày (push notification).
-- Thiết kế lại theo phong cách mới cho màn chơi (cài đặt ván, thanh trên, kết quả), trang chủ khách và các màn tài khoản.
+- Lỗi lint có từ trước (chạy `npx expo lint`, cần cài eslint): đọc ref lúc render trong `useFocusChain` (Gương mặt & Tên, Ghi nhớ từ) và dấu `"` chưa thoát trong chữ hướng dẫn.
