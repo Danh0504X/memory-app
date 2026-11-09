@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
     input: {
         minHeight: 56,
         borderRadius: radius,
-        borderWidth: 1.5,
-        borderColor: colors.step,
+        borderWidth: 2,
+        borderColor: colors.line,
         backgroundColor: colors.wall,
         textAlign: 'center',
         fontFamily: fonts.extrabold,

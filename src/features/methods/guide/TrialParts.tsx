@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { LiveShape } from '@/components/ui/LiveShape';
 import { PressableScale } from '@/components/ui/PressableScale';
 import { AppText } from '@/components/ui/AppText';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import type { Picture } from './pictures';
 
 // Khung chung của ba trò thử trong trang hướng dẫn: tiêu đề theo bước và nút chọn độ dài
@@ -29,7 +29,7 @@ export function TrialFrame({
             <AppText style={styles.title} accessibilityLiveRegion="polite">{title}</AppText>
             <View style={styles.levels} accessibilityRole="radiogroup">
                 {levels.map((size, index) => (
-                    <Pressable
+                    <PressableScale
                         key={size}
                         disabled={locked}
                         onPress={() => onLevel(index)}
@@ -37,8 +37,8 @@ export function TrialFrame({
                         accessibilityState={{ selected: index === level, disabled: locked }}
                         style={[styles.level, index === level && styles.levelOn, locked && { opacity: 0.5 }]}
                     >
-                        <AppText variant="small" style={styles.levelText}>{size} {unit}</AppText>
-                    </Pressable>
+                        <AppText variant="small" style={[styles.levelText, index === level && styles.levelTextOn]}>{size} {unit}</AppText>
+                    </PressableScale>
                 ))}
             </View>
             {children}
@@ -97,18 +97,19 @@ export const trialStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-    trial: { gap: spacing.md, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
-    title: { fontFamily: fonts.bold, fontSize: 17 },
+    trial: { gap: spacing.md, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
+    title: { fontFamily: fonts.extrabold, fontSize: 17, color: colors.ink },
     levels: { flexDirection: 'row', gap: spacing.sm },
-    level: { minHeight: 40, paddingHorizontal: 14, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, justifyContent: 'center' },
-    levelOn: { borderColor: colors.brand, backgroundColor: colors.mint },
-    levelText: { fontFamily: fonts.semibold, color: colors.ink },
+    level: { minHeight: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge, justifyContent: 'center' },
+    levelOn: { borderColor: colors.brand, borderBottomColor: colors.brandDeep, backgroundColor: colors.brand },
+    levelText: { fontFamily: fonts.bold, color: colors.ink },
+    levelTextOn: { color: colors.white },
     cell: { alignItems: 'center', gap: 4, maxWidth: 76 },
-    disc: { backgroundColor: colors.wall, borderWidth: 1.5, borderColor: colors.step, alignItems: 'center', justifyContent: 'center' },
-    ok: { borderColor: colors.brand, backgroundColor: '#eef8f0' },
-    bad: { borderColor: colors.danger, backgroundColor: '#fdecea' },
+    disc: { backgroundColor: colors.wall, borderWidth: 2, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
+    ok: { borderColor: colors.brand, backgroundColor: '#e3f4e6' },
+    bad: { borderColor: colors.danger, backgroundColor: colors.dangerTint },
     empty: { borderStyle: 'dashed', backgroundColor: colors.white },
     emptyText: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.inkSoft },
     label: { textAlign: 'center', fontSize: 12, lineHeight: 15, color: colors.ink },
-    choice: { width: 84, alignItems: 'center', gap: 4, padding: 8, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, backgroundColor: colors.white },
+    choice: { width: 84, alignItems: 'center', gap: 4, padding: 8, borderRadius: radius, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge, backgroundColor: colors.white },
 });

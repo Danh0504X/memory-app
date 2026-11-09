@@ -13,7 +13,6 @@ import { NumberTrial } from './NumberTrial';
 import { RouteTrial } from './RouteTrial';
 import { StoryTrial } from './StoryTrial';
 import type { GuideContent } from './types';
-import { WOODCUTS } from './woodcuts';
 
 // Nội dung ba trang hướng dẫn, chép từ bản web (StoryGuidePage, NumberShapeGuidePage, MemoryPalaceGuidePage).
 // Hình minh hoạ vẽ bằng component SVG thay cho <img>.
@@ -63,7 +62,7 @@ const STORY: GuideContent = {
     crumb: 'Nối thành câu chuyện',
     title: 'Nối thành câu chuyện',
     lead: 'Một danh sách rời rất dễ lẫn thứ tự. Cho mỗi hình làm gì đó với hình kế tiếp, rồi khi kể lại, câu chuyện kéo cả dãy ra đúng thứ tự.',
-    hero: { picture: pictureOf('Mèo'), woodcut: WOODCUTS.snake },
+    hero: { picture: pictureOf('Mèo') },
     how: {
         title: 'Từ hình rời đến một chuỗi',
         intro: 'Một hàng tên thì đọc qua là quên, còn một cảnh có hành động thì đọng lại. Ba bước dưới đây biến các hình rời thành một chuỗi, mỗi mắt xích gọi ra mắt xích sau.',
@@ -104,11 +103,6 @@ const STORY: GuideContent = {
         title: 'Chơi thử',
         intro: 'Các hình ngẫu nhiên hiện theo một hàng. Kể một câu chuyện nối chúng, rồi xếp lại sau khi bị xáo trộn. Bắt đầu với 4 hình.',
         game: <StoryTrial />,
-    },
-    history: {
-        title: 'Hình phải sống động',
-        text: 'Sách dạy ghi nhớ của Johann Romberch (1520) vẽ chữ cái thành con vật đang làm gì đó: rắn đang cuộn, rồng há miệng, chim nghiêng đầu. Người xưa đã biết điều mà câu chuyện của bạn cần: hình có hành động thì bám lâu hơn hình đứng yên.',
-        woodcuts: [WOODCUTS.head, WOODCUTS.snake, WOODCUTS.dragon, WOODCUTS.birds],
     },
     apply: {
         title: 'Áp dụng ngay',
@@ -190,7 +184,7 @@ const NUMBERS: GuideContent = {
     crumb: 'Biến số thành hình',
     title: 'Biến số thành hình',
     lead: 'Số 2 cong như cổ thiên nga, số 8 là người tuyết. Đổi mỗi chữ số thành một hình quen, nối các hình thành một cảnh, và cả dãy số được nhớ đúng thứ tự.',
-    hero: { picture: shape(2), woodcut: WOODCUTS.ladder },
+    hero: { picture: shape(2) },
     how: {
         title: 'Từ số rời đến một cảnh',
         intro: 'Chữ số trông giống nhau và không gợi gì, nên dễ trôi. Hình thì có dáng và có hành động. Ba bước dưới đây biến một dãy số rời thành một cảnh nhỏ, rồi đổi ngược cảnh ấy về số.',
@@ -214,11 +208,6 @@ const NUMBERS: GuideContent = {
         title: 'Chơi thử',
         intro: 'Một dãy số ngẫu nhiên hiện kèm hình của từng chữ số. Nhìn, nối thành cảnh, rồi gõ lại. Bắt đầu với 4 số; đúng hết thì thử dãy dài hơn.',
         game: <NumberTrial />,
-    },
-    history: {
-        title: 'Mẹo này đã 500 tuổi',
-        text: 'Năm 1520, tu sĩ Johann Romberch in một cuốn sách dạy cách ghi nhớ. Trong đó mỗi chữ cái được vẽ thành một đồ vật có cùng dáng: A là cái thang, B là cây đàn luýt. Memio làm đúng điều ấy với mười chữ số.',
-        woodcuts: [WOODCUTS.ladder, WOODCUTS.lute, WOODCUTS.horn, WOODCUTS.fish],
     },
     apply: {
         title: 'Áp dụng ngay',
@@ -295,7 +284,7 @@ const LOCI: GuideContent = {
     crumb: 'Căn phòng trí nhớ',
     title: 'Căn phòng trí nhớ',
     lead: 'Đường đi trong nhà mình thì bạn đã thuộc. Đặt mỗi điều cần nhớ vào một chỗ trên đường ấy, rồi đi lại trong đầu để nhặt chúng lên theo đúng thứ tự.',
-    hero: { picture: DOOR, woodcut: WOODCUTS.tower },
+    hero: { picture: DOOR },
     how: {
         title: 'Từ danh sách đến lộ trình',
         intro: 'Danh sách dài thì khó nhớ, nhưng con đường trong nhà thì bạn không quên. Ba bước dưới đây gắn từng mục của danh sách vào một chỗ trên con đường quen.',
@@ -341,11 +330,6 @@ const LOCI: GuideContent = {
         title: 'Chơi thử',
         intro: 'Một lộ trình trong nhà với 3 chỗ. Xem đồ vật được đặt ở từng chỗ, rồi đi lại và chọn đúng đồ. Đúng hết thì lộ trình dài thêm.',
         game: <RouteTrial />,
-    },
-    history: {
-        title: 'Ba phòng, ba mươi chỗ',
-        text: 'Romberch (1520) chia đại sảnh, thư viện và nhà nguyện thành các ô đánh số, mỗi ô giữ sẵn một đồ vật. Người học thuộc các ô theo thứ tự, rồi đặt điều cần nhớ vào đó. Căn nhà của bạn làm được việc tương tự.',
-        woodcuts: [WOODCUTS.aula, WOODCUTS.biblioteca, WOODCUTS.capella, WOODCUTS.tower],
     },
     apply: {
         title: 'Áp dụng ngay',

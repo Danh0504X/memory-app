@@ -1,6 +1,6 @@
 import { router, type Href } from 'expo-router';
 import { useState, type FC, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import type { SvgProps } from 'react-native-svg';
 import room0 from '@/assets/memio/practice/room-step0.svg';
@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { LiveShape } from '@/components/ui/LiveShape';
 import { Screen } from '@/components/ui/Screen';
 import { ease } from '@/constants/motion';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { pictureOf } from '@/features/methods/guide/pictures';
 
 // Bài thực hành có hướng dẫn (bản web: features/practice/pages): đề cố định, đi từng bước xem đề, che đề tự nhớ, xem đáp án
@@ -136,8 +136,24 @@ export function PracticeScreen({ practice }: { practice: Practice }) {
     const last = step === practice.steps.length - 1;
 
     return (
-        <Screen edges={['bottom']}>
-            <AppText variant="small" style={styles.overline}>Bài thực hành · {practice.title}</AppText>
+        <Screen
+            edges={['bottom']}
+            footer={
+                <>
+                    <Button title={current.action} onPress={() => setStep(last ? 0 : step + 1)} />
+                    <Pressable onPress={() => router.replace(practice.guide as Href)} accessibilityRole="link" hitSlop={8} style={styles.back}>
+                        <AppText variant="small" style={styles.backText}>Xem lại hướng dẫn</AppText>
+                    </Pressable>
+                </>
+            }
+        >
+            <AppText variant="small" style={styles.overline}>{practice.title}</AppText>
+            {/* Chấm báo bước: bước đang làm dài hơn, bước đã qua tô màu */}
+            <View style={styles.dots} accessibilityLabel={`Bước ${step + 1} trên ${practice.steps.length}`}>
+                {practice.steps.map((item, i) => (
+                    <View key={item.title} style={[styles.dot, i <= step && styles.dotOn, i === step && styles.dotNow]} />
+                ))}
+            </View>
             <AppText variant="title" accessibilityLiveRegion="polite">{current.title}</AppText>
             <View style={styles.board}>
                 <AppText variant="body">{current.prompt}</AppText>
@@ -146,22 +162,26 @@ export function PracticeScreen({ practice }: { practice: Practice }) {
                     {current.visual}
                 </Animated.View>
             </View>
-            <Button title={current.action} onPress={() => setStep(last ? 0 : step + 1)} />
-            <Button title="Xem lại hướng dẫn" variant="secondary" onPress={() => router.replace(practice.guide as Href)} />
         </Screen>
     );
 }
 
 const styles = StyleSheet.create({
-    overline: { fontFamily: fonts.bold, color: colors.brandDeep },
-    board: { gap: spacing.md, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    overline: { fontFamily: fonts.bold, color: colors.brandDeep, textTransform: 'uppercase', letterSpacing: 0.5 },
+    dots: { flexDirection: 'row', gap: 6 },
+    dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.step },
+    dotOn: { backgroundColor: colors.brand },
+    dotNow: { width: 28 },
+    back: { minHeight: 40, alignSelf: 'center', justifyContent: 'center' },
+    backText: { fontFamily: fonts.bold, color: colors.brand },
+    board: { gap: spacing.md, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     stage: { minHeight: 150, justifyContent: 'center', padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: '#eaf8ef' },
     row: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, flexWrap: 'wrap' },
     cell: { alignItems: 'center', gap: 6, width: 72 },
     disc: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
     mark: { fontFamily: fonts.extrabold, fontSize: 26, color: colors.inkSoft },
     label: { color: colors.ink, textAlign: 'center' },
-    digitBox: { width: 60, height: 76, borderRadius: radius, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+    digitBox: { width: 60, height: 76, borderRadius: radius, backgroundColor: colors.white, borderBottomWidth: EDGE, borderBottomColor: colors.edge, alignItems: 'center', justifyContent: 'center' },
     digit: { fontFamily: fonts.extrabold, fontSize: 40, lineHeight: 48 },
     chain: { fontFamily: fonts.semibold, textAlign: 'center', color: colors.brandDeep },
 });

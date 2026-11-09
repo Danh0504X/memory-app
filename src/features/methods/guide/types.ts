@@ -2,7 +2,6 @@ import type { FC, ReactNode } from "react";
 import type { SvgProps } from "react-native-svg";
 import type { MethodId } from "../methodsData";
 import type { Picture, ShapeMotion } from "./pictures";
-import type { Woodcut } from "./woodcuts";
 
 export type Tone = "mint" | "sun" | "sky";
 
@@ -27,7 +26,7 @@ export interface GuideContent {
     crumb: string;
     title: string;
     lead: string;
-    hero: { picture: Picture; woodcut: Woodcut };
+    hero: { picture: Picture };
     how: {
         title: string;
         intro: string;
@@ -37,7 +36,6 @@ export interface GuideContent {
     };
     index: { title: string; hint: string; items: IndexItem[] };
     trial: { title: string; intro: string; game: ReactNode };
-    history: { title: string; text: string; woodcuts: Woodcut[] };
     apply: { title: string; groups: { name: string; items: ApplyItem[] }[] };
     close: {
         line: string;

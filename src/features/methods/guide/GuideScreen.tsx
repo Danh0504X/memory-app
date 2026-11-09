@@ -1,74 +1,70 @@
-import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { ArrowRight, ChevronRight } from 'lucide-react-native';
 import { useRef, useState, type ReactNode } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { LiveShape } from '@/components/ui/LiveShape';
-import { PressableScale } from '@/components/ui/PressableScale';
+import { Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
-import { enterUp } from '@/constants/motion';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
-import type { Picture } from './pictures';
+import { LiveShape } from '@/components/ui/LiveShape';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { ease, enterUp } from '@/constants/motion';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import type { GuideContent, Tone } from './types';
-import { WOODCUT_CREDIT } from './woodcuts';
 
 export const TONES: Record<Tone, string> = { mint: colors.mint, sun: '#f7dc8e', sky: colors.sky };
+// Gờ dưới đậm hơn nền của từng tông (thẻ "dày")
+export const TONE_EDGES: Record<Tone, string> = { mint: '#a5d6b3', sun: colors.sunDeep, sky: '#a9d3ea' };
 
-// Trang hướng dẫn một phương pháp (bản web: GuidePage), xếp dọc cho điện thoại
+// Trang hướng dẫn một phương pháp, bản gọn cho điện thoại: cách làm, ví dụ, chơi thử, dùng ở đâu
 export function GuideScreen({ content }: { content: GuideContent }) {
     const scroll = useRef<ScrollViewInstance>(null);
     const trialTop = useRef(0);
-    const applyTop = useRef(0);
     const [selected, setSelected] = useState(0);
-    const { hero, how, index, trial, history, apply, close } = content;
+    const { hero, how, index, trial, apply, close } = content;
     const tone = TONES[content.tone];
+    const edge = TONE_EDGES[content.tone];
     const current = index.items[selected];
     const jump = (y: number) => scroll.current?.scrollTo({ y: Math.max(0, y - spacing.md), animated: true });
 
     return (
         <ScrollView ref={scroll} style={{ backgroundColor: colors.wall }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            <Animated.View entering={enterUp(0)} style={[styles.hero, { backgroundColor: tone }]}>
-                <View style={styles.heroArt}>
-                    <View style={styles.heroDisc}>
-                        <LiveShape art={hero.picture.src} motion={hero.picture.motion} size={88} label={hero.picture.name} tappable />
-                    </View>
-                    <Image source={hero.woodcut.src} style={styles.heroWoodcut} contentFit="contain" accessibilityLabel={hero.woodcut.alt} />
+            <Animated.View entering={enterUp(0)} style={[styles.hero, { backgroundColor: tone, borderBottomColor: edge }]}>
+                <View style={styles.heroDisc}>
+                    <LiveShape art={hero.picture.src} motion={hero.picture.motion} size={88} label={hero.picture.name} tappable />
                 </View>
-                <AppText variant="title">{content.title}</AppText>
-                <AppText variant="body">{content.lead}</AppText>
-                <Button title="Chơi thử ngay" onPress={() => jump(trialTop.current)} />
-                <Pressable onPress={() => jump(applyTop.current)} accessibilityRole="button" hitSlop={8}>
-                    <AppText variant="small" style={styles.link}>Dùng trong trò chơi nào?</AppText>
-                </Pressable>
+                <AppText style={styles.heroTitle}>{content.title}</AppText>
+                <AppText variant="body" style={{ color: colors.ink, textAlign: 'center' }}>{content.lead}</AppText>
+                <Button title="Chơi thử ngay" onPress={() => jump(trialTop.current)} style={{ alignSelf: 'stretch' }} />
             </Animated.View>
 
             <Section title={how.title}>
                 <AppText variant="body">{how.intro}</AppText>
-                <View style={styles.flow}>
+                <View style={[styles.flow, { backgroundColor: tone }]}>
                     <View style={styles.flowRow}>
-                        {how.loose.map((picture, i) => (
-                            <View key={`${picture.name}-${i}`} style={{ transform: [{ rotate: `${((i * 37) % 30) - 15}deg` }] }}>
-                                <Shape picture={picture} size={32} />
-                            </View>
-                        ))}
+                        {how.loose.map((picture, i) => {
+                            const Art = picture.src;
+                            return (
+                                <View key={`${picture.name}-${i}`} style={{ transform: [{ rotate: `${((i * 37) % 30) - 15}deg` }] }}>
+                                    <Art width={32} height={32} />
+                                </View>
+                            );
+                        })}
                     </View>
-                    <ArrowRight color={colors.inkSoft} size={20} style={{ alignSelf: 'center' }} />
+                    <ArrowRight color={colors.ink} size={20} style={{ alignSelf: 'center', transform: [{ rotate: '90deg' }] }} />
                     <View style={styles.flowRow}>
                         {how.ordered.map(({ picture, label }, i) => (
                             <View key={`${label}-${i}`} style={styles.ordered}>
-                                <View style={[styles.orderedDisc, { backgroundColor: tone }]}>
+                                <View style={styles.orderedDisc}>
                                     <LiveShape art={picture.src} motion={picture.motion} size={36} />
                                 </View>
-                                <AppText variant="small" style={styles.orderedLabel}>{label}</AppText>
+                                <AppText style={styles.orderedLabel}>{label}</AppText>
                             </View>
                         ))}
                     </View>
                 </View>
                 {how.steps.map((step, i) => (
                     <View key={step.name} style={styles.step}>
-                        <View style={[styles.stepNo, { backgroundColor: tone }]}>
+                        <View style={[styles.stepNo, { backgroundColor: tone, borderBottomColor: edge }]}>
                             <AppText style={styles.stepNoText}>{i + 1}</AppText>
                         </View>
                         <View style={{ flex: 1, gap: 2 }}>
@@ -83,18 +79,20 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                 <AppText variant="small">{index.hint}</AppText>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.names}>
                     {index.items.map((item, i) => (
-                        <Pressable
+                        <PressableScale
                             key={item.name}
                             onPress={() => setSelected(i)}
                             accessibilityRole="button"
                             accessibilityState={{ selected: i === selected }}
-                            style={[styles.name, i === selected && { borderColor: colors.brand, backgroundColor: tone }]}
+                            style={[styles.name, i === selected && { borderColor: edge, backgroundColor: tone }]}
                         >
-                            <AppText variant="small" style={styles.nameText}>{item.name}</AppText>
-                        </Pressable>
+                            <AppText style={styles.nameText}>{item.name}</AppText>
+                        </PressableScale>
                     ))}
                 </ScrollView>
-                <View key={selected} style={[styles.stage, { backgroundColor: tone }]}>{current.art}</View>
+                <Animated.View key={selected} entering={FadeIn.duration(220).easing(ease.ui)} style={[styles.stage, { backgroundColor: tone }]}>
+                    {current.art}
+                </Animated.View>
                 <AppText variant="body" accessibilityLiveRegion="polite">
                     <AppText style={styles.strong}>{current.name}. </AppText>
                     {current.fact}
@@ -102,29 +100,13 @@ export function GuideScreen({ content }: { content: GuideContent }) {
             </Section>
 
             <View onLayout={(event) => (trialTop.current = event.nativeEvent.layout.y)} style={{ gap: spacing.sm }}>
-                <AppText variant="heading" accessibilityRole="header">{trial.title}</AppText>
+                <AppText style={styles.sectionTitle} accessibilityRole="header">{trial.title}</AppText>
                 <AppText variant="body">{trial.intro}</AppText>
                 {trial.game}
             </View>
 
-            <Section title={history.title}>
-                <AppText variant="body">{history.text}</AppText>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.plates}>
-                    {history.woodcuts.map((woodcut) => (
-                        <View key={woodcut.source + woodcut.caption} style={styles.plate}>
-                            <Image source={woodcut.src} style={styles.plateImage} contentFit="contain" accessibilityLabel={woodcut.alt} />
-                            <AppText variant="small" style={styles.caption}>{woodcut.caption}</AppText>
-                            <Pressable onPress={() => void Linking.openURL(woodcut.source)} accessibilityRole="link" hitSlop={6}>
-                                <AppText variant="small" style={styles.link}>Ảnh gốc</AppText>
-                            </Pressable>
-                        </View>
-                    ))}
-                </ScrollView>
-                <AppText variant="small" style={styles.credit}>{WOODCUT_CREDIT}</AppText>
-            </Section>
-
-            <View onLayout={(event) => (applyTop.current = event.nativeEvent.layout.y)} style={{ gap: spacing.md }}>
-                <AppText variant="heading" accessibilityRole="header">{apply.title}</AppText>
+            <View style={{ gap: spacing.sm }}>
+                <AppText style={styles.sectionTitle} accessibilityRole="header">{apply.title}</AppText>
                 {apply.groups.map((group) => (
                     <View key={group.name} style={{ gap: spacing.sm }}>
                         <AppText style={styles.groupName}>{group.name}</AppText>
@@ -133,7 +115,7 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                             const body = (
                                 <>
                                     <View style={[styles.applyArt, { backgroundColor: `${item.art.color}22` }]}>
-                                        <Art width={36} height={36} />
+                                        <Art width={34} height={34} />
                                     </View>
                                     <View style={{ flex: 1, gap: 2 }}>
                                         <AppText style={styles.strong}>
@@ -157,14 +139,14 @@ export function GuideScreen({ content }: { content: GuideContent }) {
                 ))}
             </View>
 
-            <View style={[styles.close, { backgroundColor: tone }]}>
+            <View style={[styles.close, { backgroundColor: tone, borderBottomColor: edge }]}>
                 <LiveShape art={close.picture.src} motion={close.motion} size={72} label={close.picture.name} tappable />
-                <AppText variant="heading">{close.line}</AppText>
-                <AppText variant="body">{close.text}</AppText>
-                <AppText variant="small" style={styles.strong}>{close.fact}</AppText>
-                <Button title={close.action.label} onPress={() => router.push(close.action.to as Href)} />
-                <Pressable onPress={() => router.replace(close.next.to as Href)} accessibilityRole="link" hitSlop={8}>
-                    <AppText variant="small" style={styles.link}>{close.next.label} →</AppText>
+                <AppText style={styles.closeTitle}>{close.line}</AppText>
+                <AppText variant="body" style={{ color: colors.ink, textAlign: 'center' }}>{close.text}</AppText>
+                <AppText variant="small" style={[styles.strong, { textAlign: 'center' }]}>{close.fact}</AppText>
+                <Button title={close.action.label} onPress={() => router.push(close.action.to as Href)} style={{ alignSelf: 'stretch' }} />
+                <Pressable onPress={() => router.replace(close.next.to as Href)} accessibilityRole="link" hitSlop={8} style={styles.nextLink}>
+                    <AppText style={styles.link}>{close.next.label} →</AppText>
                 </Pressable>
             </View>
         </ScrollView>
@@ -174,46 +156,40 @@ export function GuideScreen({ content }: { content: GuideContent }) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
         <View style={styles.section}>
-            <AppText variant="heading" accessibilityRole="header">{title}</AppText>
+            <AppText style={styles.sectionTitle} accessibilityRole="header">{title}</AppText>
             {children}
         </View>
     );
 }
 
-function Shape({ picture, size }: { picture: Picture; size: number }) {
-    const Art = picture.src;
-    return <Art width={size} height={size} />;
-}
+const THICK = { borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge } as const;
 
 const styles = StyleSheet.create({
-    content: { padding: spacing.md, gap: spacing.lg, paddingBottom: spacing.xl },
-    hero: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5 },
-    heroArt: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.sm },
-    heroDisc: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
-    heroWoodcut: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.white },
-    link: { fontFamily: fonts.bold, color: colors.brandDeep, textDecorationLine: 'underline' },
-    section: { gap: spacing.sm, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
-    flow: { gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.wall },
+    content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xl },
+    hero: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, borderBottomWidth: EDGE + 2 },
+    heroDisc: { width: 128, height: 128, borderRadius: 64, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+    heroTitle: { fontFamily: fonts.extrabold, fontSize: 26, lineHeight: 32, color: colors.ink, textAlign: 'center' },
+    link: { fontFamily: fonts.bold, color: colors.brandDeep },
+    nextLink: { minHeight: 44, justifyContent: 'center' },
+    section: { gap: spacing.sm, padding: spacing.md, borderRadius: radius * 1.5, backgroundColor: colors.white, ...THICK },
+    sectionTitle: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink },
+    flow: { gap: spacing.sm, padding: spacing.md, borderRadius: radius },
     flowRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm },
     ordered: { alignItems: 'center', gap: 2 },
-    orderedDisc: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
-    orderedLabel: { fontFamily: fonts.semibold, color: colors.ink, fontSize: 12 },
+    orderedDisc: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
+    orderedLabel: { fontFamily: fonts.bold, color: colors.ink, fontSize: 12, lineHeight: 16 },
     step: { flexDirection: 'row', gap: spacing.sm },
-    stepNo: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-    stepNoText: { fontFamily: fonts.extrabold, fontSize: 14 },
+    stepNo: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3 },
+    stepNoText: { fontFamily: fonts.extrabold, fontSize: 14, color: colors.ink },
     strong: { fontFamily: fonts.bold, color: colors.ink },
-    names: { gap: spacing.sm },
-    name: { minHeight: 40, paddingHorizontal: 12, borderRadius: radius, borderWidth: 1.5, borderColor: colors.step, justifyContent: 'center', backgroundColor: colors.white },
-    nameText: { fontFamily: fonts.semibold, color: colors.ink },
+    names: { gap: spacing.sm, paddingBottom: 2 },
+    name: { minHeight: 44, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center', backgroundColor: colors.white, ...THICK },
+    nameText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
     stage: { minHeight: 170, borderRadius: radius * 1.5, alignItems: 'center', justifyContent: 'center', padding: spacing.md },
-    plates: { gap: spacing.md },
-    plate: { width: 150, gap: 4 },
-    plateImage: { width: 150, height: 150, borderRadius: 75, backgroundColor: colors.wall },
-    caption: { color: colors.ink },
-    credit: { fontSize: 11, lineHeight: 15 },
     groupName: { fontFamily: fonts.bold, color: colors.brandDeep },
-    applyItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.step },
+    applyItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius * 1.25, backgroundColor: colors.white, ...THICK },
     applyArt: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
     note: { color: colors.brandDeep, fontFamily: fonts.semibold },
-    close: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5 },
+    close: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, borderBottomWidth: EDGE + 2 },
+    closeTitle: { fontFamily: fonts.extrabold, fontSize: 20, lineHeight: 26, color: colors.ink, textAlign: 'center' },
 });

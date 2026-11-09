@@ -9,10 +9,9 @@ import { Screen } from '@/components/ui/Screen';
 import { enterUp } from '@/constants/motion';
 import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { GUIDES } from '../guide/content';
-import { TONES } from '../guide/GuideScreen';
+import { TONES, TONE_EDGES } from '../guide/GuideScreen';
 import { METHODS } from '../methodsData';
 
-const EDGES = { mint: '#a5d6b3', sun: colors.sunDeep, sky: '#a9d3ea' } as const;
 
 // Trang Phương pháp: ba thẻ màu, chạm thẻ để đọc hướng dẫn có trò thử, nút nhỏ để chơi thử ngay
 export function MethodsScreen() {
@@ -29,7 +28,7 @@ export function MethodsScreen() {
                             onPress={() => router.push(method.guide as Href)}
                             accessibilityRole="button"
                             accessibilityLabel={`${method.name}. ${method.summary}`}
-                            style={[styles.card, { backgroundColor: TONES[method.tone], borderBottomColor: EDGES[method.tone] }]}
+                            style={[styles.card, { backgroundColor: TONES[method.tone], borderBottomColor: TONE_EDGES[method.tone] }]}
                         >
                             <View style={styles.head}>
                                 <View style={styles.disc}>
