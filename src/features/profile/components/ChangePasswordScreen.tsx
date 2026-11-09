@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
 import { authApi } from '@/features/auth/api/auth.api';
+import { parentApi } from '@/features/parent/api/parent.api';
 import { AuthHeader, FormError } from '@/features/auth/components/AuthParts';
 import { changePasswordSchema, setPasswordSchema, type ChangePasswordFormData } from '@/features/auth/schemas/auth.schema';
 import { useAuthStore } from '@/features/auth/store/authStore';
@@ -18,7 +19,7 @@ import type { ApiErrorResponse } from '@/types/auth.types';
 // Tài khoản đã có mật khẩu: nhập mật khẩu hiện tại rồi đổi.
 // Tài khoản Google chưa có mật khẩu: đặt mật khẩu lần đầu, không có ô mật khẩu hiện tại.
 // Backend thu hồi mọi phiên sau khi đổi, nên app xoá token đã lưu và đưa về màn đăng nhập.
-export function ChangePasswordScreen() {
+export function ChangePasswordScreen({ parent = false }: { parent?: boolean }) {
     const hasPassword = useAuthStore((state) => state.user?.hasPassword !== false);
     const clearSession = useAuthStore((state) => state.clearSession);
     const [serverError, setServerError] = useState<string | null>(null);
@@ -30,7 +31,8 @@ export function ChangePasswordScreen() {
     const onSubmit = async (data: ChangePasswordFormData) => {
         setServerError(null);
         try {
-            await authApi.changePassword(hasPassword ? data : { newPassword: data.newPassword, confirmPassword: data.confirmPassword });
+            if (parent) await parentApi.password({ ...data, currentPassword: data.currentPassword ?? '' });
+            else await authApi.changePassword(hasPassword ? data : { newPassword: data.newPassword, confirmPassword: data.confirmPassword });
             sessionStore.clearTokens();
             clearSession();
             Alert.alert('Đã đổi mật khẩu', 'Vui lòng đăng nhập lại bằng mật khẩu mới.', [{ text: 'Đăng nhập', onPress: () => router.replace('/login') }]);

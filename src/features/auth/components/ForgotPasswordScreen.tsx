@@ -10,12 +10,13 @@ import { TextField } from '@/components/ui/TextField';
 import { colors } from '@/constants/theme';
 import { PASSWORD_RESET_ERROR_CODES, type ApiErrorResponse } from '@/types/auth.types';
 import { authApi } from '../api/auth.api';
+import { parentPasswordResetApi } from '@/features/parent/api/passwordReset.api';
 import { AuthHeader, FormError, TextLink } from './AuthParts';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '../schemas/auth.schema';
 
 // Gửi link đặt lại mật khẩu qua email. Link mở trang /reset-password của bản web (backend ghép từ CLIENT_URL),
 // đặt mật khẩu mới ở đó rồi quay lại app đăng nhập.
-export function ForgotPasswordScreen() {
+export function ForgotPasswordScreen({ parent = false }: { parent?: boolean }) {
     const [serverError, setServerError] = useState<string | null>(null);
     const [sentTo, setSentTo] = useState<string | null>(null);
     const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotPasswordFormData>({
@@ -26,7 +27,7 @@ export function ForgotPasswordScreen() {
     const onSubmit = async ({ email }: ForgotPasswordFormData) => {
         setServerError(null);
         try {
-            await authApi.forgotPassword(email);
+            await (parent ? parentPasswordResetApi.forgot(email) : authApi.forgotPassword(email));
             setSentTo(email);
         } catch (err) {
             const error = err as ApiErrorResponse;
@@ -56,7 +57,7 @@ export function ForgotPasswordScreen() {
 
     return (
         <Screen edges={['bottom']}>
-            <AuthHeader title="Quên mật khẩu?" line="Nhập email của tài khoản, Memio gửi liên kết để đặt mật khẩu mới." tint={colors.sky} />
+            <AuthHeader title={parent ? "Quên mật khẩu phụ huynh?" : "Quên mật khẩu?"} line="Nhập email của tài khoản, Memio gửi liên kết để đặt mật khẩu mới." tint={colors.sky} />
             <Controller
                 control={control}
                 name="email"

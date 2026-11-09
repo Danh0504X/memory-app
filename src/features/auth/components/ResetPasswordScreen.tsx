@@ -11,6 +11,7 @@ import { colors, spacing } from '@/constants/theme';
 import { sessionStore } from '@/lib/session';
 import { PASSWORD_RESET_ERROR_CODES, type ApiErrorResponse } from '@/types/auth.types';
 import { authApi } from '../api/auth.api';
+import { parentPasswordResetApi } from '@/features/parent/api/passwordReset.api';
 import { AuthHeader, FormError } from './AuthParts';
 import { resetPasswordSchema, type ResetPasswordFormData } from '../schemas/auth.schema';
 import { useAuthStore } from '../store/authStore';
@@ -24,7 +25,7 @@ type LinkStatus = 'checking' | 'ready' | 'invalid' | 'network-error';
 
 // Đặt mật khẩu mới từ link trong email, mở vào app dạng memio://reset-password?token=...
 // (bản web đọc token ở "#token="; deep link của app dùng query vì expo-router không đưa fragment vào params)
-export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined }) {
+export function ResetPasswordScreen({ rawToken, parent = false }: { rawToken: string | undefined; parent?: boolean }) {
     const token = rawToken ? parseResetTokenFromHash(`token=${rawToken}`) : null;
     const [status, setStatus] = useState<LinkStatus>(token ? 'checking' : 'invalid');
     const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
@@ -39,8 +40,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
     useEffect(() => {
         if (!token) return;
         let cancelled = false;
-        authApi
-            .validatePasswordResetToken(token)
+        (parent ? parentPasswordResetApi.validate(token) : authApi.validatePasswordResetToken(token))
             .then((response) => {
                 if (cancelled) return;
                 setMaskedEmail(response.data.maskedEmail);
@@ -52,7 +52,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
         return () => {
             cancelled = true;
         };
-    }, [token, attempt]);
+    }, [token, attempt, parent]);
 
     // Backend đã thu hồi mọi phiên: xoá token đang lưu trên máy rồi về màn đăng nhập
     const finish = (notice: string) => {
@@ -65,7 +65,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
         if (!token) return;
         setServerError(null);
         try {
-            await authApi.confirmPasswordReset({ token, ...data });
+            await (parent ? parentPasswordResetApi.confirm({ token, ...data }) : authApi.confirmPasswordReset({ token, ...data }));
             finish(SUCCESS_NOTICE);
         } catch (err) {
             const error = err as ApiErrorResponse;
@@ -94,7 +94,7 @@ export function ResetPasswordScreen({ rawToken }: { rawToken: string | undefined
                 <>
                     <FormError>Liên kết không hợp lệ, đã hết hạn hoặc đã được dùng.</FormError>
                     <AppText variant="small">Để nhận liên kết mới, bạn có thể gửi lại yêu cầu khôi phục mật khẩu.</AppText>
-                    <Button title="Yêu cầu liên kết mới" onPress={() => router.replace('/forgot-password')} />
+                    <Button title="Yêu cầu liên kết mới" onPress={() => router.replace((parent ? '/parent/forgot-password' : '/forgot-password') as import('expo-router').Href)} />
                 </>
             ) : null}
 

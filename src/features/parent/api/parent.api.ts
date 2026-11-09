@@ -8,7 +8,7 @@ export type ParentOverview = {
     child: { username: string; avatarUrl: string | null; profile: UserProfile };
     summary: { games: number; practiceDays: number; accuracy: number | null; recordedPracticeSeconds: number; lastPlayedAt: string | null;
         byGame: { gameName: string; games: number; correct: number; total: number }[] };
-    progress: { gameName: string; unlockedLevel: number; stats: { played: number; totalCorrect: number; totalItems: number } }[];
+    progress: { gameName: string; unlockedLevel: number; stats: { played: number; totalCorrect: number; totalItems: number }; records?: { bestLevel: number | null; fastestMemorizeSecByLevel: Record<string, number> } }[];
     ageGroup: string | null;
 };
 export type ParentReport = {

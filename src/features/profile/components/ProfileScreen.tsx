@@ -91,6 +91,8 @@ function MemberProfile() {
                     />
                 }
             >
+                <Button title="Chơi cùng ba mẹ" variant="secondary" onPress={() => router.push('/family-room' as import('expo-router').Href)} />
+                <Button title="Phụ huynh đồng hành" variant="secondary" onPress={() => router.push('/parent-link' as import('expo-router').Href)} />
                 <BlockState request={profile.state} onRetry={reloadProfile}>
                     {(data) => {
                         const badges = games ? buildBadges(data, games) : null;

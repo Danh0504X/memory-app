@@ -14,7 +14,7 @@ export type RoomView = {
 export type FamilyGame = { gameName: string; levels: { level: number; itemCount: number }[]; customItems: { min: number; max: number } | null;
     memorizeSecOptions: number[]; defaultMemorizeSec: number; recallSec: number; customTimeRange?: { min: number; max: number }; player: { unlockedLevel: number } };
 export type CreateFamilyRoom = { gameName: string; roundCount: number; memorizeSec: number } & (
-    { mode: 'level'; gameLevel: number } | { mode: 'custom'; itemCount: number; recallSec: number }
+    { mode: 'level'; gameLevel: number } | { mode: 'custom'; itemCount: number; recallSec?: number }
 );
 const data = <T>(promise: Promise<ApiSuccessResponse<T>>) => promise.then((response) => response.data);
 const post = (url: string, body?: unknown) => data(apiClient.post(url, body) as unknown as Promise<ApiSuccessResponse<RoomView>>);

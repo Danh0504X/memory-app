@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,7 @@ import { authApi } from '@/features/auth/api/auth.api';
 import { AuthHeader, FormError, TextLink } from '@/features/auth/components/AuthParts';
 import { loginSchema, type LoginFormData } from '@/features/auth/schemas/auth.schema';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { accountHome } from '@/features/parent/utils/access';
 import type { ApiErrorResponse } from '@/types/auth.types';
 
 export default function LoginScreen() {
@@ -24,7 +25,7 @@ export default function LoginScreen() {
         try {
             const response = await authApi.login({ email, password });
             saveSession(response.data.userInfo);
-            router.dismissTo('/');
+            router.dismissTo(accountHome(response.data.userInfo) as Href);
         } catch (error) {
             setServerError((error as ApiErrorResponse).message);
         }
@@ -68,6 +69,7 @@ export default function LoginScreen() {
                 )}
             />
             <TextLink label="Quên mật khẩu?" align="right" onPress={() => router.push('/forgot-password')} />
+            <TextLink label="Quên mật khẩu phụ huynh?" onPress={() => router.push('/parent/forgot-password' as Href)} />
             <FormError>{serverError}</FormError>
             <Button title="Đăng nhập" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
             <TextLink lead="Chưa có tài khoản?" label="Tạo tài khoản" onPress={() => router.replace('/register')} />

@@ -6,7 +6,7 @@ import {
     BeVietnamPro_800ExtraBold,
     useFonts,
 } from '@expo-google-fonts/be-vietnam-pro';
-import { Stack } from 'expo-router';
+import { Stack, Redirect, usePathname, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -14,6 +14,7 @@ import { AppState } from 'react-native';
 import { colors, fonts } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { sessionStore } from '@/lib/session';
+import { accessRedirect } from '@/features/parent/utils/access';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,6 +27,10 @@ export default function RootLayout() {
         BeVietnamPro_800ExtraBold,
     });
     const authLoading = useAuthStore((state) => state.isLoading);
+
+    const user = useAuthStore((state) => state.user);
+    const pathname = usePathname();
+    const redirect = !authLoading ? accessRedirect(pathname, user) : null;
 
     // Khôi phục phiên đã lưu (refresh token trong SecureStore) ngay khi mở app
     useEffect(() => {
@@ -50,6 +55,7 @@ export default function RootLayout() {
         <>
             <StatusBar style="dark" />
             <Stack
+                screenLayout={({ children }) => redirect ? <Redirect href={redirect as Href} /> : children}
                 screenOptions={{
                     headerTintColor: colors.brandDeep,
                     headerTitleStyle: { fontFamily: fonts.bold },
@@ -60,6 +66,9 @@ export default function RootLayout() {
                 }}
             >
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="parent" options={{ headerShown: false }} />
+                <Stack.Screen name="family-room" options={{ headerShown: false }} />
+                <Stack.Screen name="parent-link" options={{ title: 'Phụ huynh đồng hành' }} />
                 <Stack.Screen name="login" options={{ title: 'Đăng nhập', presentation: 'modal' }} />
                 <Stack.Screen name="register" options={{ title: 'Tạo tài khoản', presentation: 'modal' }} />
             </Stack>
