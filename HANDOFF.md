@@ -66,29 +66,26 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
   - Dùng `marginHorizontal: -spacing.lg` để tràn ra mép màn, nên giả định màn cha có lề `spacing.lg`. Đúng với `Screen`, sai nếu đặt chỗ khác.
   - Dải tự cuộn tới cấp đang chọn khi mở màn; cần xem có bị giật không.
 - **Thanh trạng thái:** `PlayLayout` đặt `<StatusBar style="light" />`. Cần kiểm tra khi thoát ván, thanh trạng thái có trở lại chữ tối không.
-- **Bàn phím trên Android:** `Screen` có `footer` nằm trong `KeyboardAvoidingView` (Android dùng `behavior` undefined). Cần xem bàn phím có che nút ở màn Mục tiêu và tuỳ chọn Ghi nhớ số không.
+- **Bàn phím trên Android (edge-to-edge của SDK 58):** `Screen` và `PlayLayout` dùng `KeyboardAvoidingView` với `behavior` undefined trên Android. Cần xem bàn phím có che ô nhập tên/từ khi chơi Gương mặt & Tên, Ghi nhớ từ, nút "Nộp bài", nút ở màn Mục tiêu không. Nếu che: thử `behavior="padding"` cho cả Android, nhưng kiểm tra kỹ vì có thể bị đẩy hai lần (khoảng trống thừa).
 - **Rung:** `PressableScale` rung **mỗi lần bấm**, kể cả khi chọn bài ở bàn nhớ lại. Nếu thấy quá nhiều, tắt rung cho khay bài trong `RecallBoard`.
 - **Chữ to (Accessibility):** chữ có thể tràn ở `GameTile`, ô số liệu Hồ sơ/Tiến độ, dải 14 ngày (màn Hôm nay) và viên phần thưởng.
 - **Pháo giấy:** `Confetti` nằm trong dải kết quả có `overflow: 'hidden'`; cần xem pháo giấy có bị cắt xấu không.
 - **Dải chip cuộn ngang:** lọc lịch sử Tiến độ dùng `Chips` (có `flexWrap`) đặt trong `ScrollView` ngang; cần xem có xuống dòng không.
 
-### 4.2 Lint: lỗi có từ trước, chưa sửa
+### 4.2 Lint: đã sửa (ESLint vẫn chưa cài)
 - Repo có script `npm run lint` (`expo lint`) nhưng **chưa cài eslint**. Chạy `npx expo lint` sẽ tự cài `eslint` và `eslint-config-expo`, đồng thời tạo `eslint.config.js`. Lần trước đã gỡ lại vì chưa có ai quyết định dùng.
-- **Khi bật lint sẽ thấy 14 lỗi có sẵn:**
-  - `react-hooks/refs`: đọc ref lúc render qua `useFocusChain`, trong `FaceNameGame.tsx` và `WordsGame.tsx`.
-  - `react/no-unescaped-entities`: dấu `"` trong chữ hướng dẫn, ở `FaceNameGame.tsx` và `NumbersSettings.tsx`.
+- 14 lỗi cũ đã sửa (11/2026): `useFocusChain` trả hàm xử lý sự kiện thay vì đọc ref lúc render; dấu `"` đổi thành “ ”.
+  Chạy thử với eslint cài tạm: 0 lỗi, còn 4 cảnh báo cũ (import/first, array-type, axios.create).
 
 ### 4.3 Việc nhỏ đã nêu nhưng chưa làm
-- **Kéo để làm mới không hiện vòng quay:** `RefreshControl refreshing={false}` cố định ở Hôm nay, Thử thách, Hồ sơ, Tiến độ.
-- **Khung chờ:** đang tải vẫn dùng `ActivityIndicator`.
-- **Ngày thi:** Hồ sơ mới không hiện ngày thi, chỉ màn Mục tiêu có. Thêm lại nếu chủ dự án muốn.
+- Đã xong (11/2026): kéo để làm mới có vòng quay (`useRequest().refresh`), khung chờ `Skeleton` trong `BlockState`, ngày thi trong Hồ sơ.
 - **Âm thanh** đúng/sai/hoàn hảo (tuỳ chọn, chưa quyết định).
 - **Test giao diện:** chưa có. Logic mới chưa có test: dải 14 ngày nằm trong `TodayScreen.tsx`, chưa tách thành hàm.
 
 ### 4.4 Cần sửa backend (memory-be)
-- **Xoá tài khoản:** Apple và Google Play bắt buộc. Cần API mới, app thêm mục trong Cài đặt của Hồ sơ.
+- **Xoá tài khoản:** đã xong (`DELETE /api/profile`, màn `/delete-account`).
 - **Email đặt lại mật khẩu:** hiện chỉ có link web. Thêm `memio://reset-password?token=...`, hoặc universal link/app link. App đã có màn `/reset-password` nhận deep link `memio://`.
-- **Thông báo nhắc giữ chuỗi ngày (push):** backend cần lưu push token và có lịch gửi.
+- **Nhắc giữ chuỗi ngày:** đã có bản cục bộ (`features/reminder/reminder.ts`, hẹn giờ hằng ngày). Muốn chỉ nhắc khi hôm nay chưa chơi thì cần push từ backend (lưu push token, lịch gửi).
 
 ### 4.5 Trước khi lên store
 - **Đăng nhập Google native:** `@react-native-google-signin/google-signin`, cần development build. Backend đã nhận `idToken` và kiểm tra `aud`.

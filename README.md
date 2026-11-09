@@ -64,10 +64,14 @@ màn tài khoản dùng `AuthParts`. Chạm nút có rung nhẹ (`expo-haptics` 
 - Phương pháp (`/methods`) và ba trang hướng dẫn có trò chơi thử (`/methods/story-linking`, `/methods/number-shape`, `/methods/memory-palace`).
 - Quên mật khẩu (`/forgot-password`) và Đặt mật khẩu mới (`/reset-password?token=...`, mở bằng deep link `memio://`).
 - Trang chủ cho khách (tab Hôm nay khi chưa đăng nhập) và ba bài thực hành (`/practice/story`, `/practice/numbers`, `/practice/loci`).
+- Duy trì đăng nhập: user lưu cùng token trong SecureStore, mở app là vào ngay rồi refresh ở nền; chỉ đăng xuất khi backend trả 401/403 (mất mạng thì giữ phiên). Backend gia hạn phiên mỗi lần refresh (phiên trượt 14 ngày).
+- Xoá tài khoản (`/delete-account`, backend `DELETE /api/profile`).
+- Nhắc giữ chuỗi ngày bằng thông báo cục bộ (`expo-notifications`, bật và chọn giờ trong Hồ sơ).
+- Kéo để làm mới có vòng quay; khung chờ (`Skeleton`) thay vòng quay khi tải.
 
 ## Việc còn lại
 
 - Email đặt lại mật khẩu hiện chỉ có link web: thêm link `memio://reset-password?token=...` ở backend, hoặc universal link / app link (cần xác minh tên miền), để mở thẳng trong app.
-- Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build), Sign in with Apple, xoá tài khoản.
-- Thông báo nhắc giữ chuỗi ngày (push notification).
-- Lỗi lint có từ trước (chạy `npx expo lint`, cần cài eslint): đọc ref lúc render trong `useFocusChain` (Gương mặt & Tên, Ghi nhớ từ) và dấu `"` chưa thoát trong chữ hướng dẫn.
+- Đăng nhập Google (`@react-native-google-signin/google-signin`, cần development build) và Sign in with Apple (bắt buộc trên iOS khi có Google).
+- Nhắc chuỗi ngày hiện nhắc cả khi hôm nay đã chơi; muốn bỏ thì cần push từ backend.
+- ESLint chưa cài (script `lint` có sẵn). Đã chạy thử: 0 lỗi, 4 cảnh báo cũ.
