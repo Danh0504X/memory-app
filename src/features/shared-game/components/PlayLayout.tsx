@@ -2,10 +2,11 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { X } from 'lucide-react-native';
 import { useEffect, type ReactNode } from 'react';
-import { ActivityIndicator, Alert, BackHandler, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, BackHandler, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
+import { KeyboardSafe } from '@/components/ui/KeyboardSafe';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { GAME_META, type GameName } from '../registry';
@@ -104,8 +105,8 @@ export function PlayLayout({
                     </View>
                 ) : null}
 
-                {/* Trò có ô nhập (gương mặt, từ): bàn phím iOS đè lên nội dung, đẩy cả nút hành động lên theo */}
-                <KeyboardAvoidingView style={styles.body} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                {/* Trò có ô nhập (gương mặt, từ): bàn phím đè lên nội dung, đẩy cả nút hành động lên theo */}
+                <KeyboardSafe>
                     <View style={styles.body}>{children}</View>
 
                     {actionLabel && onAction ? (
@@ -113,7 +114,7 @@ export function PlayLayout({
                             <Button title={actionLabel} tone={{ color: meta.color, edge: meta.edge }} loading={actionBusy} onPress={onAction} />
                         </View>
                     ) : null}
-                </KeyboardAvoidingView>
+                </KeyboardSafe>
             </SafeAreaView>
         </View>
     );

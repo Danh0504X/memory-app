@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { enterUp } from '@/constants/motion';
 import { colors, spacing } from '@/constants/theme';
+import { KeyboardSafe } from './KeyboardSafe';
 
 interface ScreenProps {
     children: ReactNode;
@@ -18,14 +19,14 @@ interface ScreenProps {
 export function Screen({ children, edges = ['top'], footer }: ScreenProps) {
     return (
         <SafeAreaView style={styles.safe} edges={edges}>
-            <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <KeyboardSafe>
                 <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
                     <Animated.View entering={enterUp(0)} style={styles.inner}>
                         {children}
                     </Animated.View>
                 </ScrollView>
                 {footer ? <View style={styles.footer}>{footer}</View> : null}
-            </KeyboardAvoidingView>
+            </KeyboardSafe>
         </SafeAreaView>
     );
 }
