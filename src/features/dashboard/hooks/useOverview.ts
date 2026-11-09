@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { fetchQuery, peekQuery, prefetchQuery } from '@/lib/queryCache';
 import { profileApi, type UserProfile } from '@/features/profile/api/profile.api';
 import { gamesApi, type GameCatalogItem } from '@/features/shared-game/api/games.api';
@@ -22,6 +23,15 @@ export const useRequest = <T>(key: string, loader: () => Promise<T>, fallbackErr
         return cached === undefined ? { status: 'loading' } : { status: 'ready', data: cached };
     });
     const [reloadKey, setReloadKey] = useState(0);
+    // Đổi tài khoản (đăng xuất, đăng nhập tài khoản khác) mà màn vẫn mở (các tab không bị huỷ):
+    // bỏ ngay dữ liệu của tài khoản trước trong lần render này rồi tải lại cho tài khoản mới
+    const owner = useAuthStore((auth) => auth.user?._id ?? 'guest');
+    const [shownFor, setShownFor] = useState(owner);
+    if (shownFor !== owner) {
+        setShownFor(owner);
+        const cached = peekQuery<T>(key);
+        setState(cached === undefined ? { status: 'loading' } : { status: 'ready', data: cached });
+    }
     // Người dùng kéo để làm mới: hiện vòng quay tới khi tải xong (tải lại sau mỗi ván thì không hiện)
     const [refreshing, setRefreshing] = useState(false);
 
@@ -37,7 +47,7 @@ export const useRequest = <T>(key: string, loader: () => Promise<T>, fallbackErr
         return () => {
             isCurrent = false;
         };
-    }, [key, loader, fallbackError, reloadKey]);
+    }, [key, loader, fallbackError, reloadKey, owner]);
 
     const reload = useCallback(() => {
         setState((current) => (current.status === 'ready' ? current : { status: 'loading' }));

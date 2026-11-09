@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { setSessionHandlers } from '@/lib/api-client';
 import { sessionStore } from '@/lib/session';
-import { clearQueries } from '@/lib/queryCache';
+import { clearQueries, setQueryOwner } from '@/lib/queryCache';
 import { authApi } from '@/features/auth/api/auth.api';
 import type { User } from '@/types/auth.types';
 
@@ -76,6 +76,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 }));
+
+// Dữ liệu đã tải gắn với tài khoản đang đăng nhập (xem queryCache)
+useAuthStore.subscribe((state, previous) => {
+    if (state.user?._id !== previous.user?._id) setQueryOwner(state.user?._id ?? null);
+});
 
 setSessionHandlers({
     onRefreshed: (user) => useAuthStore.getState().saveSession(user),

@@ -67,7 +67,9 @@ function MemberToday() {
     const daily = useDailyChallenge();
     const [skipping, setSkipping] = useState(false);
     const todayKey = dayKey(new Date(), timeZone);
-    const [warmedUp, setWarmedUp] = useState(() => appStorage.getItem(WARM_KEY) === todayKey);
+    // Cờ khởi động theo từng tài khoản: máy dùng chung không lấy cờ của người khác
+    const warmKey = `${WARM_KEY}:${useAuthStore.getState().user?._id ?? 'guest'}`;
+    const [warmedUp, setWarmedUp] = useState(() => appStorage.getItem(warmKey) === todayKey);
 
     const { reload: reloadProfile } = profile;
     const { reload: reloadRecent } = recent;
@@ -103,7 +105,7 @@ function MemberToday() {
     }, [playedToday]);
 
     const warmUp = () => {
-        appStorage.setItem(WARM_KEY, todayKey);
+        appStorage.setItem(warmKey, todayKey);
         setWarmedUp(true);
         router.push(method.practice.to as Href);
     };

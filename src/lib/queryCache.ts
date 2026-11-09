@@ -3,6 +3,8 @@
 // - dữ liệu đã có thì hiện ngay khi quay lại trang, rồi làm mới ở nền;
 // - vừa tải trong FRESH_MS (vd. đã tải trước lúc rê chuột lên link) thì không gọi lại.
 // Xoá hết khi đăng xuất và sau mỗi ván chơi (onGameSessionRecorded).
+// Mỗi khoá gắn với tài khoản lúc gọi (setQueryOwner): request của tài khoản cũ trả về muộn sau khi đổi
+// tài khoản chỉ ghi vào ngăn của tài khoản cũ, tài khoản mới không đọc phải.
 
 import { onGameSessionRecorded } from '@/features/shared-game/events';
 
@@ -10,10 +12,18 @@ type Entry = { data?: unknown; updatedAt: number; promise?: Promise<unknown> };
 
 const FRESH_MS = 10_000;
 const entries = new Map<string, Entry>();
+let owner = 'guest';
 
-export const peekQuery = <T>(key: string): T | undefined => entries.get(key)?.data as T | undefined;
+// authStore gọi mỗi khi người dùng đổi (đăng nhập, đăng xuất, đổi tài khoản)
+export const setQueryOwner = (userId: string | null) => {
+    owner = userId ?? 'guest';
+};
+const scoped = (key: string) => `${owner}:${key}`;
 
-export const fetchQuery = <T>(key: string, loader: () => Promise<T>, { force = false } = {}): Promise<T> => {
+export const peekQuery = <T>(key: string): T | undefined => entries.get(scoped(key))?.data as T | undefined;
+
+export const fetchQuery = <T>(name: string, loader: () => Promise<T>, { force = false } = {}): Promise<T> => {
+    const key = scoped(name);
     const entry = entries.get(key);
     if (entry?.promise) return entry.promise as Promise<T>;
     if (!force && entry && entry.data !== undefined && Date.now() - entry.updatedAt < FRESH_MS) {
@@ -44,7 +54,7 @@ export const prefetchQuery = (key: string, loader: () => Promise<unknown>) => {
 
 // Ghi đè bằng dữ liệu vừa nhận từ một thao tác (vd. đổi tên), để nơi khác đọc ra đúng ngay
 export const setQuery = <T>(key: string, data: T) => {
-    entries.set(key, { data, updatedAt: Date.now() });
+    entries.set(scoped(key), { data, updatedAt: Date.now() });
 };
 
 export const clearQueries = () => entries.clear();

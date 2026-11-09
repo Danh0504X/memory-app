@@ -15,7 +15,7 @@ globalThis.__authApi = { refreshToken: async () => { throw new Error('chưa đ�
 const MOCKS = {
     '@/lib/session': 'export const sessionStore = globalThis.__session;',
     '@/lib/api-client': 'export const setSessionHandlers = () => {};',
-    '@/lib/queryCache': 'export const clearQueries = () => {};',
+    '@/lib/queryCache': 'export const clearQueries = () => {}; export const setQueryOwner = () => {};',
     '@/features/auth/api/auth.api': 'export const authApi = globalThis.__authApi;',
 };
 registerHooks({
