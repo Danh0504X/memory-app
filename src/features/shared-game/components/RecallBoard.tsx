@@ -2,7 +2,8 @@ import { Undo2, X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import { useEffect } from 'react';
+import Animated, { Easing, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { AppText } from '@/components/ui/AppText';
 import { ease } from '@/constants/motion';
 import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
@@ -68,7 +69,7 @@ export function RecallBoard<T>({
                     style={[styles.undo, lastFilled === -1 && styles.disabled]}
                 >
                     <Undo2 color={colors.brandDeep} size={18} />
-                    <AppText variant="small" style={styles.undoLabel}>Gỡ {unit} cuối</AppText>
+                    <AppText variant="small" style={styles.undoLabel}>Gỡ</AppText>
                 </Pressable>
             </View>
 
@@ -89,6 +90,7 @@ export function RecallBoard<T>({
                                     item !== null && styles.slotFilled,
                                 ]}
                             >
+                                {isTarget ? <TargetPulse /> : null}
                                 {item !== null ? (
                                     <>
                                         <Animated.View key={keyOf(item)} entering={ZoomIn.duration(200).easing(ease.enter)}>
@@ -106,6 +108,7 @@ export function RecallBoard<T>({
             </ScrollView>
 
             <View style={styles.deck}>
+                <View style={styles.handle} />
                 <AppText variant="small" style={styles.deckTitle}>
                     {deckTitle} · {unit === 'lá' ? 'lá' : 'hình'} đã dùng sẽ mờ đi
                 </AppText>
@@ -145,10 +148,20 @@ export function RecallBoard<T>({
     );
 }
 
+function TargetPulse() {
+    const reduceMotion = useReducedMotion();
+    const pulse = useSharedValue(1);
+    useEffect(() => {
+        if (!reduceMotion) pulse.value = withRepeat(withTiming(0.25, { duration: 700, easing: Easing.inOut(Easing.quad) }), -1, true);
+    }, [pulse, reduceMotion]);
+    const fade = useAnimatedStyle(() => ({ opacity: pulse.value }));
+    return <Animated.View pointerEvents="none" style={[styles.pulse, fade]} />;
+}
+
 const styles = StyleSheet.create({
     root: { flex: 1 },
     head: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-    hint: { flex: 1, color: colors.ink },
+    hint: { flex: 1, fontFamily: fonts.semibold, color: colors.ink },
     undo: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 40, paddingHorizontal: 10, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
     undoLabel: { fontFamily: fonts.semibold, color: colors.brandDeep },
     disabled: { opacity: 0.4 },
@@ -164,7 +177,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    slotTarget: { borderColor: colors.sunDeep, borderStyle: 'solid', borderWidth: 3, backgroundColor: '#fff8e1' },
+    slotTarget: { borderColor: colors.sun, borderStyle: 'solid', borderWidth: 2, backgroundColor: '#fff8e1' },
+    pulse: { position: 'absolute', top: -4, right: -4, bottom: -4, left: -4, borderRadius: 11, borderWidth: 3, borderColor: colors.sunDeep },
     slotFilled: { borderWidth: 0, backgroundColor: 'transparent' },
     clear: { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.inkSoft, alignItems: 'center', justifyContent: 'center' },
     deck: {
@@ -173,9 +187,12 @@ const styles = StyleSheet.create({
         borderTopRightRadius: radius * 1.5,
         borderTopWidth: 2,
         borderColor: colors.line,
+        borderLeftWidth: 2,
+        borderRightWidth: 2,
         paddingTop: spacing.sm,
     },
-    deckTitle: { paddingHorizontal: spacing.md, fontFamily: fonts.semibold },
+    handle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: colors.step, marginBottom: 6 },
+    deckTitle: { paddingHorizontal: spacing.md, fontFamily: fonts.bold, color: colors.ink },
     deckRows: { gap: spacing.sm, paddingVertical: spacing.sm },
     group: { gap: 4 },
     groupLabel: { paddingHorizontal: spacing.md, fontFamily: fonts.bold, color: colors.ink },

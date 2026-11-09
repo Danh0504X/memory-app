@@ -4,6 +4,7 @@ import { spacing } from '@/constants/theme';
 import type { GameCatalogItem } from '@/features/shared-game/api/games.api';
 import { GameOptions, MAX_GROUP } from '@/features/shared-game/components/GameOptions';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
+import { GAME_META } from '@/features/shared-game/registry';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RecallBoard } from '@/features/shared-game/components/RecallBoard';
 import { ReviewGrid, RoundResult } from '@/features/shared-game/components/RoundResult';
@@ -101,8 +102,8 @@ function MemorizePhase() {
     const total = cardsToMemorize.length;
     const groupSize = Math.max(1, Math.min(MAX_GROUP, preferences.groups || 1));
     const shownTo = Math.min(currentMemorizeIndex + groupSize, total);
-    // Bề rộng còn lại sau hai nút lật (48 mỗi bên) và lề; lá to nhất 220
-    const room = width - 2 * 48 - 2 * spacing.sm - spacing.sm * (groupSize - 1);
+    // Bề rộng màn trừ lề (nút lật đã nằm ở hàng dưới); lá to nhất 220
+    const room = width - 2 * spacing.md - spacing.sm * (groupSize - 1);
     const bigWidth = Math.min(220, Math.floor(room / groupSize) - 8);
 
     return (
@@ -121,6 +122,7 @@ function MemorizePhase() {
             error={error}
         >
             <MemorizeStage
+                tone={GAME_META.card}
                 items={cardsToMemorize}
                 index={currentMemorizeIndex}
                 groupSize={groupSize}

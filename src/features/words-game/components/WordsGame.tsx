@@ -10,6 +10,7 @@ import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { Chips } from '@/features/shared-game/components/Chips';
 import { GameOptions, MAX_GROUP } from '@/features/shared-game/components/GameOptions';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
+import { GAME_META } from '@/features/shared-game/registry';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RoundResult } from '@/features/shared-game/components/RoundResult';
 import { RoundSetup, RoundSetupStatus } from '@/features/shared-game/components/RoundSetup';
@@ -137,7 +138,7 @@ function MemorizePhase() {
     const groupSize = Math.max(1, Math.min(MAX_GROUP, preferences.groups || 1));
     const shownTo = Math.min(currentMemorizeIndex + groupSize, total);
     // Thẻ rộng hết khoảng giữa hai nút lật; nhóm nhiều từ thì thẻ thấp lại để vẫn vừa màn hình
-    const cardWidth = width - 2 * 48 - 2 * spacing.sm - 16;
+    const cardWidth = Math.min(360, width - 2 * spacing.md - 16);
     const cardHeight = groupSize === 1 ? 160 : groupSize === 2 ? 120 : 96;
 
     return (
@@ -156,6 +157,7 @@ function MemorizePhase() {
             error={error}
         >
             <MemorizeStage
+                tone={GAME_META.word}
                 items={wordsToMemorize}
                 index={currentMemorizeIndex}
                 groupSize={groupSize}

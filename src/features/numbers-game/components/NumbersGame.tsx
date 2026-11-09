@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
+import { GAME_META } from '@/features/shared-game/registry';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RoundResult } from '@/features/shared-game/components/RoundResult';
 import { useCompletedRound } from '@/features/shared-game/hooks/useCompletedRound';
@@ -193,6 +194,7 @@ function MemorizePhase() {
 
     return (
         <MemorizeStage
+            tone={GAME_META.number}
             items={groups}
             index={Math.min(index, last)}
             groupSize={1}

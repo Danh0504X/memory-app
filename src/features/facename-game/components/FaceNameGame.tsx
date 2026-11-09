@@ -12,6 +12,7 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import { LevelGrid } from '@/features/shared-game/components/LevelGrid';
 import { MemorizeStage } from '@/features/shared-game/components/MemorizeStage';
 import { PhotoBack, PhotoTile } from '@/features/shared-game/components/PhotoTile';
+import { GAME_META } from '@/features/shared-game/registry';
 import { PlayLayout } from '@/features/shared-game/components/PlayLayout';
 import { RoundResult } from '@/features/shared-game/components/RoundResult';
 import { DealBand, GuestNote, SectionTitle, SetupPanel, ToolButton, ToolRow, setupStyles, toneOf } from '@/features/shared-game/components/SetupParts';
@@ -243,8 +244,8 @@ function MemorizePhase() {
 
     const total = memorizePeople.length;
     if (total === 0) return null;
-    // Bề rộng còn lại sau hai nút lật (48 mỗi bên) và lề; ảnh to nhất 280
-    const portrait = Math.min(280, width - 2 * 48 - 2 * spacing.sm - 16);
+    // Bề rộng màn trừ lề (nút lật đã nằm ở hàng dưới); ảnh to nhất 280
+    const portrait = Math.min(280, width - 2 * spacing.md - 24); // trừ đệm và viền của khung ảnh
 
     return (
         <PlayLayout
@@ -261,6 +262,7 @@ function MemorizePhase() {
             error={errorMessage}
         >
             <MemorizeStage<Person>
+                tone={GAME_META.facename}
                 items={memorizePeople}
                 index={currentMemorizeIndex}
                 groupSize={1}
@@ -273,7 +275,9 @@ function MemorizePhase() {
                 renderBig={(person) => (
                     <View style={styles.faceCard}>
                         <PhotoTile uri={person.imageUrl} width={portrait} label={person.name} />
-                        <AppText style={styles.faceName}>{person.name}</AppText>
+                        <View style={styles.nameTag}>
+                            <AppText style={styles.faceName}>{person.name}</AppText>
+                        </View>
                     </View>
                 )}
                 renderMini={(person, _index, seen) => (seen ? <PhotoTile uri={person.imageUrl} width={40} label={person.name} /> : <PhotoBack width={40} />)}
@@ -403,8 +407,10 @@ const styles = StyleSheet.create({
     statValue: { fontFamily: fonts.extrabold, fontSize: 20 },
     bestRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 6, borderBottomWidth: 1, borderColor: colors.step },
     optionTitle: { fontFamily: fonts.semibold, color: colors.ink },
-    faceCard: { alignItems: 'center', gap: spacing.sm },
-    faceName: { fontFamily: fonts.extrabold, fontSize: 26, lineHeight: 32, textAlign: 'center' },
+    faceCard: { alignItems: 'center', padding: 8, borderRadius: radius * 1.5, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
+    // Thẻ tên màu của trò, đè lên mép dưới ảnh
+    nameTag: { marginTop: -20, paddingHorizontal: 20, paddingVertical: 6, borderRadius: 999, backgroundColor: GAME_META.facename.color, borderBottomWidth: 3, borderBottomColor: GAME_META.facename.edge },
+    faceName: { fontFamily: fonts.extrabold, fontSize: 22, lineHeight: 28, textAlign: 'center', color: colors.white },
     recallList: { padding: spacing.md, gap: spacing.sm },
     recallHint: { color: colors.ink },
     recallGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: RECALL_GAP },
