@@ -41,7 +41,7 @@ function StepButton({ label, disabled, onPress, children }: { label: string; dis
 
 const styles = StyleSheet.create({
     row: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-    step: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: colors.mint, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
+    step: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: colors.line, borderBottomWidth: 4, borderBottomColor: colors.edge, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
     disabled: { opacity: 0.4 },
     value: { fontFamily: fonts.bold, fontSize: 18, minWidth: 72, textAlign: 'center' },
 });

@@ -8,10 +8,11 @@ interface ChipsProps<T extends string | number> {
     value: T;
     onChange: (value: T) => void;
     accessibilityLabel: string;
+    tone?: string;          // màu nút đang chọn (màu của trò); mặc định xanh thương hiệu
 }
 
 // Nhóm nút chọn một trong vài giá trị (thời gian ghi nhớ, số lá mỗi lần xem...)
-export function Chips<T extends string | number>({ options, value, onChange, accessibilityLabel }: ChipsProps<T>) {
+export function Chips<T extends string | number>({ options, value, onChange, accessibilityLabel, tone }: ChipsProps<T>) {
     return (
         <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel={accessibilityLabel}>
             {options.map((option) => {
@@ -22,7 +23,7 @@ export function Chips<T extends string | number>({ options, value, onChange, acc
                         accessibilityRole="radio"
                         accessibilityState={{ selected }}
                         onPress={() => onChange(option.value)}
-                        style={[styles.chip, selected && styles.selected]}
+                        style={[styles.chip, selected && styles.selected, selected && tone ? { borderColor: tone, backgroundColor: tone } : null]}
                     >
                         <AppText variant="small" style={[styles.label, selected && styles.selectedLabel]}>
                             {option.label}

@@ -1,8 +1,9 @@
 import { Check, Lock } from 'lucide-react-native';
-import { StyleSheet, View } from 'react-native';
-import { PressableScale } from '@/components/ui/PressableScale';
+import { useEffect, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { EDGE, colors, fonts, radius } from '@/constants/theme';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 
 interface LevelGridProps {
     levels: { level: number; count: number }[];
@@ -10,12 +11,34 @@ interface LevelGridProps {
     selectedLevel: number;
     shortUnit: string;          // "lá", "hình", "người"
     onSelect: (level: number) => void;
+    tone?: { color: string; edge: string };  // màu của trò cho ô đang chọn
 }
 
-// Lưới cấp độ: chọn lại được mọi cấp đã mở; cấp chưa mở bị khoá tới khi vượt qua cấp trước
-export function LevelGrid({ levels, unlockedLevel, selectedLevel, shortUnit, onSelect }: LevelGridProps) {
+const CELL = 64;
+const GAP = 8;
+
+// Dải cấp độ cuộn ngang: chọn lại được mọi cấp đã mở; cấp chưa mở bị khoá tới khi vượt qua cấp trước.
+// Mở màn là dải tự cuộn tới cấp đang chọn.
+export function LevelGrid({ levels, unlockedLevel, selectedLevel, shortUnit, onSelect, tone }: LevelGridProps) {
+    const scroll = useRef<ScrollViewInstance>(null);
+    const [width, setWidth] = useState(0);
+    const fill = tone ?? { color: colors.brand, edge: colors.brandDeep };
+
+    useEffect(() => {
+        if (!width) return;
+        const center = (selectedLevel - 1) * (CELL + GAP) + CELL / 2 + spacing.lg;
+        scroll.current?.scrollTo({ x: Math.max(0, center - width / 2), animated: true });
+    }, [selectedLevel, width]);
+
     return (
-        <View style={styles.levels}>
+        <ScrollView
+            ref={scroll}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+            style={styles.bleed}
+            contentContainerStyle={styles.levels}
+        >
             {levels.map(({ level, count }) => {
                 const locked = level > unlockedLevel;
                 const done = level < unlockedLevel;
@@ -28,26 +51,28 @@ export function LevelGrid({ levels, unlockedLevel, selectedLevel, shortUnit, onS
                         accessibilityRole="button"
                         accessibilityState={{ selected, disabled: locked }}
                         accessibilityLabel={`Cấp ${level}, ${count} ${shortUnit}${locked ? ', chưa mở khoá' : done ? ', đã qua' : ''}`}
-                        style={[styles.level, selected && styles.selected, locked && styles.locked]}
+                        style={[styles.level, selected && { borderColor: fill.color, backgroundColor: fill.color, borderBottomColor: fill.edge }, locked && styles.locked]}
                     >
                         <View style={styles.top}>
                             {locked ? <Lock color={colors.inkSoft} size={12} /> : null}
-                            {done ? <Check color={selected ? colors.white : colors.brand} size={12} /> : null}
+                            {done ? <Check color={selected ? colors.white : fill.color} size={12} strokeWidth={3} /> : null}
                             <AppText style={[styles.number, selected && styles.selectedText]}>{level}</AppText>
                         </View>
-                        <AppText variant="small" style={[styles.count, selected && styles.selectedText]}>{count} {shortUnit}</AppText>
+                        <AppText style={[styles.count, selected && styles.selectedText]}>{count} {shortUnit}</AppText>
                     </PressableScale>
                 );
             })}
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    levels: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    // Tràn ra hai mép màn (Screen có lề spacing.lg) để vuốt tự nhiên
+    bleed: { marginHorizontal: -spacing.lg, flexGrow: 0 },
+    levels: { gap: GAP, paddingHorizontal: spacing.lg, paddingBottom: 2 },
     level: {
-        width: 62,
-        minHeight: 56,
+        width: CELL,
+        minHeight: 60,
         borderRadius: radius,
         borderWidth: 2,
         borderColor: colors.line,
@@ -57,10 +82,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    selected: { borderColor: colors.brand, backgroundColor: colors.brand, borderBottomColor: colors.brandDeep },
     selectedText: { color: colors.white },
     locked: { opacity: 0.45 },
     top: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-    number: { fontFamily: fonts.extrabold, fontSize: 18 },
-    count: { fontSize: 12, lineHeight: 16 },
+    number: { fontFamily: fonts.extrabold, fontSize: 20, lineHeight: 24, color: colors.ink },
+    count: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, color: colors.inkSoft },
 });
