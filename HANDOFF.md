@@ -101,6 +101,7 @@ Toàn bộ thiết kế lại **mới qua typecheck và build, chưa ai nhìn th
 - **RN 0.88 bỏ `StyleSheet.absoluteFillObject`:** viết thẳng `top/right/bottom/left: 0`.
 - **Ref:** `ScrollView` dùng kiểu `ScrollViewInstance`, `TextInput` dùng `TextInputInstance`.
 - **Gói native:** cài bằng `npx expo install <gói>`, không dùng `npm install`.
+- **SVG có thẻ `<ns0:path>`** (file do công cụ Python sinh): trình duyệt vẽ được nhưng `react-native-svg-transformer` bỏ qua, hình trống. Đã chuẩn hoá 24 file (11/2026); `test/svg-assets.test.mjs` chặn lỗi quay lại khi chép ảnh từ web.
 - **Máy chủ Expo cũ chạy ngầm:** phục vụ bundle cũ và chặn máy chủ mới; tắt tiến trình node cũ trước khi dò lỗi.
 
 ## 6. Quy ước làm việc với chủ dự án
