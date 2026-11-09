@@ -1,27 +1,37 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { ProgressBar } from '@/components/ui/ProgressBar';
-import { LiveShape } from '@/components/ui/LiveShape';
+import { BarChart3, ChevronDown, ChevronRight, Flame, KeyRound, LogOut, Mail, Medal, Pencil, Sparkles, Target } from 'lucide-react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
-import { BlockState, Panel } from '@/components/ui/Panel';
+import { LiveShape } from '@/components/ui/LiveShape';
+import { BlockState } from '@/components/ui/Panel';
+import { ProgressRing } from '@/components/ui/ProgressRing';
 import { TextField } from '@/components/ui/TextField';
 import { enterUp } from '@/constants/motion';
-import { colors, fonts, radius, spacing } from '@/constants/theme';
+import { EDGE, colors, fonts, radius, spacing } from '@/constants/theme';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { GAME_META } from '@/features/dashboard/constants';
 import { PROFILE_KEY, useCatalog, useProfile } from '@/features/dashboard/hooks/useOverview';
 import type { GameCatalogItem } from '@/features/shared-game/api/games.api';
 import { onGameSessionRecorded } from '@/features/shared-game/events';
+import { GAME_ICONS } from '@/features/shared-game/gameIcons';
 import { setQuery } from '@/lib/queryCache';
 import type { ApiErrorResponse } from '@/types/auth.types';
 import { profileApi, type UserProfile } from '../api/profile.api';
 import { buildBadges, isEarned, type Badge } from '../utils/badges';
-import { GOAL_LABELS, describeTargetDate, formatMinutes } from '../utils/preferences';
+import { GOAL_LABELS, formatMinutes } from '../utils/preferences';
 import { formatNumber, getLevelProgress } from '../utils/profileProgress';
+
+// Khớp với EXP_RULES ở backend (memory-be/src/config/progression.ts); đổi ở đó thì sửa cả ở đây
+const EXP_WAYS = [
+    ['Mỗi lá hoặc hình nhớ đúng', '+3'],
+    ['Ván hoàn hảo', '+10'],
+    ['Ván đầu tiên trong ngày', '+10'],
+    ['Lập kỷ lục mới', '+20'],
+] as const;
 
 export function ProfileScreen() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -30,9 +40,13 @@ export function ProfileScreen() {
             <SafeAreaView style={styles.safe} edges={['top']}>
                 <ScrollView contentContainerStyle={styles.content}>
                     <AppText variant="title">Hồ sơ</AppText>
-                    <AppText variant="lead">Đăng nhập để lưu EXP, kỷ lục và chuỗi ngày luyện tập trên mọi thiết bị.</AppText>
-                    <Button title="Đăng nhập" onPress={() => router.push('/login')} />
-                    <Button title="Tạo tài khoản" variant="secondary" onPress={() => router.push('/register')} />
+                    <Animated.View entering={enterUp(1)} style={styles.guest}>
+                        <Sparkles color={colors.brandDeep} size={28} />
+                        <AppText variant="heading">Lưu tiến độ của bạn</AppText>
+                        <AppText variant="body">Đăng nhập để giữ EXP, kỷ lục, huy hiệu và chuỗi ngày trên mọi thiết bị.</AppText>
+                        <Button title="Đăng nhập" onPress={() => router.push('/login')} />
+                        <Button title="Tạo tài khoản" variant="secondary" onPress={() => router.push('/register')} />
+                    </Animated.View>
                 </ScrollView>
             </SafeAreaView>
         );
@@ -58,7 +72,6 @@ function MemberProfile() {
     );
 
     const games = catalog.state.status === 'ready' ? catalog.state.data : null;
-    const badges = profile.state.status === 'ready' && games ? buildBadges(profile.state.data, games) : null;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -77,59 +90,87 @@ function MemberProfile() {
                 }
             >
                 <BlockState request={profile.state} onRetry={reloadProfile}>
-                    {(data) => <Header profile={data} badges={badges} />}
+                    {(data) => {
+                        const badges = games ? buildBadges(data, games) : null;
+                        return (
+                            <>
+                                <Header profile={data} badges={badges} />
+                                {badges ? (
+                                    <Animated.View entering={enterUp(2)} style={{ gap: spacing.sm }}>
+                                        <AppText style={styles.section}>Huy hiệu</AppText>
+                                        <Badges badges={badges} />
+                                    </Animated.View>
+                                ) : null}
+                                {games ? (
+                                    <Animated.View entering={enterUp(3)} style={{ gap: spacing.sm }}>
+                                        <AppText style={styles.section}>Kỷ lục từng trò</AppText>
+                                        <Records games={games} />
+                                    </Animated.View>
+                                ) : (
+                                    <BlockState request={catalog.state} onRetry={reloadCatalog}>{() => null}</BlockState>
+                                )}
+                                <Settings profile={data} onSaved={reloadProfile} />
+                            </>
+                        );
+                    }}
                 </BlockState>
-
-                <Button title="Xem tiến độ chi tiết" variant="secondary" onPress={() => router.push('/progress')} />
-
-                <Panel title="Huy hiệu">
-                    {badges ? <Badges badges={badges} /> : <BlockState request={catalog.state} onRetry={reloadCatalog}>{() => null}</BlockState>}
-                </Panel>
-
-                {profile.state.status === 'ready' ? (
-                    <Panel title="Kỷ lục cá nhân">
-                        <BlockState request={catalog.state} onRetry={reloadCatalog}>
-                            {(data) => <Records profile={profile.state.status === 'ready' ? profile.state.data : null} games={data} />}
-                        </BlockState>
-                    </Panel>
-                ) : null}
-
-                <Panel title="Mục tiêu luyện tập">
-                    <BlockState request={profile.state} onRetry={reloadProfile}>
-                        {(data) => <Goals profile={data} />}
-                    </BlockState>
-                </Panel>
-
-                <Panel title="Tài khoản">
-                    <BlockState request={profile.state} onRetry={reloadProfile}>
-                        {(data) => <Account profile={data} onSaved={reloadProfile} />}
-                    </BlockState>
-                </Panel>
             </ScrollView>
         </SafeAreaView>
     );
 }
 
 function Header({ profile, badges }: { profile: UserProfile; badges: Badge[] | null }) {
+    const [help, setHelp] = useState(false);
     const progress = getLevelProgress(profile.level);
     const initials = profile.username.trim().split(/\s+/).slice(-2).map((word) => word.charAt(0).toUpperCase()).join('');
+
     return (
-        <Animated.View entering={enterUp(0)} style={styles.header}>
-            <View style={styles.headerTop}>
-                <View style={styles.avatar}>
-                    <AppText style={styles.avatarText}>{initials || 'M'}</AppText>
+        <Animated.View entering={enterUp(0)} style={{ gap: spacing.md }}>
+            <View style={styles.header}>
+                <ProgressRing value={progress.percentage / 100} size={112} stroke={10} color={colors.sunDeep} track="#fff3cf">
+                    <View style={styles.avatar}>
+                        <AppText style={styles.avatarText}>{initials || 'M'}</AppText>
+                    </View>
+                </ProgressRing>
+                <View style={styles.levelTag}>
+                    <AppText style={styles.levelTagText}>Cấp {profile.level.level}</AppText>
                 </View>
-                <View style={{ flex: 1 }}>
-                    <AppText variant="heading" numberOfLines={1}>{profile.username}</AppText>
-                    <AppText variant="small">
-                        Cấp {profile.level.level} · {formatNumber(profile.exp)} EXP
-                        {badges ? ` · ${badges.filter(isEarned).length}/${badges.length} huy hiệu` : ''}
-                    </AppText>
-                </View>
+                <AppText variant="title" numberOfLines={1} style={{ textAlign: 'center' }}>{profile.username}</AppText>
+                <AppText variant="small" style={{ textAlign: 'center' }}>
+                    Còn {formatNumber(progress.remaining)} EXP lên cấp {progress.nextLevel}
+                </AppText>
+                <Pressable onPress={() => setHelp((open) => !open)} accessibilityRole="button" accessibilityState={{ expanded: help }} style={styles.helpToggle} hitSlop={8}>
+                    <AppText style={styles.helpText}>Cách nhận EXP</AppText>
+                    <ChevronDown color={colors.brand} size={16} style={{ transform: [{ rotate: help ? '180deg' : '0deg' }] }} />
+                </Pressable>
+                {help ? (
+                    <Animated.View entering={FadeIn.duration(200)} style={styles.help}>
+                        {EXP_WAYS.map(([way, amount]) => (
+                            <View key={way} style={styles.helpRow}>
+                                <AppText variant="small" style={{ flex: 1, color: colors.ink }}>{way}</AppText>
+                                <AppText style={styles.helpAmount}>{amount}</AppText>
+                            </View>
+                        ))}
+                        <AppText variant="small">Ván chưa đạt vẫn nhận một nửa số EXP theo số đã nhớ đúng.</AppText>
+                    </Animated.View>
+                ) : null}
             </View>
-            <ProgressBar value={progress.percentage / 100} track={colors.white} />
-            <AppText variant="small">Còn {formatNumber(progress.remaining)} EXP lên cấp {progress.nextLevel}</AppText>
+            <View style={styles.pills}>
+                <Pill icon={<Flame color="#e8590c" size={20} />} tint="#fff0e6" value={`${profile.streaks}`} label={`ngày · dài nhất ${profile.longestStreak}`} />
+                <Pill icon={<Sparkles color={colors.sunDeep} size={20} />} tint="#fff3cf" value={formatNumber(profile.exp)} label="EXP" />
+                <Pill icon={<Medal color={colors.brand} size={20} />} tint={colors.mint} value={badges ? `${badges.filter(isEarned).length}/${badges.length}` : '–'} label="huy hiệu" />
+            </View>
         </Animated.View>
+    );
+}
+
+function Pill({ icon, tint, value, label }: { icon: ReactNode; tint: string; value: string; label: string }) {
+    return (
+        <View style={[styles.pill, { backgroundColor: tint }]}>
+            {icon}
+            <AppText style={styles.pillValue}>{value}</AppText>
+            <AppText style={styles.pillLabel} numberOfLines={2}>{label}</AppText>
+        </View>
     );
 }
 
@@ -141,14 +182,14 @@ function Badges({ badges }: { badges: Badge[] }) {
                 return (
                     <View
                         key={badge.id}
-                        style={[styles.badge, earned ? styles.badgeEarned : null]}
+                        style={[styles.badge, earned && styles.badgeEarned]}
                         accessibilityLabel={`${badge.title}: ${earned ? 'đã đạt' : badge.unit(badge.current)}`}
                     >
                         <View style={[styles.badgeShape, !earned && styles.badgeLocked]}>
-                            {earned ? <LiveShape art={badge.shape} motion={badge.motion} size={44} tappable /> : <badge.shape width={44} height={44} />}
+                            {earned ? <LiveShape art={badge.shape} motion={badge.motion} size={40} tappable /> : <badge.shape width={40} height={40} />}
                         </View>
-                        <AppText variant="small" style={styles.badgeTitle} numberOfLines={2}>{badge.title}</AppText>
-                        <AppText variant="small" style={styles.badgeProgress}>{earned ? 'Đã đạt' : badge.unit(badge.current)}</AppText>
+                        <AppText style={styles.badgeTitle} numberOfLines={2}>{badge.title}</AppText>
+                        <AppText style={styles.badgeProgress}>{earned ? 'Đã đạt' : badge.unit(badge.current)}</AppText>
                     </View>
                 );
             })}
@@ -156,54 +197,27 @@ function Badges({ badges }: { badges: Badge[] }) {
     );
 }
 
-// Kỷ lục lấy từ số liệu backend giữ trọn đời (hồ sơ và danh sách trò), không suy ra từ lịch sử gần đây
-function Records({ profile, games }: { profile: UserProfile | null; games: GameCatalogItem[] }) {
-    if (!profile) return null;
+// Kỷ lục lấy từ số liệu backend giữ trọn đời (danh sách trò), không suy ra từ lịch sử gần đây
+function Records({ games }: { games: GameCatalogItem[] }) {
     return (
-        <View>
-            <RecordRow label="Chuỗi ngày dài nhất" value={`${profile.longestStreak} ngày`} />
-            <RecordRow label="Tổng EXP" value={formatNumber(profile.exp)} />
-            {games.map((game) => {
+        <View style={styles.group}>
+            {games.map((game, i) => {
+                const meta = GAME_META[game.gameName];
+                const Icon = GAME_ICONS[game.gameName];
                 const best = game.player?.bestLevel ?? null;
                 return (
-                    <RecordRow
-                        key={game.gameName}
-                        label={GAME_META[game.gameName].label}
-                        sub={`Đã mở cấp ${game.player?.unlockedLevel ?? 1}/${game.maxLevel} · ${formatNumber(game.player?.played ?? 0)} ván`}
-                        value={best ? `Hoàn hảo cấp ${best}` : 'Chưa có'}
-                    />
+                    <View key={game.gameName} style={[styles.groupRow, i > 0 && styles.divider]}>
+                        <View style={[styles.rowIcon, { backgroundColor: meta.color }]}>
+                            <Icon color={colors.white} size={18} strokeWidth={2.4} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <AppText style={styles.rowTitle}>{meta.label}</AppText>
+                            <AppText variant="small">Cấp {game.player?.unlockedLevel ?? 1}/{game.maxLevel} · {formatNumber(game.player?.played ?? 0)} ván</AppText>
+                        </View>
+                        <AppText style={[styles.best, !best && { color: colors.inkSoft }]}>{best ? `★ ${best}` : '–'}</AppText>
+                    </View>
                 );
             })}
-        </View>
-    );
-}
-
-function RecordRow({ label, sub, value }: { label: string; sub?: string; value: string }) {
-    return (
-        <View style={styles.recordRow}>
-            <View style={{ flex: 1 }}>
-                <AppText style={styles.recordLabel}>{label}</AppText>
-                {sub ? <AppText variant="small">{sub}</AppText> : null}
-            </View>
-            <AppText style={styles.recordValue}>{value}</AppText>
-        </View>
-    );
-}
-
-function Goals({ profile }: { profile: UserProfile }) {
-    const { goals, dailyMinutes, targetDate, status } = profile.preferences;
-    return (
-        <View style={{ gap: spacing.sm }}>
-            {status === 'answered' && goals.length > 0 ? (
-                <>
-                    <AppText variant="body">{goals.map((goal) => GOAL_LABELS[goal]).join(' · ')}</AppText>
-                    {dailyMinutes ? <AppText variant="small">Mỗi ngày {formatMinutes(dailyMinutes)}</AppText> : null}
-                    {targetDate ? <AppText variant="small">Ngày thi: {describeTargetDate(targetDate)}</AppText> : null}
-                </>
-            ) : (
-                <AppText variant="body">Chưa đặt mục tiêu. Chọn mục tiêu để Memio gợi ý đúng trò và số ván mỗi ngày.</AppText>
-            )}
-            <Button title={status === 'answered' ? 'Đổi mục tiêu' : 'Chọn mục tiêu'} variant="secondary" onPress={() => router.push('/goals')} />
         </View>
     );
 }
@@ -216,13 +230,19 @@ const validateName = (value: string) => {
     return null;
 };
 
-function Account({ profile, onSaved }: { profile: UserProfile; onSaved: () => void }) {
+// Danh sách cài đặt kiểu iOS: một thẻ, mỗi dòng một biểu tượng màu
+function Settings({ profile, onSaved }: { profile: UserProfile; onSaved: () => void }) {
     const { user, updateUser, logout } = useAuthStore();
     const [editing, setEditing] = useState(false);
     const [name, setName] = useState(profile.username);
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
+    const { goals, dailyMinutes, status } = profile.preferences;
+    const goalLine =
+        status === 'answered' && goals.length > 0
+            ? [goals.map((goal) => GOAL_LABELS[goal]).join(', '), dailyMinutes ? formatMinutes(dailyMinutes) + '/ngày' : null].filter(Boolean).join(' · ')
+            : 'Chưa đặt';
 
     const save = async () => {
         const invalid = validateName(name);
@@ -254,70 +274,105 @@ function Account({ profile, onSaved }: { profile: UserProfile; onSaved: () => vo
     };
 
     return (
-        <View style={{ gap: spacing.md }}>
-            {editing ? (
-                <View style={{ gap: spacing.sm }}>
-                    <TextField label="Tên hiển thị" value={name} onChangeText={setName} error={error ?? undefined} maxLength={100} autoFocus onSubmitEditing={() => void save()} />
-                    <View style={styles.inline}>
-                        <Button title="Lưu" loading={saving} onPress={() => void save()} style={{ flex: 1 }} />
-                        <Button
-                            title="Huỷ"
-                            variant="secondary"
-                            disabled={saving}
-                            onPress={() => {
-                                setEditing(false);
-                                setName(profile.username);
-                                setError(null);
-                            }}
-                            style={{ flex: 1 }}
-                        />
+        <Animated.View entering={enterUp(4)} style={{ gap: spacing.sm }}>
+            <AppText style={styles.section}>Cài đặt</AppText>
+            <View style={styles.group}>
+                <SettingRow icon={<Target color={colors.brand} size={18} />} tint={colors.mint} title="Mục tiêu luyện tập" value={goalLine} onPress={() => router.push('/goals')} />
+                <SettingRow icon={<BarChart3 color="#1c7ed6" size={18} />} tint={colors.sky} title="Tiến độ chi tiết" value="Biểu đồ, lịch và lịch sử ván chơi" onPress={() => router.push('/progress')} divider />
+            </View>
+            <View style={styles.group}>
+                {editing ? (
+                    <View style={styles.editBox}>
+                        <TextField label="Tên hiển thị" value={name} onChangeText={setName} error={error ?? undefined} maxLength={100} autoFocus onSubmitEditing={() => void save()} />
+                        <View style={styles.inline}>
+                            <Button title="Lưu" loading={saving} onPress={() => void save()} style={{ flex: 1 }} />
+                            <Button
+                                title="Huỷ"
+                                variant="secondary"
+                                disabled={saving}
+                                onPress={() => {
+                                    setEditing(false);
+                                    setName(profile.username);
+                                    setError(null);
+                                }}
+                                style={{ flex: 1 }}
+                            />
+                        </View>
                     </View>
-                </View>
-            ) : (
-                <SettingRow label="Tên hiển thị" value={profile.username} action="Đổi" onPress={() => setEditing(true)} />
-            )}
-            {user?.email ? <SettingRow label="Email đăng nhập" value={user.email} /> : null}
-            <SettingRow
-                label="Mật khẩu"
-                value={user?.hasPassword === false ? 'Chưa đặt (đăng nhập bằng Google)' : '••••••••'}
-                action={user?.hasPassword === false ? 'Đặt' : 'Đổi'}
-                onPress={() => router.push('/change-password')}
-            />
-            <Button title="Đăng xuất" variant="secondary" loading={loggingOut} onPress={() => void onLogout()} />
-        </View>
+                ) : (
+                    <SettingRow icon={<Pencil color="#d6336c" size={18} />} tint="#ffe8f0" title="Tên hiển thị" value={profile.username} onPress={() => setEditing(true)} />
+                )}
+                {user?.email ? <SettingRow icon={<Mail color="#0c8599" size={18} />} tint="#e3f6f8" title="Email đăng nhập" value={user.email} divider /> : null}
+                <SettingRow
+                    icon={<KeyRound color="#e8590c" size={18} />}
+                    tint="#fff0e6"
+                    title={user?.hasPassword === false ? 'Đặt mật khẩu' : 'Đổi mật khẩu'}
+                    value={user?.hasPassword === false ? 'Bạn đang đăng nhập bằng Google' : undefined}
+                    onPress={() => router.push('/change-password')}
+                    divider
+                />
+            </View>
+            <Pressable onPress={() => void onLogout()} disabled={loggingOut} accessibilityRole="button" style={[styles.group, styles.logout]}>
+                <LogOut color={colors.danger} size={20} />
+                <AppText style={styles.logoutText}>{loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}</AppText>
+            </Pressable>
+        </Animated.View>
     );
 }
 
-function SettingRow({ label, value, action, onPress }: { label: string; value: string; action?: string; onPress?: () => void }) {
-    return (
-        <View style={styles.settingRow}>
+function SettingRow({ icon, tint, title, value, onPress, divider }: { icon: ReactNode; tint: string; title: string; value?: string; onPress?: () => void; divider?: boolean }) {
+    const body = (
+        <>
+            <View style={[styles.rowIcon, { backgroundColor: tint }]}>{icon}</View>
             <View style={{ flex: 1 }}>
-                <AppText variant="small">{label}</AppText>
-                <AppText style={styles.recordLabel} numberOfLines={1}>{value}</AppText>
+                <AppText style={styles.rowTitle}>{title}</AppText>
+                {value ? <AppText variant="small" numberOfLines={1}>{value}</AppText> : null}
             </View>
-            {action && onPress ? <Button title={action} variant="secondary" onPress={onPress} style={styles.rowButton} /> : null}
-        </View>
+            {onPress ? <ChevronRight color={colors.inkSoft} size={20} /> : null}
+        </>
+    );
+    if (!onPress) return <View style={[styles.groupRow, divider && styles.divider]}>{body}</View>;
+    return (
+        <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.groupRow, divider && styles.divider, pressed && { backgroundColor: colors.wall }]}>
+            {body}
+        </Pressable>
     );
 }
 
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.wall },
-    content: { padding: spacing.lg, gap: spacing.md },
-    header: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, backgroundColor: colors.mint },
-    headerTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-    avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
-    avatarText: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.white },
+    content: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xl },
+    guest: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius * 1.5, backgroundColor: colors.mint, borderBottomWidth: EDGE, borderBottomColor: '#a5d6b3' },
+    header: { alignItems: 'center', gap: 6 },
+    avatar: { width: 84, height: 84, borderRadius: 42, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
+    avatarText: { fontFamily: fonts.extrabold, fontSize: 30, color: colors.white },
+    levelTag: { marginTop: -20, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, backgroundColor: colors.sun, borderBottomWidth: 3, borderBottomColor: colors.sunDeep },
+    levelTagText: { fontFamily: fonts.extrabold, fontSize: 13, color: colors.ink },
+    helpToggle: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32 },
+    helpText: { fontFamily: fonts.bold, fontSize: 13, color: colors.brand },
+    help: { alignSelf: 'stretch', gap: 6, padding: spacing.md, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line },
+    helpRow: { flexDirection: 'row', alignItems: 'center' },
+    helpAmount: { fontFamily: fonts.extrabold, color: colors.sunDeep },
+    pills: { flexDirection: 'row', gap: spacing.sm },
+    pill: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: spacing.md, paddingHorizontal: 6, borderRadius: radius * 1.25 },
+    pillValue: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink, fontVariant: ['tabular-nums'] },
+    pillLabel: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, color: colors.inkSoft, textAlign: 'center' },
+    section: { fontFamily: fonts.extrabold, fontSize: 20, color: colors.ink },
     badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    badge: { width: '31%', flexGrow: 1, alignItems: 'center', gap: 4, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.wall, borderWidth: 1, borderColor: colors.step },
-    badgeEarned: { backgroundColor: '#fff8e1', borderColor: colors.sun },
-    badgeShape: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
+    badge: { width: '31%', flexGrow: 1, alignItems: 'center', gap: 2, padding: spacing.sm, borderRadius: radius, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge },
+    badgeEarned: { backgroundColor: '#fff8e1', borderColor: colors.sun, borderBottomColor: colors.sunDeep },
+    badgeShape: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
     badgeLocked: { opacity: 0.3 },
-    badgeTitle: { fontFamily: fonts.semibold, color: colors.ink, textAlign: 'center' },
-    badgeProgress: { fontSize: 12, lineHeight: 16, textAlign: 'center' },
-    recordRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 10, borderBottomWidth: 1, borderColor: colors.step },
-    recordLabel: { fontFamily: fonts.semibold, color: colors.ink },
-    recordValue: { fontFamily: fonts.bold, color: colors.brandDeep },
+    badgeTitle: { fontFamily: fonts.bold, fontSize: 12, lineHeight: 16, color: colors.ink, textAlign: 'center' },
+    badgeProgress: { fontSize: 11, lineHeight: 14, color: colors.inkSoft, textAlign: 'center' },
+    group: { borderRadius: radius * 1.25, backgroundColor: colors.white, borderWidth: 2, borderColor: colors.line, borderBottomWidth: EDGE, borderBottomColor: colors.edge, overflow: 'hidden' },
+    groupRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: 12, minHeight: 56 },
+    divider: { borderTopWidth: 1, borderTopColor: colors.step },
+    rowIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    rowTitle: { fontFamily: fonts.bold, color: colors.ink },
+    best: { fontFamily: fonts.extrabold, color: colors.sunDeep },
+    editBox: { gap: spacing.sm, padding: spacing.md },
     inline: { flexDirection: 'row', gap: spacing.sm },
-    settingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    rowButton: { minHeight: 40, paddingHorizontal: 14 },
+    logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, minHeight: 54 },
+    logoutText: { fontFamily: fonts.extrabold, color: colors.danger },
 });
